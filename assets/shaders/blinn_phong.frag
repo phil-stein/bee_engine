@@ -5,6 +5,7 @@
         sampler2D specular;
         float shininess;
         vec2 tile;
+	vec3 tint;
     };
 
     struct DirectionalLight {
@@ -100,6 +101,7 @@
         float transparency = texture(material.diffuse, normTexCoords).a;
 	if(transparency < 0.1)         
 	{ discard; }
+	result *= material.tint;
         FragColor = vec4(result, transparency); //vec4(result, texture(material.diffuse, normTexCoords).w); //* ourTexture; //vec3(norm.xyz); 
     }
 

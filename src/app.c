@@ -60,6 +60,9 @@ void init()
 	
 	u32 shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
 										 "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag");
+
+	u32 shader_unlit = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
+											   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag");
 	
 	// load texture
 	texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png");
@@ -81,6 +84,7 @@ void init()
 
 	texture blank_texture = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\blank.png", "blank.png");
 	material mat_blank = make_material(shader, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile);
+	material mat_blank_unlit = make_material(shader_unlit, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile);
 	
 
 	texture glass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\window.png", "window.png");
@@ -106,10 +110,10 @@ void init()
 	vec3 scale_light01 = { 0.1f, 0.1f,  0.1f };
 	vec3 scale_light02 = { 0.5f, 0.5f,  0.5f };
 	glm_vec3_copy(diffuse01, mat_blank.tint);
-	add_entity(pos_light01, rot_light, scale_light02, &m_arrow,      &mat_blank, &dir_light,   "dir_light");
-	add_entity(pos_light03, rot_light, scale_light02, &m_flashlight, &mat_blank, &spot_light,  "spot_light");
+	add_entity(pos_light01, rot_light, scale_light02, &m_arrow,      &mat_blank_unlit, &dir_light,   "dir_light");
+	add_entity(pos_light03, rot_light, scale_light02, &m_flashlight, &mat_blank_unlit, &spot_light,  "spot_light");
 	glm_vec3_copy(diffuse02, mat_blank.tint);
-	add_entity(pos_light02, rot_light, scale_light01, &m_lightbulb,  &mat_blank, &point_light, "point_light");
+	add_entity(pos_light02, rot_light, scale_light01, &m_lightbulb,  &mat_blank_unlit, &point_light, "point_light");
 	glm_vec3_copy(specular, mat_blank.tint); // all 1.0f
 
 	// plane

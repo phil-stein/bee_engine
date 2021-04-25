@@ -116,9 +116,9 @@ void ui_update()
 
     properties_window(entities_len);
 
-    console_window();
+    //console_window();
 
-
+    asset_browser_window();
 
     nk_glfw3_render(&glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
 }
@@ -1991,7 +1991,6 @@ void properties_window(int ent_len)
 
 void console_window()
 {
-    /* GUI */
     if (nk_begin(ctx, "Console", nk_rect(1600, 700, 300, 300),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
@@ -2019,6 +2018,34 @@ void console_window()
     }
     nk_end(ctx);
 }
+
+void asset_browser_window()
+{
+    if (nk_begin(ctx, "Asset Browser", nk_rect(1600, 700, 300, 300),
+        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+    {
+        if (nk_tree_push(ctx, NK_TREE_NODE, "Grid", NK_MINIMIZED))
+        {
+            int i = 0;
+            static int selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+            nk_layout_row_static(ctx, 50, 50, 4);
+
+            if (nk_selectable_label(ctx, "Image", NK_TEXT_CENTERED, &selected[i])) 
+            {
+                selected[i] = selected[i] == 0 ? 1 : 0;
+            }
+            i++;
+
+            for (i = 0; i < 16; ++i) {
+
+            }
+            nk_tree_pop(ctx);
+        }
+    }
+    nk_end(ctx);
+}
+
 
 
 static void set_style(struct nk_context* ctx, enum theme theme)

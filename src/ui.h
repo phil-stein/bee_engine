@@ -91,6 +91,8 @@ void properties_window(int ent_len);
 
 void console_window();
 
+void asset_browser_window();
+
 // themes
 enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };
 static void set_style(struct nk_context* ctx, enum theme theme);

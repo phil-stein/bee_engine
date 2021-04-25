@@ -269,6 +269,15 @@ void renderer_update()
 	glDisable(GL_DEPTH_TEST);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	// ------------------------------------------------------------------------
+
+	// entities ---------------------------------------------------------------
+
+	for (int i = 0; i < entities_len; ++i)
+	{
+		update_entity(&entities[i]);
+	}
+
+	// ------------------------------------------------------------------------
 }
 
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global)

@@ -388,9 +388,9 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 // for script, collider, etc. components
 void update_entity(entity* ent)
 {
-	if (0 == 1)
+	if (ent->has_light && ent->has_model)
 	{
-		// draw_model(&ent->_model, ent->pos, ent->rot, ent->scale, ent->rotate_global);
+		glm_vec3_copy(ent->_light.diffuse, ent->_material.tint);
 	}
 }
 
