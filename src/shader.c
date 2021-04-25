@@ -78,7 +78,7 @@ u32 create_shader_from_file(const char* vert_path, const char* frag_path) // con
 	f = fopen(vert_path, "rb");
 	if (f == NULL) {
 		fprintf(stderr, "error loading vert shader text-file at: %s\n", vert_path);
-		exit(1);
+		assert(BEE_FALSE);
 	}
 
 	// get len of file
@@ -106,7 +106,7 @@ u32 create_shader_from_file(const char* vert_path, const char* frag_path) // con
 	f = fopen(frag_path, "rb");
 	if (f == NULL) {
 		fprintf(stderr, "error loading frag shader text-file at: %s\n", frag_path);
-		exit(1);
+		assert(BEE_FALSE);
 	}
 
 	// get len of file

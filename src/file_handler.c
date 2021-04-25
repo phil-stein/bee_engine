@@ -29,7 +29,7 @@ char* read_text_file(const char* file_path)
     f = fopen(file_path, "rb");
     if (f == NULL) {
         fprintf(stderr, "error loading text-file at: %s\n", file_path);
-        exit(1);
+        assert(BEE_FALSE);
     }
 
     // get len of file

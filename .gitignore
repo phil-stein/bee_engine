@@ -4,7 +4,7 @@
 **/release
 
 # vs-files
-Browse.VC.opendb
+# Browse.VC.opendb
 
 # vim-files
 *~
@@ -13,3 +13,4 @@ Browse.VC.opendb
 
 # rar-files
 *.rar
+.zip

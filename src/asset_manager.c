@@ -13,7 +13,7 @@
 // prob. should replace these with something faster sometime
 struct { char* key;  int  value; }* textures  = NULL;
 int tex_len = 0;
-texture* tex_col_buffer = NULL;
+texture* tex = NULL;
 struct { char* key;  material value; }* materials = NULL;
 struct { char* key;  mesh     value; }* meshes    = NULL;
 // light* lights; // seems weird idk why
@@ -97,7 +97,7 @@ texture get_texture(const char* name)
 	// texture t_ptr = hmget(textures, name);
 	// assert(t_ptr != NULL);
 	// return t_ptr;
-	return tex_col_buffer[shget(textures, name)];
+	return tex[shget(textures, name)];
 }
 
 void create_texture(const char* path, const char* name)
@@ -105,6 +105,6 @@ void create_texture(const char* path, const char* name)
 	texture t = texture_create_from_path(path, name);
 
 	shput(textures, name, tex_len);
-	arrput(tex_col_buffer, t);
+	arrput(tex, t);
 	tex_len++;
 }

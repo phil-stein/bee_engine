@@ -41,7 +41,7 @@ void create_framebuffer(u32* tex_buffer)
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
 		fprintf(stderr, "-!!!-> ERROR_CREATING_FRAMEBUFFER");
-		exit(1);
+		assert(BEE_FALSE);
 	}
 
 	// unbind the framebuffer, opengl now renders to the default buffer again

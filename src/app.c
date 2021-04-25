@@ -50,7 +50,7 @@ void init()
 	if (create_window(1920, 1080, "bee engine", BEE_TRUE) == BEE_ERROR)
 	{
 		fprintf(stderr, "Initializing GLFW, GLAD or opening a window failed.\n exiting ... \n");
-		exit(1);
+		assert(BEE_FALSE);
 	}
 
 	window = get_window();
