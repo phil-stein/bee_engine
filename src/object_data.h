@@ -1,0 +1,148 @@
+#pragma once
+#ifndef OBJECT_DATA_H
+#define OBJECT_DATA_H
+
+#include "CGLM/cglm.h"
+#include "global.h"
+
+//
+// ---- assets ----
+//
+
+typedef struct
+{
+	u32 handle;
+	char* name;
+}texture;
+
+typedef struct
+{
+	u32 shader;
+
+	texture dif_tex;
+	texture spec_tex;
+
+	bee_bool is_transparent;
+
+	f32 shininess;
+	vec2 tile;
+
+	vec3 tint;
+
+	char* name;
+}material;
+
+typedef struct
+{
+	u32 vertices_len;
+	u32 indices_len;
+
+	u32 vao, vbo, ebo;
+
+	enum bee_bool indexed;
+	enum bee_bool visible;
+
+	char* name;
+}mesh;
+
+//
+// ---- components ---- 
+//
+
+//typedef struct 
+//{
+//	// @TODO: allow for multiple meshes
+//	mesh _mesh;
+//	material _material;
+//}model;
+
+enum light_type { POINT_LIGHT, DIR_LIGHT, SPOT_LIGHT };
+typedef enum light_type light_type;
+typedef struct
+{
+	// ---- general ----
+
+	light_type type;
+
+	vec3 ambient;
+	vec3 diffuse;
+	vec3 specular;
+
+	// -----------------
+
+	vec3 direction; // for dir & spot light
+
+	f32 constant;	// for point & spot light
+	f32 linear;		// for point & spot light
+	f32 quadratic;	// for point & spot light
+
+	// spot light
+	f32 cut_off;
+	f32 outer_cut_off;
+
+}light;
+
+// ---- entity ----
+
+typedef struct
+{
+	char* name;
+
+	vec3 pos;
+	vec3 rot;
+	vec3 scale;
+
+	bee_bool rotate_global;
+
+	bee_bool has_model;
+	// model _model;
+	mesh _mesh;
+	material _material;
+
+	bee_bool has_light;
+	light _light;
+
+}entity;
+
+// creates a material struct
+material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile);
+// creates a material struct, tints the material
+material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint);
+
+// creates a mesh struct 
+// dont do this manually
+mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len); // , u32* indices[]
+mesh make_plane_mesh();
+mesh make_cube_mesh();
+mesh make_grid_mesh(int x_verts, int z_verts);
+
+// creates a mesh struct 
+// model make_model(mesh* _mesh, material* _material);
+
+// create a point light
+light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, f32 linear, f32 quadratic);
+// create a directional light
+light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction);
+// create a spot light
+light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction, f32 constant, f32 linear, f32 quadratic, f32 cut_off, f32 outer_cut_off);
+
+// create an entity
+entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, light* _light, char* _name); //model* _model
+
+// render the mesh
+// void draw_mesh(mesh* _mesh, material* _material, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
+// render the models meshes
+// void draw_model(model* _model, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
+// updates all attached components
+void update_entity(entity* ent);
+
+void free_material(material* mat);
+// free the buffer objects of the mesh
+void free_mesh(mesh* _mesh);
+// free the mesh and material
+// void free_model(model* _model);
+// free all attached data
+void free_entity(entity* ent);
+
+
+#endif

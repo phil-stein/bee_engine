@@ -1,0 +1,15 @@
+# build-folder
+**/bin
+**/debug
+**/release
+
+# vs-files
+Browse.VC.opendb
+
+# vim-files
+*~
+*.swp
+*.swo
+
+# rar-files
+*.rar

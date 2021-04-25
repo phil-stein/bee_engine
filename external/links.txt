@@ -1,0 +1,16 @@
+---- links ----
+
+ ---- tutorials
+ - learnopengl.com	: https://learnopengl.com
+
+ ---- libraries
+
+ - stb_image, stb_ds 	: https://github.com/nothings/stb
+ - glfw 		: https://www.glfw.org/
+ - glad			: https://glad.dav1d.de/
+ - cglm			: https://github.com/recp/cglm
+ - tinyobj		: https://github.com/syoyo/tinyobjloader-c
+ - nuklear		: https://github.com/Immediate-Mode-UI/Nuklear
+ - assimp		: https://github.com/assimp/assimp
+ - dirent 		: https://github.com/tronkko/dirent
+
