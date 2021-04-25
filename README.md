@@ -2,7 +2,7 @@
 simple 3d game-engine in C ( C89 ), using OpenGL 4.6. <br>
 still under development. 
 
-using    [glfw3](https://www.glfw.org/), [glad](https://glad.dav1d.de/), [stb_image](https://github.com/nothings/stb), [nuklear](https://github.com/Immediate-Mode-UI/Nuklear), [assimp](http://assimp.org/) <br>
+using    [glfw3](https://www.glfw.org/), [glad](https://glad.dav1d.de/), [cglm](https://github.com/recp/cglm), [stb_image & stb_ds](https://github.com/nothings/stb), [nuklear](https://github.com/Immediate-Mode-UI/Nuklear), [assimp](http://assimp.org/) <br>
 tutorial [learnopengl.com](https://learnopengl.com/)
 
 ## current capabilities
