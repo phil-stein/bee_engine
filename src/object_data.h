@@ -3,7 +3,9 @@
 #define OBJECT_DATA_H
 
 #include "CGLM/cglm.h"
+
 #include "global.h"
+#include "native_script.h"
 
 //
 // ---- assets ----
@@ -45,17 +47,6 @@ typedef struct
 	char* name;
 }mesh;
 
-//
-// ---- components ---- 
-//
-
-//typedef struct 
-//{
-//	// @TODO: allow for multiple meshes
-//	mesh _mesh;
-//	material _material;
-//}model;
-
 enum light_type { POINT_LIGHT, DIR_LIGHT, SPOT_LIGHT };
 typedef enum light_type light_type;
 typedef struct
@@ -94,13 +85,21 @@ typedef struct
 
 	bee_bool rotate_global;
 
+
+	// ---- components ----
+
 	bee_bool has_model;
-	// model _model;
 	mesh _mesh;
 	material _material;
 
 	bee_bool has_light;
 	light _light;
+
+	// --------------------
+
+	int scripts_len;
+	script* scripts;
+
 
 }entity;
 

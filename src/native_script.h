@@ -2,6 +2,8 @@
 #ifndef NATIVE_SCRIPT_H
 #define NATIVE_SCRIPT_H
 
+#include "global.h"
+
 typedef struct
 {
 	// @UNCLEAR: this is is very oop, do I want this ???

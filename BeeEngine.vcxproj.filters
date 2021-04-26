@@ -63,6 +63,9 @@
     <ClCompile Include="src\native_script.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\script_test.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">

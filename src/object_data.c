@@ -1,5 +1,7 @@
 #include "GLAD/glad.h"
 
+#include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION is defined in renderer.c
+
 #include "object_data.h"
 #include "shader.h"
 #include "camera.h"
@@ -283,31 +285,6 @@ void free_mesh(mesh* _mesh)
 	}
 }
 
-
-// ---- model ----
-/*
-model make_model(mesh* _mesh, material* _material)
-{
-	model mod;
-	mod._mesh = *_mesh;
-	mod._material = *_material;
-
-	return mod;
-}
-
-// draw_model()
-void draw_model(model* _model, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global)
-{
-	draw_mesh(&_model->_mesh, &_model->_material, pos, rot, scale, rotate_global);
-}
-
-void free_model(model* _model)
-{
-	free_material(&_model->_material);
-	free_mesh(&_model->_mesh);
-}
-*/
-
 // ---- light ----
 
 light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, f32 linear, f32 quadratic)
@@ -382,15 +359,34 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 		ent._light = *_light;
 	}
 
+	ent.scripts = NULL; // needs to be null-pointer for stb_ds
+
 	return ent;
+}
+
+void entity_add_script(entity* ent, script _script)
+{
+	// register the update, cleanup functions
+	arrput(ent->scripts, _script);
+	ent->scripts_len++;
+
+	(*_script.init);  // call init function
 }
 
 // for script, collider, etc. components
 void update_entity(entity* ent)
 {
+	// if both light and model make the models color the lights diffuse color
 	if (ent->has_light && ent->has_model)
 	{
 		glm_vec3_copy(ent->_light.diffuse, ent->_material.tint);
+	}
+
+	// scripts
+	for (int i = 0; i < ent->scripts_len; ++i)
+	{
+		// call the registered update function
+		(* ent->scripts[i].update);
 	}
 }
 
@@ -401,4 +397,13 @@ void free_entity(entity* ent)
 		free_mesh(&ent->_mesh);
 		free_material(&ent->_material);
 	}
+
+	// scripts
+	for (int i = 0; i < ent->scripts_len; ++i)
+	{
+		// call the registered cleanup function
+		(*ent->scripts[i].cleanup);
+	}
+
+	arrfree(ent->scripts);
 }
