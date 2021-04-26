@@ -42,7 +42,7 @@ int main(void)
 
 
 	// set background-color
-	glClearColor(72 / 255.0f, 242 / 255.0f, 245 / 255.0f, 0.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 	// glfwSetWindowOpacity(window, 0.5f);
 

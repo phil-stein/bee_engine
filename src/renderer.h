@@ -8,6 +8,17 @@
 #include "object_data.h"
 #include "ui.h"
 
+typedef struct
+{
+	f32* perspective;
+	f32* near_plane;
+	f32* far_plane;
+
+	f32* wireframe_col_r;
+	f32* wireframe_col_g;
+	f32* wireframe_col_b;
+}renderer_properties;
+
 
 void renderer_init();
 
@@ -25,11 +36,15 @@ void add_entity_cube();
 
 entity_properties get_entity_properties(int index);
 
-void get_renderer_properties(f32* _perspective, f32* _near_plane, f32* _far_plane);
+renderer_properties get_renderer_properties();
 
 void get_entity_len(int* _entities_len);
 
 
-void renderer_enable_wireframe(enum bee_bool act);
+void renderer_enable_wireframe_mode(bee_bool act);
+void renderer_enable_normal_mode(bee_bool act);
+void renderer_enable_uv_mode(bee_bool act);
+
+void renderer_set_skybox_active(bee_bool act);
 
 #endif

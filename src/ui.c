@@ -88,7 +88,7 @@ void ui_init()
 	// -----------------
 
 
-    bg.r = 0.10f; bg.g = 0.18f; bg.b = 0.24f; bg.a = 1.0f;
+    bg.r = 0.1f; bg.g = 0.1f; bg.b = 0.1f; bg.a = 1.0f;
 
 
     // set default theme
@@ -1409,11 +1409,86 @@ void properties_window(int ent_len)
         if (nk_tree_push(ctx, NK_TREE_TAB, "Scene", NK_MINIMIZED))
         {
 
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Settings", NK_MINIMIZED))
+            {
+                settings _settings = get_settings();
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "free-look mode", NK_TEXT_LEFT);
+                nk_property_float(ctx, "mosue sensitivity", -1.0f, _settings.free_look_mouse_sensitivity, 1.0f, 0.1f, 0.01f);
+
+                // spacing
+                nk_layout_row_static(ctx, 5, 10, 1);
+                nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
+                static int skybox_enabled = 1;
+                static int skybox_enabled_last_frame = 1;
+                nk_layout_row_dynamic(ctx, 15, 1);
+                nk_checkbox_label(ctx, " draw skybox", &skybox_enabled);
+                if (skybox_enabled == 0 && skybox_enabled_last_frame == 1)
+                {
+                    renderer_set_skybox_active(BEE_FALSE);
+
+                    skybox_enabled_last_frame = 0;
+                }
+                else if (skybox_enabled == 1 && skybox_enabled_last_frame == 0)
+                {
+                    renderer_set_skybox_active(BEE_TRUE);
+
+                    skybox_enabled_last_frame = 1;
+                }
+
+                nk_layout_row_dynamic(ctx, 30, 1);
+                nk_label(ctx, "background color", NK_TEXT_LEFT);
+                nk_layout_row_dynamic(ctx, 25, 1);
+
+                struct nk_colorf old_bg = bg;
+
+                // complex color combobox
+                if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(200, 400))) 
+                {
+                    enum color_mode { COL_RGB, COL_HSV };
+                    static int col_mode = COL_RGB;
+
+                    nk_layout_row_dynamic(ctx, 120, 1);
+                    bg = nk_color_picker(ctx, bg, NK_RGB);
+
+                    nk_layout_row_dynamic(ctx, 25, 2);
+                    col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+                    col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    if (col_mode == COL_RGB) {
+                        bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
+                        bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
+                        bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
+                    }
+                    else {
+                        float hsva[4];
+                        nk_colorf_hsva_fv(hsva, bg);
+                        hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                        hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                        hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                        bg = nk_hsva_colorfv(hsva);
+                    }
+                    nk_combo_end(ctx);
+
+                    // check if the color was changed
+                    if (bg.r != old_bg.r || bg.g != old_bg.g || bg.b != old_bg.b || bg.a != old_bg.a)
+                    {
+                        glClearColor(bg.r, bg.g, bg.b, bg.a);
+                    }
+                }
+
+                nk_tree_pop(ctx);
+            }
+
             if (nk_tree_push(ctx, NK_TREE_TAB, "Debug", NK_MINIMIZED))
             {
+                renderer_properties prop = get_renderer_properties();
+
                 const struct nk_input* in = &ctx->input;
                 struct nk_rect bounds;
-
 
                 static int wireframe_mode_enabled = 0;
                 static int wireframe_mode_enabled_last_frame = 0;
@@ -1424,6 +1499,7 @@ void properties_window(int ent_len)
                     nk_tooltip(ctx, " Activate Wireframe-Mode, you can also use Tab.");
 
                 static int normal_mode_enabled = 0;
+                static int normal_mode_enabled_last_frame = 0;
                 nk_layout_row_dynamic(ctx, 15, 1);
                 bounds = nk_widget_bounds(ctx);
                 nk_checkbox_label(ctx, "Normals", &normal_mode_enabled);
@@ -1431,6 +1507,7 @@ void properties_window(int ent_len)
                     nk_tooltip(ctx, " Not implemented yet.");
 
                 static int uv_mode_enabled = 0;
+                static int uv_mode_enabled_last_frame = 0;
                 nk_layout_row_dynamic(ctx, 15, 1);
                 bounds = nk_widget_bounds(ctx);
                 nk_checkbox_label(ctx, "UVs", &uv_mode_enabled);
@@ -1440,17 +1517,90 @@ void properties_window(int ent_len)
                 if (wireframe_mode_enabled == 0 && wireframe_mode_enabled_last_frame == 1)
                 {
                     // draw in solid-mode
-                    renderer_enable_wireframe(BEE_FALSE);
+                    renderer_enable_wireframe_mode(BEE_FALSE);
 
                     wireframe_mode_enabled_last_frame = 0;
                 }
                 else if ( wireframe_mode_enabled == 1 && wireframe_mode_enabled_last_frame == 0)
                 {
                     // draw in wireframe-mode
-                    renderer_enable_wireframe(BEE_TRUE);
+                    renderer_enable_wireframe_mode(BEE_TRUE);
 
                     wireframe_mode_enabled_last_frame = 1;
                 }
+                if (normal_mode_enabled == 0 && normal_mode_enabled_last_frame == 1)
+                {
+                    // draw in solid-mode
+                    renderer_enable_normal_mode(BEE_FALSE);
+
+                    normal_mode_enabled_last_frame = 0;
+                }
+                else if (normal_mode_enabled == 1 && normal_mode_enabled_last_frame == 0)
+                {
+                    // draw in wireframe-mode
+                    renderer_enable_normal_mode(BEE_TRUE);
+
+                    normal_mode_enabled_last_frame = 1;
+                }
+                if (uv_mode_enabled == 0 && uv_mode_enabled_last_frame == 1)
+                {
+                    // draw in solid-mode
+                    renderer_enable_uv_mode(BEE_FALSE);
+
+                    uv_mode_enabled_last_frame = 0;
+                }
+                else if (uv_mode_enabled == 1 && uv_mode_enabled_last_frame == 0)
+                {
+                    // draw in wireframe-mode
+                    renderer_enable_uv_mode(BEE_TRUE);
+
+                    uv_mode_enabled_last_frame = 1;
+                }
+
+                // complex color combobox
+                struct nk_colorf col = { *prop.wireframe_col_r, *prop.wireframe_col_g, *prop.wireframe_col_b, 0.0f };
+                struct nk_colorf old_col = col;
+                nk_layout_row_dynamic(ctx, 30, 1);
+                nk_label(ctx, "wireframe color", NK_TEXT_LEFT);
+                nk_layout_row_dynamic(ctx, 25, 1);
+                if (nk_combo_begin_color(ctx, nk_rgb_cf(col), nk_vec2(200, 400)))
+                {
+                    enum color_mode { COL_RGB, COL_HSV };
+                    static int col_mode = COL_RGB;
+
+                    nk_layout_row_dynamic(ctx, 120, 1);
+                    col = nk_color_picker(ctx, col, NK_RGB);
+
+                    nk_layout_row_dynamic(ctx, 25, 2);
+                    col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+                    col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    if (col_mode == COL_RGB) {
+                        col.r = nk_propertyf(ctx, "#R:", 0, col.r, 1.0f, 0.01f, 0.005f);
+                        col.g = nk_propertyf(ctx, "#G:", 0, col.g, 1.0f, 0.01f, 0.005f);
+                        col.b = nk_propertyf(ctx, "#B:", 0, col.b, 1.0f, 0.01f, 0.005f);
+                    }
+                    else {
+                        float hsva[4];
+                        nk_colorf_hsva_fv(hsva, col);
+                        hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                        hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                        hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                        col = nk_hsva_colorfv(hsva);
+                    }
+
+                    // check if the color was changed
+                    if (col.r != old_col.r || col.g != old_col.g || col.b != old_col.b || col.a != old_col.a)
+                    {
+                        *prop.wireframe_col_r = col.r;
+                        *prop.wireframe_col_g = col.g;
+                        *prop.wireframe_col_b = col.b;
+                    }
+
+                    nk_combo_end(ctx);
+                }
+
 
                 if (nk_tree_push(ctx, NK_TREE_TAB, "FPS Diagnostics", NK_MINIMIZED))
                 {
@@ -1494,65 +1644,9 @@ void properties_window(int ent_len)
                 nk_tree_pop(ctx);
             }
 
-            if (nk_tree_push(ctx, NK_TREE_TAB, "Settings", NK_MINIMIZED))
-            {
-                settings _settings = get_settings();
-
-                nk_layout_row_dynamic(ctx, 25, 1);
-                nk_label(ctx, "free-look mode", NK_TEXT_LEFT);
-                nk_property_float(ctx, "mosue sensitivity", -1.0f, _settings.free_look_mouse_sensitivity, 1.0f, 0.1f, 0.01f);
-
-                nk_layout_row_dynamic(ctx, 30, 1);
-                nk_label(ctx, "background color", NK_TEXT_LEFT);
-                nk_layout_row_dynamic(ctx, 25, 1);
-
-                struct nk_colorf old_bg = bg;
-
-                // complex color combobox
-                if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(200, 400))) 
-                {
-                    enum color_mode { COL_RGB, COL_HSV };
-                    static int col_mode = COL_RGB;
-
-                    nk_layout_row_dynamic(ctx, 120, 1);
-                    bg = nk_color_picker(ctx, bg, NK_RGBA);
-
-                    nk_layout_row_dynamic(ctx, 25, 2);
-                    col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                    col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    if (col_mode == COL_RGB) {
-                        bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-                        bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-                        bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-                        bg.a = nk_propertyf(ctx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
-                    }
-                    else {
-                        float hsva[4];
-                        nk_colorf_hsva_fv(hsva, bg);
-                        hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                        hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                        hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                        hsva[3] = nk_propertyf(ctx, "#A:", 0, hsva[3], 1.0f, 0.01f, 0.05f);
-                        bg = nk_hsva_colorfv(hsva);
-                    }
-                    nk_combo_end(ctx);
-
-                    // check if the color was changed
-                    if (bg.r != old_bg.r || bg.g != old_bg.g || bg.b != old_bg.b || bg.a != old_bg.a)
-                    {
-                        glClearColor(bg.r, bg.g, bg.b, bg.a);
-                    }
-                }
-
-                nk_tree_pop(ctx);
-            }
-
             if (nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
             {
-                f32* persp = NULL; f32* near_p = NULL; f32* far_p = NULL;
-                get_renderer_properties(persp, near_p, far_p);
+                renderer_properties prop = get_renderer_properties();
 
                 if (nk_tree_push(ctx, NK_TREE_NODE, "Position", NK_MINIMIZED))
                 {
@@ -1597,11 +1691,11 @@ void properties_window(int ent_len)
                 }
 
 
-                // nk_property_float(ctx, "Perspective:", 1.0f, persp, 200.0f, 0.1f, 0.2f);
-                // 
-                // nk_property_float(ctx, "Near Plane:", 0.0001f, near_p, 10.0f, 0.1f, 0.01f);
-                // 
-                // nk_property_float(ctx, "Far Plane:", 1.0f, far_p, 500.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Perspective:", 1.0f, prop.perspective, 200.0f, 0.1f, 0.2f);
+                
+                nk_property_float(ctx, "Near Plane:", 0.0001f, prop.near_plane, 10.0f, 0.1f, 0.01f);
+                
+                nk_property_float(ctx, "Far Plane:", 1.0f, prop.far_plane, 500.0f, 0.1f, 0.2f);
 
                 nk_tree_pop(ctx);
             }
@@ -2021,24 +2115,67 @@ void console_window()
 
 void asset_browser_window()
 {
-    if (nk_begin(ctx, "Asset Browser", nk_rect(1600, 700, 300, 300),
+    int x = 1600;
+    int y = 700;
+    int w = 300;
+    int h = 300;
+    if (nk_begin(ctx, "Asset Browser", nk_rect(x, y, w, h),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
     {
-        if (nk_tree_push(ctx, NK_TREE_NODE, "Grid", NK_MINIMIZED))
+       //  nk_layout_row_dynamic(ctx, (f32)h - 25.0f, 2);
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Images", NK_MINIMIZED))
         {
             int i = 0;
-            static int selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+            static nk_bool selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
             nk_layout_row_static(ctx, 50, 50, 4);
 
-            if (nk_selectable_label(ctx, "Image", NK_TEXT_CENTERED, &selected[i])) 
+            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i])) 
             {
-                selected[i] = selected[i] == 0 ? 1 : 0;
+                selected[i] ^= 1;
+            }
+            i++;
+            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i]))
+            {
+                selected[i] ^= 1;
+            }
+            i++;
+            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i]))
+            {
+                selected[i] ^= 1;
+            }
+            i++;
+            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i]))
+            {
+                selected[i] ^= 1;
             }
             i++;
 
-            for (i = 0; i < 16; ++i) {
+            // for (i = 0; i < 16; ++i) {
+            //     if (nk_selectable_label(ctx, "Z", NK_TEXT_CENTERED, &selected[i])) {
+            //         int x = (i % 4), y = i / 4;
+            //         if (x > 0) selected[i - 1] ^= 1;
+            //         if (x < 3) selected[i + 1] ^= 1;
+            //         if (y > 0) selected[i - 4] ^= 1;
+            //         if (y < 3) selected[i + 4] ^= 1;
+            //     }
+            // }
+            nk_tree_pop(ctx);
+        }
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Meshes", NK_MINIMIZED))
+        {
+            int i = 0;
+            static nk_bool selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+            nk_layout_row_static(ctx, 50, 50, 4);
 
+            for (i = 0; i < 4; ++i) {
+                if (nk_selectable_label(ctx, "Mesh", NK_TEXT_CENTERED, &selected[i])) {
+                    int x = (i % 4), y = i / 4;
+                    if (x > 0) selected[i - 1] ^= 1;
+                    if (x < 3) selected[i + 1] ^= 1;
+                    if (y > 0) selected[i - 4] ^= 1;
+                    if (y < 3) selected[i + 4] ^= 1;
+                }
             }
             nk_tree_pop(ctx);
         }

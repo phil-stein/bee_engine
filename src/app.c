@@ -280,7 +280,7 @@ void process_input(GLFWwindow* window)
 	// wireframe- / solid-mode switch on tab
 	if (is_key_pressed(KEY_Tab))
 	{
-		renderer_enable_wireframe(BEE_SWITCH);
+		renderer_enable_wireframe_mode(BEE_SWITCH);
 	}
 
 	// maximized- / minimized window switch on f11
