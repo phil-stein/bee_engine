@@ -66,7 +66,7 @@ void search_dir(const char* dir_path)
 				// printf("dir_path_cpy: '%s'\n", dir_path_cpy);
 				// printf("path:         '%s'\n---------------\n", t_path);
 
-				create_texture(t_path, dp->d_name);
+				log_texture(t_path, dp->d_name);
 			}
 
 			// construct new path from our base path
@@ -94,14 +94,27 @@ void assetm_cleanup()
 
 texture get_texture(const char* name)
 {
-	// texture t_ptr = hmget(textures, name);
-	// assert(t_ptr != NULL);
-	// return t_ptr;
+	int i = shget(textures, name);
+	if (i == NULL)
+	{
+		fprintf(stderr, "");
+	}
+	else if (i == 9999)
+	{
+		create_texture(name);
+	}
 	return tex[shget(textures, name)];
 }
 
-void create_texture(const char* path, const char* name)
+void log_texture(const char* path, const char* name)
 {
+	shput(textures, name, 9999);
+}
+
+void create_texture(const char* name)
+{
+	assert(1 == 0); // not yet working
+	const char* path = NULL; // log this and retrieve it here
 	texture t = texture_create_from_path(path, name);
 
 	shput(textures, name, tex_len);

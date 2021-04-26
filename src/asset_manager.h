@@ -14,6 +14,7 @@ void assetm_cleanup();
 
 texture get_texture(const char* name);
 
-void create_texture(const char* path, const char* name);
+void log_texture(const char* path, const char* name);
+void create_texture(const char* name);
 
 #endif

@@ -60,6 +60,9 @@
     <ClCompile Include="src\framebuffer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\native_script.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">
@@ -105,6 +108,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\framebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\native_script.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
