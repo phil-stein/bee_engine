@@ -8,7 +8,7 @@ func init()
 	var this = Entity();
 
 	// move it up a bit otherwise the sinewave makes it clip through the floor
-	this.move_y(2.0);
+	this.move_y(1.0);
 }
 
 // func update(delta)
@@ -21,7 +21,7 @@ func update()
 
 	// System.print(this.get_y());
 	var dist = Math.sin(game.get_total_secs() * 6);
-	this.move_y(dist * 0.1);
+	this.move_y(dist * delta * 2.0);
 }
 
 func cleanup()
