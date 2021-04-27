@@ -13,6 +13,7 @@
 #include "game_time.h"
 #include "file_handler.h"
 #include "asset_manager.h"
+#include "gravity_script.h"
 #include "renderer.h"
 #include "input.h"
 
@@ -69,26 +70,26 @@ void init()
 	texture crate_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_spec.png", "crate01_spec.png");
 
 	vec2 tile = { 1.0f, 1.0f };
-	material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile);
+	material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");
 
 	texture grass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_dif.png", "grass01_dif.png");
 	texture grass_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_spec.png", "grass01_spec.png");
 	// glm_vec2_scale(tile, 3, tile);
-	material mat_grass = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile);
+	material mat_grass = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_grass");
 
 	texture barrel_dif_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_dif.png", "barrel01_dif.png");
 	texture barrel_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_spec.png", "barrel01_spec.png");
-	material mat_barrel = make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile);
+	material mat_barrel = make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_barrel");
 
 	mesh m_cube = make_cube_mesh();
 
 	texture blank_texture = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\blank.png", "blank.png");
-	material mat_blank = make_material(shader, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile);
-	material mat_blank_unlit = make_material(shader_unlit, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile);
+	material mat_blank = make_material(shader, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile, "MAT_blank");
+	material mat_blank_unlit = make_material(shader_unlit, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile, "MAT_blank_unlit");
 	
 
 	texture glass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\window.png", "window.png");
-	material mat_glass = make_material(shader, glass_dif_tex, blank_texture, BEE_TRUE, 1.0f, tile);
+	material mat_glass = make_material(shader, glass_dif_tex, blank_texture, BEE_TRUE, 1.0f, tile, "MAT_glass");
 	
 	mesh m_lightbulb  = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\lightbulb.obj");
 	mesh m_flashlight = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\flashlight.obj");
@@ -140,7 +141,10 @@ void init()
 
 	mesh m_bunny = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\bunny.obj"); //crate01.obj, hero_defense_char.obj
 	vec3 pos06 = { 1.5f, -0.5f, -1.5f };
-	add_entity(pos06, rot01, scale, &m_bunny, &mat_blank, NULL, "bunny");
+	int ent_bunny = add_entity(pos06, rot01, scale, &m_bunny, &mat_blank, NULL, "bunny");
+
+	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\test_script.gravity");
+	entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave.gravity");
 
 	mesh m_barrel = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\misc\\post_apocalyptic_barrel.obj");
 	vec3 pos07 = { -1.5f, 0.0f, -1.5f };
@@ -317,6 +321,7 @@ void process_input(GLFWwindow* window)
 
 		fly_enabled = !fly_enabled;
 	}
+
 }
 
 // rotates the camera accoding to the mouse-movement

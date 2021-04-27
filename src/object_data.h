@@ -5,7 +5,7 @@
 #include "CGLM/cglm.h"
 
 #include "global.h"
-#include "native_script.h"
+#include "gravity_script.h"
 
 //
 // ---- assets ----
@@ -98,19 +98,19 @@ typedef struct
 	// --------------------
 
 	int scripts_len;
-	script* scripts;
+	gravity_script* scripts;
 
 
 }entity;
 
 // creates a material struct
-material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile);
+material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name);
 // creates a material struct, tints the material
-material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint);
+material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
 
 // creates a mesh struct 
 // dont do this manually
-mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len); // , u32* indices[]
+mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name);
 mesh make_plane_mesh();
 mesh make_cube_mesh();
 mesh make_grid_mesh(int x_verts, int z_verts);
@@ -134,12 +134,11 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 // void draw_model(model* _model, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
 // updates all attached components
 void update_entity(entity* ent);
+// void entity_add_script(entity* ent,const char* path);
 
 void free_material(material* mat);
 // free the buffer objects of the mesh
 void free_mesh(mesh* _mesh);
-// free the mesh and material
-// void free_model(model* _model);
 // free all attached data
 void free_entity(entity* ent);
 

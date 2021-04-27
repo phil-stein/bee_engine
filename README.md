@@ -52,6 +52,8 @@ bee engine is supposed to be a lightweight game-framework coupled with an editor
 
 - [ ] physics engine
 
+- [ ] scripting language (gravity / wren / lua)
+
 - [ ] advanced 3d
 	- [ ] shadows
 	- [ ] normals 

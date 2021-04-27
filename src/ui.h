@@ -26,12 +26,14 @@ typedef struct
 	f32* scale_z;
 
 	// mesh
+	char* mesh_name;
 	u32* verts_len;
 	u32* indices_len;
 	enum bee_bool* mesh_indexed;
 	enum bee_bool* mesh_visible;
 
 	// material
+	char* material_name;
 	f32* shininess;
 	f32* tile_x;
 	f32* tile_y;
@@ -43,6 +45,7 @@ typedef struct
 	char* dif_tex_name;
 	char* spec_tex_name;
 	bee_bool* is_transparent;
+
 
 	// light
 	enum light_type* _light_type;
@@ -73,6 +76,11 @@ typedef struct
 	// spot light
 	f32* cut_off;
 	f32* outer_cut_off;
+
+	// -----------------
+
+	int* scripts_len;
+	gravity_script* scripts;
 
 
 }entity_properties;
