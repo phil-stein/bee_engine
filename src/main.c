@@ -58,6 +58,7 @@ int main(void)
 		delta_t = currentFrame - last_frame;
 		last_frame = currentFrame;
 		set_delta_time(delta_t);
+		set_total_secs(currentFrame);
 
 
 		// call the update function in the apllication

@@ -478,7 +478,7 @@ void renderer_cleanup()
 }
 
 // add an entity
-void add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name)
+int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name)
 {
 	entities_len++;
 	arrput(entities, make_entity(pos, rot, scale, _mesh, _material, _light, name));
@@ -505,7 +505,7 @@ void add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material
 		}
 	}
 
-	// printf("sizeof entities: %d, sizeof struct entity: %d, entities_len: %d\n", (int)entities_size, (int)sizeof(struct entity), entities_len);
+	return entities_len -1;
 }
 void add_entity_cube()
 {
@@ -516,9 +516,25 @@ void add_entity_cube()
 	add_entity(pos, rot, scale, &m, &entities[0]._material, NULL, "cube");
 }
 
+void entity_add_script(int entity_index, const char* path)
+{
+	gravity_script script = make_script(path);
+	script.entity_index = entity_index;
+	arrput(entities[entity_index].scripts, script);
+	entities[entity_index].scripts_len++;
+}
+
 void get_entity_len(int* _entities_len)
 {
 	*_entities_len = entities_len;
+}
+entity* get_entites()
+{
+	return entities;
+}
+entity* get_entity(int i)
+{
+	return &entities[i];
 }
 
 entity_properties get_entity_properties(int index)
@@ -545,12 +561,14 @@ entity_properties get_entity_properties(int index)
 	if (entities[index].has_model == BEE_TRUE)
 	{
 		// mesh
+		prop.mesh_name	  =  entities[index]._mesh.name;
 		prop.verts_len    = &entities[index]._mesh.vertices_len;
 		prop.indices_len  = &entities[index]._mesh.indices_len;
 		prop.mesh_indexed = &entities[index]._mesh.indexed;
 		prop.mesh_visible = &entities[index]._mesh.visible;
 
 		// material
+		prop.material_name	=  entities[index]._material.name;
 		prop.shininess		= &entities[index]._material.shininess;
 		prop.tile_x			= &entities[index]._material.tile[0];
 		prop.tile_y			= &entities[index]._material.tile[1];
@@ -595,6 +613,10 @@ entity_properties get_entity_properties(int index)
 			prop.outer_cut_off	= &entities[index]._light.outer_cut_off;
 		}
 	}
+
+
+	prop.scripts_len = &entities[index].scripts_len;
+	prop.scripts     =  entities[index].scripts;
 
 	return prop;
 }

@@ -1,0 +1,21 @@
+extern var Entity;
+extern var Game;
+
+func init()
+{
+	var delta = _args[0];
+	var this = Entity();
+	var game = Game();
+}
+
+func update()
+{
+ 	var delta = _args[0];
+	var this = Entity();
+	var game = Game();
+}
+
+func cleanup()
+{
+}
+

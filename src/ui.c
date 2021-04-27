@@ -15,6 +15,7 @@
 #include "nuklear/nuklear.h"
 #include "nuklear/nuklear_glfw_gl3.h"
 
+#include "str_util.h"
 #include "renderer.h"
 #include "window.h"
 #include "camera.h"
@@ -1348,7 +1349,7 @@ void properties_window(int ent_len)
         static float property_pos_y = 0.0f;
         static float property_pos_z = 0.0f;
         static const float ratio[] = { 120, 150 };
-        char buffer[20];
+        char buffer[50];
 
 
         // ---- theme menu ----
@@ -1820,6 +1821,12 @@ void properties_window(int ent_len)
 
                 if (*prop.has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Mesh", NK_MINIMIZED))
                 {
+
+                    nk_layout_row_dynamic(ctx, 25, 2);
+                    nk_label(ctx, "Name", NK_TEXT_LEFT);
+                    nk_label(ctx, prop.mesh_name, NK_TEXT_RIGHT);
+
+                    nk_layout_row_dynamic(ctx, 25, 1);
                     nk_checkbox_label(ctx, " visible", prop.mesh_visible);
 
                     nk_layout_row_dynamic(ctx, 25, 2);
@@ -1841,7 +1848,14 @@ void properties_window(int ent_len)
             
                 if (*prop.has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Material", NK_MINIMIZED))
                 {
+                    nk_layout_row_dynamic(ctx, 25, 2);
+                    nk_label(ctx, "Name", NK_TEXT_LEFT);
+                    nk_label(ctx, prop.material_name, NK_TEXT_RIGHT);
+
+
+                    nk_layout_row_dynamic(ctx, 25, 1);
                     nk_property_float(ctx, "Shininess", 0.0f, prop.shininess, 1.0f, 0.1f, 0.002f);
+                    nk_layout_row_dynamic(ctx, 25, 2);
                     nk_property_float(ctx, "Tile X", 0.0f, prop.tile_x, 100.0f, 0.1f, 0.1f);
                     nk_property_float(ctx, "Tile Y", 0.0f, prop.tile_y, 100.0f, 0.1f, 0.1f);
             
@@ -1891,18 +1905,12 @@ void properties_window(int ent_len)
 
                         // @TODO: draw the texture here
 
-                        //nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, "Diffuse Texture: ", NK_TEXT_LEFT);
-                        // nk_layout_row_dynamic(ctx, 35, 1);
-                        // nk_label_wrap(ctx, prop.dif_tex_name);
                         nk_label(ctx, prop.dif_tex_name, NK_TEXT_RIGHT);
 
                         // @TODO: draw the texture here
 
-                        // nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, "Specular Texture: ", NK_TEXT_LEFT);
-                        // nk_layout_row_dynamic(ctx, 35, 1);
-                        // nk_label_wrap(ctx, prop.spec_tex_name);
                         nk_label(ctx, prop.spec_tex_name, NK_TEXT_RIGHT);
 
                         nk_tree_pop(ctx);
@@ -2075,6 +2083,81 @@ void properties_window(int ent_len)
                     nk_tree_pop(ctx);
                 }
 
+
+                // scritps always the last element
+                sprintf(buffer, "Scripts - %d", *prop.scripts_len);
+                if (*prop.scripts_len > 0 && nk_tree_push(ctx, NK_TREE_TAB, *prop.scripts_len == 1 ? "Script" : buffer , NK_MINIMIZED))
+                {
+                    for (int i = 0; i < *prop.scripts_len; ++i)
+                    {
+                        static int popup_active;
+
+                        char* name = str_find_last_of(prop.scripts[i].path, "\\");
+                        if (name == NULL)
+                        {
+                            name = str_find_last_of(prop.scripts[i].path, "/");
+                        }
+                        assert(name != NULL);
+                        name = str_trunc(name, 1); // cut off the last "\"
+                        assert(name != NULL);
+
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Name", NK_TEXT_LEFT);
+                        nk_label(ctx, name, NK_TEXT_RIGHT);
+
+
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        if (nk_button_label(ctx, "Source Code"))
+                        { popup_active = 1; }
+
+                        if (popup_active)
+                        {
+                            sprintf(buffer, "Source Code - \"%s\"", name);
+                            // static struct nk_rect s = ;
+                            if (nk_popup_begin(ctx, NK_POPUP_DYNAMIC, buffer, NK_WINDOW_CLOSABLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE, (struct nk_rect){ 600, 200, 500, 600 }))
+                            {
+                                if (prop.scripts[i].source != NULL)
+                                {
+                                    int line_index = 0;
+                                    nk_layout_row_dynamic(ctx, 25, 1);
+                                    for (int c = 0; c < strlen(prop.scripts[i].source); ++c)
+                                    {
+                                        if (isspace(prop.scripts[i].source[c]) && prop.scripts[i].source[c] != '\n')
+                                        {
+                                            //prop.scripts[i].source[c] = ' ';
+                                        }
+                                        else if (prop.scripts[i].source[c] == '\n')
+                                        {
+                                            //prop.scripts[i].source[c] = ' ';
+
+                                            char* line = str_trunc(prop.scripts[i].source, -1 * (strlen(prop.scripts[i].source) - c));
+                                            if (line_index != 0)
+                                            {
+                                                line = str_trunc(line, line_index);
+                                            }
+                                            line_index = c;
+                                            nk_label(ctx, line, NK_TEXT_LEFT); 
+                                        }
+                                    }
+                                }
+
+                                if (nk_button_label(ctx, "Close")) {
+                                    popup_active = 0;
+                                    nk_popup_close(ctx);
+                                }
+                                nk_popup_end(ctx);
+                            }
+                            else popup_active = nk_false;
+                        }
+
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        if (nk_button_label(ctx, prop.scripts[i].active == BEE_TRUE ? "Pause" : "Continue"))
+                        {
+                            prop.scripts[i].active = !prop.scripts[i].active;
+                        }
+                    }
+                    nk_tree_pop(ctx);
+                }
             }
             nk_tree_pop(ctx);
         }

@@ -29,8 +29,9 @@ void renderer_cleanup();
 
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
 
-
-void add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name);
+// return the index to the entity
+int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name);
+void entity_add_script(int entity_index, const char* path);
 
 void add_entity_cube();
 
@@ -39,6 +40,9 @@ entity_properties get_entity_properties(int index);
 renderer_properties get_renderer_properties();
 
 void get_entity_len(int* _entities_len);
+
+entity* get_entites();
+entity* get_entity(int i);
 
 
 void renderer_enable_wireframe_mode(bee_bool act);

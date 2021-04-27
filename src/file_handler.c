@@ -20,7 +20,7 @@
 #include "str_util.h"
 
 
-char* read_text_file(const char* file_path)
+char* read_text_file(const char* file_path, int* size)
 {
     FILE* f;
     char* text;
@@ -257,13 +257,14 @@ mesh load_mesh(char* file_path)
         name = str_find_last_of(file_path, "/");
     }
     assert(name != NULL);
+    name = str_trunc(name, 1); // cut off the last "\"
+    assert(name != NULL);
     // printf("mesh name: '%s'\n", name);
 
     // struct aiMesh* mesh = scene->mMeshes[scene->mRootNode->mChildren[0]->mMeshes[0]]; // hard-coded the first mesh
     // return process_mesh(mesh, scene); // meshes.push_back()
     mesh m;
-    m.name = name;
-    process_node(scene->mRootNode, scene, &m);
+    process_node(scene->mRootNode, scene, &m, name);
     aiReleaseImport(scene);
     //printf("meshes loaded: %d\n", (int)arrlen(m));
     //assert(arrlen(m) >= 1);
@@ -272,24 +273,24 @@ mesh load_mesh(char* file_path)
     return m; //_mesh
 }
 
-void process_node(struct aiNode* node, const struct aiScene* scene, mesh* m)
+void process_node(struct aiNode* node, const struct aiScene* scene, mesh* m, const char* name)
 {
     // process all the node's meshes (if any)
     // assert(node->mNumMeshes <= 1);
     for (u32 i = 0; i < node->mNumMeshes; i++)
     {
         struct aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        *m = process_mesh(mesh, scene); // meshes.push_back()
+        *m = process_mesh(mesh, scene, name); // meshes.push_back()
     }
     // then do the same for each of its children
     // assert(node->mNumChildren <= 0);
     for (u32 i = 0; i < node->mNumChildren; i++)
     {
-        process_node(node->mChildren[i], scene, m);
+        process_node(node->mChildren[i], scene, m, name);
     }
 }
 
-mesh process_mesh(struct aiMesh* m_assimp, struct aiScene* scene)
+mesh process_mesh(struct aiMesh* m_assimp, struct aiScene* scene, const char* name)
 {
     static int calls = 0; calls++;
     // printf("process_mesh called: %d\n", calls);
@@ -359,7 +360,7 @@ mesh process_mesh(struct aiMesh* m_assimp, struct aiScene* scene)
         }
     }
 
-    mesh m = make_mesh(verts, verts_len, indices, indices_len);
+    mesh m = make_mesh(verts, verts_len, indices, indices_len, name);
 
     arrfree(verts);
     arrfree(indices);

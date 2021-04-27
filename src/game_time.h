@@ -7,5 +7,8 @@
 f32 get_delta_time();
 void set_delta_time(f32 delta_t);
 
+f32 get_total_secs();
+void set_total_secs(f32 secs);
+
 #endif
 

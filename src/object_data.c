@@ -3,6 +3,7 @@
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION is defined in renderer.c
 
 #include "object_data.h"
+#include "file_handler.h"
 #include "shader.h"
 #include "camera.h"
 #include "window.h"
@@ -15,9 +16,10 @@
 
 // ---- material ----
 
-material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile)
+material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name)
 {
 	material mat;
+	mat.name = name;
 	mat.shader = shader;
 	mat.dif_tex = dif_tex;
 	mat.spec_tex = spec_tex;
@@ -30,9 +32,9 @@ material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool i
 
 	return mat;
 }
-material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint)
+material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
 {
-	material mat = make_material(shader, dif_tex, spec_tex, shininess, is_transparent, tile);
+	material mat = make_material(shader, dif_tex, spec_tex, shininess, is_transparent, tile, name);
 	glm_vec3_copy(tint, mat.tint);
 
 	return mat;
@@ -49,9 +51,10 @@ void free_material(material* mat)
 
 // ---- mesh ----
 
-mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len) // , u32* indices[]
+mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name) // , u32* indices[]
 {
 	mesh m;
+	m.name = name;
 	m.visible = BEE_TRUE;
 	// m.vertices = NULL;
 	m.vertices_len = vertices_len;
@@ -150,7 +153,7 @@ mesh make_plane_mesh()
 	int vert_len = sizeof(verts) / sizeof(verts[0]);
 	int ind_len = sizeof(indices) / sizeof(indices[0]);
 	printf("vert_len: %d, ind_len: %d\n", vert_len, ind_len);
-	return make_mesh(verts, vert_len, indices, ind_len);
+	return make_mesh(verts, vert_len, indices, ind_len, "plane");
 }
 
 mesh make_cube_mesh()
@@ -201,7 +204,7 @@ mesh make_cube_mesh()
 	};
 	int vert_len = sizeof(vertices) / sizeof(vertices[0]);
 
-	return make_mesh(vertices, vert_len, NULL, 0);
+	return make_mesh(vertices, vert_len, NULL, 0, "cube");
 }
 
 mesh make_grid_mesh(int x_verts, int z_verts)
@@ -268,7 +271,7 @@ mesh make_grid_mesh(int x_verts, int z_verts)
 		w += 2;
 	}
 
-	mesh m = make_mesh(verts, verts_len, tris, tris_len);
+	mesh m = make_mesh(verts, verts_len, tris, tris_len, "grid");
 	free(verts);
 	free(tris);
 	return m;
@@ -359,18 +362,10 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 		ent._light = *_light;
 	}
 
+	ent.scripts_len = 0;
 	ent.scripts = NULL; // needs to be null-pointer for stb_ds
 
 	return ent;
-}
-
-void entity_add_script(entity* ent, script _script)
-{
-	// register the update, cleanup functions
-	arrput(ent->scripts, _script);
-	ent->scripts_len++;
-
-	(*_script.init);  // call init function
 }
 
 // for script, collider, etc. components
@@ -385,8 +380,24 @@ void update_entity(entity* ent)
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)
 	{
-		// call the registered update function
-		(* ent->scripts[i].update);
+		if (ent->scripts[i].active == BEE_FALSE)
+		{ continue; }
+
+		char* cpy = "";
+
+		// source not yet read
+		if (ent->scripts[i].source == NULL)
+		{
+			ent->scripts[i].source = read_text_file(ent->scripts[i].path);
+			//printf("read gravity source: \n%s\n", ent->scripts[i].source);
+			
+			gravity_run_init(&ent->scripts[i]);
+		}
+		else 
+		{
+			ent->scripts[i].source = read_text_file(ent->scripts[i].path);
+			gravity_run_update(&ent->scripts[i]);
+		}
 	}
 }
 
@@ -398,12 +409,13 @@ void free_entity(entity* ent)
 		free_material(&ent->_material);
 	}
 
-	// scripts
-	for (int i = 0; i < ent->scripts_len; ++i)
+	if (ent->scripts_len > 0)
 	{
-		// call the registered cleanup function
-		(*ent->scripts[i].cleanup);
+		// scripts
+		for (int i = 0; i < ent->scripts_len; ++i)
+		{
+			free_script(&ent->scripts[i]);
+		}
+		arrfree(ent->scripts);
 	}
-
-	arrfree(ent->scripts);
 }

@@ -1,0 +1,10 @@
+func main()
+{
+	System.print("print function");
+	return 42;
+}
+
+func init()
+{
+	System.print("init gravity function");
+}
