@@ -1,0 +1,41 @@
+extern var Entity;
+extern var Game;
+extern var Input;
+
+var global = 0;
+
+func init()
+{
+	System.print("called init: move arrows");
+}
+
+func update()
+{
+ 	// var delta = _args[0];
+	var this  = Entity();
+	var game  = Game();
+	var input = Input();
+	
+	var dist = 10 * game.get_delta_t();
+	if(input.get_key_ARROW_LEFT())
+	{
+		this.move_x(-dist);
+	}
+	if(input.get_key_ARROW_RIGHT())
+	{
+		this.move_x(dist);
+	}
+	if(input.get_key_ARROW_UP())
+	{
+		this.move_z(-dist);
+	}
+	if(input.get_key_ARROW_DOWN())
+	{
+		this.move_z(dist);
+	}
+}
+
+func cleanup()
+{
+	System.print("called cleanup");
+}

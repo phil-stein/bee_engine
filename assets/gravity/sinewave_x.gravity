@@ -1,0 +1,37 @@
+
+extern var Entity;
+extern var Game;
+
+var global = 0;
+
+func init()
+{
+	System.print("called init");
+	var this = Entity();
+
+	// move it up a bit otherwise the sinewave makes it clip through the floor
+	this.move_y(1.0);
+}
+
+// func update(delta)
+
+func update()
+{
+ 	// var delta = _args[0];
+	var this = Entity();
+	var game = Game();
+	
+	System.print("delta_t: " + game.get_delta_t());
+	// System.print("global_x: " + global);
+	global -= 1;
+
+	var dist = Math.sin(game.get_total_secs() * 6);
+	this.move_x(dist * game.get_delta_t() * 2.0);
+}
+
+func cleanup()
+{
+	System.print("called cleanup");
+}
+
+

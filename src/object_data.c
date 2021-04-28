@@ -383,19 +383,29 @@ void update_entity(entity* ent)
 		if (ent->scripts[i].active == BEE_FALSE)
 		{ continue; }
 
-		char* cpy = "";
-
 		// source not yet read
 		if (ent->scripts[i].source == NULL)
 		{
 			ent->scripts[i].source = read_text_file(ent->scripts[i].path);
-			//printf("read gravity source: \n%s\n", ent->scripts[i].source);
+			assert(ent->scripts[i].source != NULL);
+			printf("read gravity source: \n%s\n", ent->scripts[i].source);
 			
-			gravity_run_init(&ent->scripts[i]);
+			// @TODO: this needs to work to display the source code
+			// char* buffer = NULL;
+			// buffer = malloc(strlen(ent->scripts[i].source) -1);
+			// assert(buffer != NULL);
+			// memcpy(buffer, ent->scripts[i].source, strlen(ent->scripts[i].source) -1);
+			// buffer[strlen(ent->scripts[i].source)- 1] = '\0';
+			// printf("copied gravity source: \n%s\nEOF copied\n", buffer);
+
+
+			gravity_run_init(&ent->scripts[i], ent->scripts[i].source);
+
+			// free(buffer);
 		}
 		else 
 		{
-			ent->scripts[i].source = read_text_file(ent->scripts[i].path);
+			// ent->scripts[i].source = read_text_file(ent->scripts[i].path);
 			gravity_run_update(&ent->scripts[i]);
 		}
 	}

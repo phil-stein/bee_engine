@@ -3,17 +3,26 @@
 #include "CGLM/cglm.h"
 
 #include "game_time.h"
+#include "file_handler.h"
 #include "renderer.h"
+#include "input.h"
 
 
 gravity_script* cur_script;
-
+gravity_vm* vm;
+gravity_closure_t* closure;
 
 // a very simple report error callback function
 void report_error(gravity_vm* vm, error_type_t error_type, const char* message,
     error_desc_t error_desc, void* xdata) {
     printf("GRAVITY_ERROR: %s, line: %d, column: %d\n", message, error_desc.lineno, error_desc.colno);
     assert(0 == 1); // exit(1);
+}
+
+// for including files
+const char* load_file(const char* file, size_t* size, uint32_t* fileid, void* xdata, int* is_static)
+{
+
 }
 
 gravity_script make_script(char* path)
@@ -26,7 +35,7 @@ gravity_script make_script(char* path)
     script.entity_index = 0;
 
     script.closure = NULL;
-    script.update_closure = NULL;
+    script.update_closure_assigned = BEE_FALSE;
 
     return script;
 }
@@ -35,7 +44,8 @@ void free_script(gravity_script* script)
     // gets alloced by read_text_file()
     if (script->source != NULL)
     {
-        // free(script->source);
+        gravity_vm_free(script->vm);
+        gravity_core_free();
     }
 }
 
@@ -91,35 +101,36 @@ rtn_code gravity_run(char* source_code)
 }
 
 
-rtn_code gravity_run_init(gravity_script* script)
+rtn_code gravity_run_init(gravity_script* script, const char* src)
 {
     cur_script = script;
 
     // setup a delegate struct
-    gravity_delegate_t delegate = { .error_callback = report_error };
+    gravity_delegate_t delegate = { .error_callback = report_error};
 
     // allocate a new compiler
     gravity_compiler_t* compiler = gravity_compiler_create(&delegate);
 
     // compile Gravity source code into bytecode
-    script->closure = gravity_compiler_run(compiler, (const char*)script->source, strlen((const char*)script->source), 0, false, true);
+    script->closure = gravity_compiler_run(compiler, src, strlen(src), 0, false, true);
 
     // allocate a new Gravity VM
-    gravity_vm* vm = gravity_vm_new(&delegate);
-    setup_entity_class(vm);
-    setup_game_class(vm);
+    script->vm = gravity_vm_new(&delegate);
+    setup_entity_class(script->vm);
+    setup_game_class(script->vm);
+    setup_input_class(script->vm);
 
     // transfer memory from the compiler (front-end) to the VM (back-end)
-    gravity_compiler_transfer(compiler, vm);
+    gravity_compiler_transfer(compiler, script->vm);
 
     // once the memory has been transferred, you can get rid of the front-end
     gravity_compiler_free(compiler);
 
     // load closure into VM
-    gravity_vm_loadclosure(vm, script->closure);
+    gravity_vm_loadclosure(script->vm, script->closure);
 
     // lookup a reference to the mul closure into the Gravity VM
-    gravity_value_t init_func = gravity_vm_getvalue(vm, "init", (uint32_t)strlen("init"));
+    gravity_value_t init_func = gravity_vm_getvalue(script->vm, "init", (uint32_t)strlen("init"));
     if (!VALUE_ISA_CLOSURE(init_func)) 
     {
         printf("Unable to find init() function in Gravity VM.\n");
@@ -130,11 +141,13 @@ rtn_code gravity_run_init(gravity_script* script)
     gravity_closure_t* init_closure = VALUE_AS_CLOSURE(init_func);
 
     // execute init closure
-    gravity_vm_runclosure(vm, init_closure, VALUE_FROM_NULL, NULL, 0);
+    gravity_vm_runclosure(script->vm, init_closure, VALUE_FROM_NULL, NULL, 0);
+    
 
+    script->closure = init_closure;
     // free VM and core libraries (implicitly allocated by the VM)
-    gravity_vm_free(vm);
-    gravity_core_free();
+    // gravity_vm_free(vm);
+    // gravity_core_free();
 
     return BEE_OK;
 }
@@ -142,52 +155,30 @@ rtn_code gravity_run_init(gravity_script* script)
 rtn_code gravity_run_update(gravity_script* script)
 {
     cur_script = script;
-
-    // setup a delegate struct
-    gravity_delegate_t delegate = { .error_callback = report_error };
-
-    // allocate a new compiler
-    gravity_compiler_t* compiler = gravity_compiler_create(&delegate);
-
-    // compile Gravity source code into bytecode
-    gravity_closure_t* closure = gravity_compiler_run(compiler, (const char*)script->source, strlen((const char*)script->source), 0, 1, 1);
-
-    // allocate a new Gravity VM
-    gravity_vm* vm = gravity_vm_new(&delegate);
-    setup_entity_class(vm);
-    setup_game_class(vm);
-
-    // transfer memory from the compiler (front-end) to the VM (back-end)
-    gravity_compiler_transfer(compiler, vm);
-
-    // once the memory has been transferred, you can get rid of the front-end
-    gravity_compiler_free(compiler);
- 
+    
     // load closure into VM
-    gravity_vm_loadclosure(vm, closure);
+    gravity_vm_loadclosure(script->vm, script->closure);
 
-
-    // lookup a reference to the update closure into the Gravity VM
-    gravity_value_t update_func = gravity_vm_getvalue(vm, "update", (uint32_t)strlen("update"));
-    if (!VALUE_ISA_CLOSURE(update_func)) 
+    if (!script->update_closure_assigned)
     {
-        printf("Unable to find update() function in Gravity VM.\n");
-        return BEE_ERROR;
+        // lookup a reference to the update closure into the Gravity VM
+        gravity_value_t update_func = gravity_vm_getvalue(script->vm, "update", (uint32_t)strlen("update"));
+        if (!VALUE_ISA_CLOSURE(update_func))
+        {
+            printf("Unable to find update() function in Gravity VM.\n");
+            assert(0 == 1);
+            return BEE_ERROR;
+        }
+        // convert function to closure
+        script->closure = VALUE_AS_CLOSURE(update_func);
+        script->update_closure_assigned = BEE_TRUE;
     }
-    // convert function to closure
-    gravity_closure_t* update_closure = VALUE_AS_CLOSURE(update_func);
-
-    // script->update_closure = update_closure;
 
     // prepare parameters
-    gravity_value_t delta_t = VALUE_FROM_FLOAT(get_delta_time());
+    // gravity_value_t delta_t = VALUE_FROM_FLOAT(get_delta_time());
 
     // execute init closure
-    gravity_vm_runclosure(vm, update_closure, VALUE_FROM_NULL, &delta_t, 1);
-
-    // free VM and core libraries (implicitly allocated by the VM)
-    gravity_vm_free(vm);
-    gravity_core_free();
+    gravity_vm_runclosure(script->vm, script->closure, VALUE_FROM_NULL, NULL, 0); // &delta_t, 1
 
     return BEE_OK;
 }
@@ -363,6 +354,7 @@ void setup_game_class(gravity_vm* vm)
 
     // allocate and bind bar closure to the newly created class
     gravity_class_bind(c, "get_total_secs", NEW_CLOSURE_VALUE(get_game_total_sec));
+    gravity_class_bind(c, "get_delta_t", NEW_CLOSURE_VALUE(get_game_delta_t));
     
     // register class c inside VM
     gravity_vm_setvalue(vm, "Game", VALUE_FROM_OBJECT(c));
@@ -376,3 +368,81 @@ static bee_bool get_game_total_sec(gravity_vm* vm, gravity_value_t* args, uint16
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(get_total_secs()), rindex);
 }
+static bee_bool get_game_delta_t(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    assert(nargs == 1);
+
+    // SKIPPED: check that both v1 and v2 are int numbers
+    RETURN_VALUE(VALUE_FROM_FLOAT(get_delta_time()), rindex);
+}
+
+
+void setup_input_class(gravity_vm* vm)
+{
+    // create a new Foo class
+    gravity_class_t* c = gravity_class_new_pair(vm, "Input", NULL, 0, 0);
+
+    // allocate and bind bar closure to the newly created class
+    gravity_class_bind(c, "get_key_W", NEW_CLOSURE_VALUE(get_key_W));
+    gravity_class_bind(c, "get_key_A", NEW_CLOSURE_VALUE(get_key_A));
+    gravity_class_bind(c, "get_key_S", NEW_CLOSURE_VALUE(get_key_S));
+    gravity_class_bind(c, "get_key_D", NEW_CLOSURE_VALUE(get_key_D));
+    gravity_class_bind(c, "get_key_ARROW_LEFT", NEW_CLOSURE_VALUE(get_key_ARROW_LEFT));
+    gravity_class_bind(c, "get_key_ARROW_RIGHT", NEW_CLOSURE_VALUE(get_key_ARROW_RIGHT));
+    gravity_class_bind(c, "get_key_ARROW_UP", NEW_CLOSURE_VALUE(get_key_ARROW_UP));
+    gravity_class_bind(c, "get_key_ARROW_DOWN", NEW_CLOSURE_VALUE(get_key_ARROW_DOWN));
+    gravity_class_bind(c, "get_key_SPACE", NEW_CLOSURE_VALUE(get_key_SPACE));
+
+
+    // register class c inside VM
+    gravity_vm_setvalue(vm, "Input", VALUE_FROM_OBJECT(c));
+}
+
+static bee_bool get_key_W(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_W)), rindex);
+}
+static bee_bool get_key_A(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_A)), rindex);
+}
+static bee_bool get_key_S(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_S)), rindex);
+}
+static bee_bool get_key_D(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_D)), rindex);
+}
+static bee_bool get_key_ARROW_LEFT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftArrow)), rindex);
+}
+static bee_bool get_key_ARROW_RIGHT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_RightArrow)), rindex);
+}
+static bee_bool get_key_ARROW_UP(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_UpArrow)), rindex);
+}
+static bee_bool get_key_ARROW_DOWN(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_DownArrow)), rindex);
+}
+static bee_bool get_key_SPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    assert(nargs == 1);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Space)), rindex);
+}
+
+

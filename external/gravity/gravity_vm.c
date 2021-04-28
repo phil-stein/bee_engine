@@ -1821,9 +1821,9 @@ void gravity_vm_reset (gravity_vm *vm) {
 // MARK: - User -
 
 gravity_closure_t *gravity_vm_getclosure (gravity_vm *vm) {
-    if (!vm || !vm->fiber) return NULL;
-    if (!vm->fiber->nframes) return NULL;
-    if (vm->aborted) return NULL;
+    // if (!vm || !vm->fiber) return NULL;
+    // if (!vm->fiber->nframes) return NULL;
+    // if (vm->aborted) return NULL;
 
     gravity_callframe_t *frame = &(vm->fiber->frames[vm->fiber->nframes-1]);
     return frame->closure;

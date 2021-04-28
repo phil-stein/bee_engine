@@ -137,21 +137,22 @@ void init()
 	vec3 pos05 = { 0.0f, 0.0f, 0.0f };
 	vec3 scale02;
 	glm_vec3_scale(scale, 0.5f, scale02);
-	add_entity(pos05, rot01, scale02, &m_crate, &mat_crate, NULL, "crate");
+	int ent_crate = add_entity(pos05, rot01, scale02, &m_crate, &mat_crate, NULL, "crate");
+	entity_add_script(ent_crate, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\move_arrows.gravity");
 
 	mesh m_bunny = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\bunny.obj"); //crate01.obj, hero_defense_char.obj
 	vec3 pos06 = { 1.5f, -0.5f, -1.5f };
 	int ent_bunny = add_entity(pos06, rot01, scale, &m_bunny, &mat_blank, NULL, "bunny");
-
-	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\test_script.gravity");
-	entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave.gravity");
+	entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_y.gravity");
+	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
 
 	mesh m_barrel = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\misc\\post_apocalyptic_barrel.obj");
 	vec3 pos07 = { -1.5f, 0.0f, -1.5f };
 	vec3 scale03;
 	glm_vec3_scale(scale, 0.5f, scale03);
-	add_entity(pos07, rot01, scale03, &m_barrel, &mat_barrel, NULL, "barrel");
+	int ent_barrel = add_entity(pos07, rot01, scale03, &m_barrel, &mat_barrel, NULL, "barrel");
 	
+	entity_add_script(ent_barrel, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
 	
 	// grid
 	// mesh m_grid = make_grid_mesh(10, 10);
