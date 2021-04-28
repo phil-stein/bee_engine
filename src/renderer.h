@@ -32,6 +32,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 // return the index to the entity
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name);
 void entity_add_script(int entity_index, const char* path);
+void entity_remove_script(int entity_index, int script_index);
 
 void add_entity_cube();
 

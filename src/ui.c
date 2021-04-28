@@ -2155,10 +2155,76 @@ void properties_window(int ent_len)
                         {
                             prop.scripts[i].active = !prop.scripts[i].active;
                         }
+
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        if (nk_button_label(ctx, "Remove"))
+                        {
+                            entity_remove_script(selected_entity, i);
+                        }
+
                     }
                     nk_tree_pop(ctx);
+                    
                 }
-            }
+                
+                // spacing
+                nk_layout_row_static(ctx, 5, 10, 1);
+                nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
+                static int attach_popup_active;
+                nk_layout_row_dynamic(ctx, 25, 1);
+                if (nk_button_label(ctx, "Attach Script"))
+                {
+                    attach_popup_active = 1;
+                }
+
+                if (attach_popup_active)
+                {
+                    // static struct nk_rect s = ;
+                    if (nk_popup_begin(ctx, NK_POPUP_DYNAMIC, "Attach Script", NK_WINDOW_CLOSABLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE, (struct nk_rect) { 600, 200, 500, 600 }))
+                    {
+                        static char text[64];
+                        static int text_len;
+                        char path_buffer[128];
+
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Name", NK_TEXT_LEFT);
+                        nk_edit_string(ctx, NK_EDIT_SIMPLE, &text, &text_len, 64, nk_filter_default);
+
+                        sprintf(path_buffer, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\%s.gravity\0", strlen(text) == 0 ? "[NAME]" : text);
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, "Path", NK_TEXT_LEFT);
+                        nk_label(ctx, path_buffer, NK_TEXT_LEFT);
+
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        if (nk_button_label(ctx, "Attach"))
+                        {
+                            // @BUGG: doesnt work
+                            printf("path: %s\n", &path_buffer[0]);
+
+                            char* buf = NULL;
+                            buf = malloc(strlen(path_buffer));
+                            assert(buf != NULL);
+                            memcpy(buf, path_buffer, strlen(path_buffer));
+                            //buf[strlen(path_buffer)- 1] = '\0';
+                            printf("copied path: %s\n", buf);
+
+                            entity_add_script(selected_entity, buf);
+
+                            // free(buf);
+                            attach_popup_active = 0;
+                            nk_popup_close(ctx);
+                        }
+                        if (nk_button_label(ctx, "Close"))
+                        {
+                            attach_popup_active = 0;
+                            nk_popup_close(ctx);
+                        }
+                        nk_popup_end(ctx);
+                    }
+                    else attach_popup_active = nk_false;
+                }
+}
             nk_tree_pop(ctx);
         }
 
@@ -2181,7 +2247,7 @@ void console_window()
         nk_layout_row_static(ctx, 180, 278, 1);
         nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
         
-        nk_layout_row(ctx, NK_STATIC, 25, 2, ratio);
+        nk_layout_row_dynamic(ctx, 25, 2);
         active = nk_edit_string(ctx, NK_EDIT_FIELD | NK_EDIT_SIG_ENTER, text[7], &text_len[7], 64, nk_filter_ascii);
         if (nk_button_label(ctx, "Submit") ||
             (active & NK_EDIT_COMMITED))

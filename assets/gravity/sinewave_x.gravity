@@ -21,7 +21,7 @@ func update()
 	var this = Entity();
 	var game = Game();
 	
-	System.print("delta_t: " + game.get_delta_t());
+	// System.print("delta_t: " + game.get_delta_t());
 	// System.print("global_x: " + global);
 	global -= 1;
 

@@ -523,6 +523,12 @@ void entity_add_script(int entity_index, const char* path)
 	arrput(entities[entity_index].scripts, script);
 	entities[entity_index].scripts_len++;
 }
+void entity_remove_script(int entity_index, int script_index)
+{
+	free_script(&entities[entity_index].scripts[script_index]);
+	arrdel(entities[entity_index].scripts, script_index);
+	entities[entity_index].scripts_len--;
+}
 
 void get_entity_len(int* _entities_len)
 {

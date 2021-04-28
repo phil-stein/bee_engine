@@ -11,7 +11,6 @@ func init()
 
 func update()
 {
- 	// var delta = _args[0];
 	var this  = Entity();
 	var game  = Game();
 	var input = Input();
