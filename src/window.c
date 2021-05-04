@@ -65,6 +65,11 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 	return BEE_OK; // all good :)
 }
 
+void close_window()
+{
+	glfwSetWindowShouldClose(window, GLFW_TRUE);
+}
+
 void set_window_title(const char* title)
 {
 	glfwSetWindowTitle(window, title);

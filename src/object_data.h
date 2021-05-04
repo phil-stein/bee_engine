@@ -79,6 +79,7 @@ typedef struct
 {
 	char* name;
 
+	bee_bool has_trans;
 	vec3 pos;
 	vec3 rot;
 	vec3 scale;

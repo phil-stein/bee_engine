@@ -8,9 +8,10 @@
 typedef struct
 {
 	char* ent_name;
-	enum bee_bool* rotate_global;
-	enum bee_bool* has_model;
-	enum bee_bool* has_light;
+	bee_bool* rotate_global;
+	bee_bool* has_model;
+	bee_bool* has_light;
+	bee_bool* has_trans;
 
 	// transform
 	f32* pos_x;
@@ -100,6 +101,14 @@ void properties_window(int ent_len);
 void console_window();
 
 void asset_browser_window();
+
+void error_popup_window();
+
+void set_error_popup(char* msg);
+
+void source_code_window();
+
+void set_source_code_window(char* src);
 
 // themes
 enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };

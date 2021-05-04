@@ -153,25 +153,37 @@ void renderer_init()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
 	// ----------------------------------------------------------------------------------------------
 
+#ifdef EDITOR_ACT
 	modes_shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
 											"C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\modes.frag");
-
+#endif
+#ifndef EDITOR_ACT
+	// set opengl state, only once in build mode as we dont use nuklear
+	glEnable(GL_DEPTH_TEST); // enable the z-buffer
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND); // enable blending of transparent texture
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //set blending function: 1 - source_alpha, e.g. 0.6(60%) transparency -> 1 - 0.6 = 0.4(40%)
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+#endif
 }
 
 void renderer_update()
 {
 	// first pass
 	bind_framebuffer();
+	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
+#if EDITOR_ACT
 	// need to restore the opengl state after calling nuklear
 	glEnable(GL_DEPTH_TEST); // enable the z-buffer
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND); // enable blending of transparent texture
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //set blending function: 1 - source_alpha, e.g. 0.6(60%) transparency -> 1 - 0.6 = 0.4(40%)
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+#endif
 
-
+#ifdef EDITOR_ACT
 	if (wireframe_mode_enabled == BEE_FALSE)
 	{
 		// draw in solid-mode
@@ -183,6 +195,7 @@ void renderer_update()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	}
+#endif
 
 	// draw opaque objects
 	for (int i = 0; i < entities_len; ++i)
@@ -198,6 +211,7 @@ void renderer_update()
 		draw_mesh(&entities[i]._mesh, &entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
 	}
 
+	// sort transparent / translucent objects
 	vec3 cam_pos; get_camera_pos(&cam_pos);
 	for(int rpt = 0; rpt < BLEND_SORT_DEPTH; ++rpt)
 	{
@@ -217,21 +231,15 @@ void renderer_update()
 			}
 		}
 	}
-	// draw transparent objects
-	for (int n = 0; n < transparent_ents_len; ++n)
-	{
-		int i = transparent_ents[n];
-		draw_mesh(&entities[i]._mesh, &entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
-	}
 
-
-	// draw in solid-mode for skybox & fbo
+	// skybox -----------------------------------------------------------------
+#ifdef EDITOR_ACT
+	// draw in solid-mode for skybox
 	if (wireframe_mode_enabled == BEE_TRUE)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-
-	// skybox -----------------------------------------------------------------
+#endif
 	if (draw_skybox == BEE_TRUE)
 	{
 		// draw skybox as last
@@ -266,8 +274,31 @@ void renderer_update()
 	}
 	// ------------------------------------------------------------------------
 
+	// draw transparent objects -----------------------------------------------
+#ifdef EDITOR_ACT
+
+	// change back after skybox
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+#endif
+	// doing this after the skyboy so the skybox can be seen through the transparent objects
+	for (int n = 0; n < transparent_ents_len; ++n)
+	{
+		int i = transparent_ents[n];
+		draw_mesh(&entities[i]._mesh, &entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+	}
+	// ------------------------------------------------------------------------
 
 	// framebuffer ------------------------------------------------------------
+#ifdef EDITOR_ACT
+	// draw in solid-mode for fbo
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+#endif
 
 	// second pass
 	unbind_framebuffer();
@@ -333,6 +364,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	int w, h; get_window_size(&w, &h);
 	glm_perspective(deg_pers, ((float)w / (float)h), near_plane, far_plane, proj);
 
+#ifdef EDITOR_ACT
 	if (wireframe_mode_enabled == BEE_TRUE || normal_mode_enabled == BEE_TRUE || uv_mode_enabled == BEE_TRUE) 
 	{
 		// act the shader
@@ -364,6 +396,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	}
 	else 
 	{
+#endif
 		shader_use(mat->shader);
 
 		// set shader matrices ------------------------------
@@ -448,7 +481,9 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 			sprintf(buffer, "spotLights[%d].outerCutOff", i);
 			shader_set_float(mat->shader, buffer, entities[spot_lights[i]]._light.outer_cut_off);
 		}
+#ifdef EDITOR_ACT
 	}
+#endif
 
 	// shader_use(mat->shader);
 	glBindVertexArray(_mesh->vao); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
@@ -483,7 +518,7 @@ int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material,
 	entities_len++;
 	arrput(entities, make_entity(pos, rot, scale, _mesh, _material, _light, name));
 
-	if (_material->is_transparent)
+	if (_material != NULL && _material->is_transparent)
 	{
 		transparent_ents_len++;
 		arrput(transparent_ents, entities_len -1);
@@ -542,6 +577,18 @@ entity* get_entity(int i)
 {
 	return &entities[i];
 }
+int get_entity_id_by_name(char* name)
+{
+	for (int i = 0; i < entities_len; ++i)
+	{
+		if (strcmp(entities[i].name, name) == 0)
+		{
+			return i;
+		}
+	}
+	assert(0 == 1);
+	return 9999;
+}
 
 entity_properties get_entity_properties(int index)
 {
@@ -551,6 +598,7 @@ entity_properties get_entity_properties(int index)
 	prop.rotate_global	= &entities[index].rotate_global;
 	prop.has_model		= &entities[index].has_model;
 	prop.has_light		= &entities[index].has_light;
+	prop.has_trans		= &entities[index].has_trans;
 
 	prop.pos_x = &entities[index].pos[0];
 	prop.pos_y = &entities[index].pos[1];

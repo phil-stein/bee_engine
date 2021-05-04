@@ -20,6 +20,8 @@
 // temp
 #include "shader.h"
 
+// if defined build as editor, otherwise build as game
+// #define EDITOR_ACT in project properties
 
 f32 delta_t = 0.0f;	// Time between current frame and last frame
 f32 last_frame = 0.0f;	// Time of last frame
@@ -67,10 +69,13 @@ int main(void)
 
 		// ---- rendering ----
 		renderer_update(); // render all objects
-		
+
+
+#ifdef EDITOR_ACT
 		// enable solid-mode in case wireframe-mode is on
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	// @PERFORMANCE: do this more effiently
 		ui_update();
+#endif
 
 		// reset last frames button state
 		input_update();

@@ -21,11 +21,16 @@ char* str_trunc(char* str, int pos)
 {
     size_t len = strlen(str);
 
-    if (len > abs(pos)) {
+    if (len > abs(pos)) 
+    {
         if (pos > 0)
+        {
             str = str + pos;
+        }
         else
+        {
             str[len + pos] = 0;
+        }
     }
 
     return str;

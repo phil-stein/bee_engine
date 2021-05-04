@@ -15,6 +15,7 @@
 #include "nuklear/nuklear.h"
 #include "nuklear/nuklear_glfw_gl3.h"
 
+#include "file_handler.h"
 #include "str_util.h"
 #include "renderer.h"
 #include "window.h"
@@ -60,6 +61,13 @@ int selected_entities[100];
 // ---- console ----
 static char box_buffer[512];
 static int box_len;
+
+// ---- gravity error ----
+static int error_popup_act = nk_false;
+static char* error_msg;
+
+static int source_code_window_act = nk_false;
+static char* source_code;
 
 
 void ui_init()
@@ -120,6 +128,15 @@ void ui_update()
     //console_window();
 
     asset_browser_window();
+
+    if (error_popup_act == nk_true)
+    {
+        error_popup_window();
+    }
+    if (source_code_window_act == nk_true)
+    {
+        source_code_window();
+    }
 
     nk_glfw3_render(&glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
 }
@@ -1406,6 +1423,21 @@ void properties_window(int ent_len)
         nk_layout_row_push(ctx, 70);
         nk_menubar_end(ctx);
 
+        // ---- play / pause ----
+        
+        nk_layout_row_static(ctx, 25, 80, 2);
+        if (nk_button_label(ctx, "Play"))
+        {
+            assert(0 == 1);
+        }
+        if (nk_button_label(ctx, "Pause"))
+        {
+            assert(0 == 1);
+        }
+        // spacing
+        nk_layout_row_static(ctx, 5, 10, 1);
+        nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
         // --------------------
         if (nk_tree_push(ctx, NK_TREE_TAB, "Scene", NK_MINIMIZED))
         {
@@ -1711,6 +1743,12 @@ void properties_window(int ent_len)
         // ---- entity tree ----
         if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) // NK_MAXIMIZED: open on start
         {
+            static int selected_entities_old[100];
+            for (int i = 0; i < 100; ++i)
+            {
+                selected_entities_old[i] = selected_entities[i];
+            }
+
             if (ent_len <= 0)
             {
                 nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
@@ -1747,20 +1785,29 @@ void properties_window(int ent_len)
             nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
 
-
-            int selected_entity = -999;
+            static int selected_entity_old;
+            static int selected_entity = -999;
 
             for (int i = 0; i < ent_len; ++i)
             {
-                if (selected_entities[i] == nk_true)
+                if (selected_entities[i] == nk_true && selected_entities_old[i] == nk_false)
                 {
-                    if (selected_entity != -999)
-                    {
-                        selected_entities[selected_entity] = nk_false;
-                    }
                     selected_entity = i;
+                    break;
                 }
             }
+            if (selected_entity != selected_entity_old)
+            {
+                for (int i = 0; i < ent_len; ++i)
+                {
+                    if (selected_entities[i] == nk_true && selected_entities_old[i] == nk_true)
+                    {
+                        selected_entities[i] = nk_false;
+                        break;
+                    }
+                }
+            }
+            selected_entity_old = selected_entity;
 
             if (selected_entity == -999 || selected_entity >= ent_len || selected_entity < 0)
             {
@@ -1778,7 +1825,7 @@ void properties_window(int ent_len)
                 nk_label(ctx, "Name: ", NK_TEXT_LEFT);
                 nk_label(ctx, prop.ent_name, NK_TEXT_LEFT);
             
-                if (nk_tree_push(ctx, NK_TREE_TAB, "Transform", NK_MINIMIZED)) {
+                if (*prop.has_trans == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Transform", NK_MINIMIZED)) {
 
                     if (nk_tree_push(ctx, NK_TREE_NODE, "Position", NK_MINIMIZED))
                     {
@@ -1817,6 +1864,11 @@ void properties_window(int ent_len)
                         nk_tree_pop(ctx);
                     }
                     nk_tree_pop(ctx);
+                }
+                if (*prop.has_trans == BEE_FALSE)
+                {
+                    nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                    nk_label_colored(ctx, "no transform", NK_TEXT_LEFT, red);
                 }
 
                 if (*prop.has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Mesh", NK_MINIMIZED))
@@ -2092,6 +2144,17 @@ void properties_window(int ent_len)
                     {
                         static int popup_active;
 
+                        if (prop.scripts[i].path_valid == BEE_FALSE)
+                        {
+                            nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                            nk_label_colored(ctx, "path not valid", NK_TEXT_LEFT, red);
+                        }
+                        else if (prop.scripts[i].has_error == BEE_TRUE)
+                        {
+                            nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                            nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
+                        }
+
                         char* name = str_find_last_of(prop.scripts[i].path, "\\");
                         if (name == NULL)
                         {
@@ -2106,54 +2169,23 @@ void properties_window(int ent_len)
                         nk_label(ctx, name, NK_TEXT_RIGHT);
 
 
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        if (nk_button_label(ctx, "Source Code"))
-                        { popup_active = 1; }
-
-                        if (popup_active)
+                        if (prop.scripts[i].path_valid == BEE_TRUE)
                         {
-                            sprintf(buffer, "Source Code - \"%s\"", name);
-                            // static struct nk_rect s = ;
-                            if (nk_popup_begin(ctx, NK_POPUP_DYNAMIC, buffer, NK_WINDOW_CLOSABLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE, (struct nk_rect){ 600, 200, 500, 600 }))
+                            nk_layout_row_dynamic(ctx, 25, 1);
+                            if (nk_button_label(ctx, "Source Code"))
                             {
-                                if (prop.scripts[i].source != NULL)
-                                {
-                                    int line_index = 0;
-                                    nk_layout_row_dynamic(ctx, 25, 1);
-                                    for (int c = 0; c < strlen(prop.scripts[i].source); ++c)
-                                    {
-                                        if (isspace(prop.scripts[i].source[c]) && prop.scripts[i].source[c] != '\n')
-                                        {
-                                            //prop.scripts[i].source[c] = ' ';
-                                        }
-                                        else if (prop.scripts[i].source[c] == '\n')
-                                        {
-                                            //prop.scripts[i].source[c] = ' ';
-
-                                            char* line = str_trunc(prop.scripts[i].source, -1 * (strlen(prop.scripts[i].source) - c));
-                                            if (line_index != 0)
-                                            {
-                                                line = str_trunc(line, line_index);
-                                            }
-                                            line_index = c;
-                                            nk_label(ctx, line, NK_TEXT_LEFT); 
-                                        }
-                                    }
-                                }
-
-                                if (nk_button_label(ctx, "Close")) {
-                                    popup_active = 0;
-                                    nk_popup_close(ctx);
-                                }
-                                nk_popup_end(ctx);
+                                char* src = read_text_file(prop.scripts[i].path);
+                                set_source_code_window(src);
                             }
-                            else popup_active = nk_false;
                         }
 
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        if (nk_button_label(ctx, prop.scripts[i].active == BEE_TRUE ? "Pause" : "Continue"))
+                        if (prop.scripts[i].path_valid == BEE_TRUE && prop.scripts[i].has_error == BEE_FALSE)
                         {
-                            prop.scripts[i].active = !prop.scripts[i].active;
+                            nk_layout_row_dynamic(ctx, 25, 1);
+                            if (nk_button_label(ctx, prop.scripts[i].active == BEE_TRUE ? "Pause" : "Continue"))
+                            {
+                                prop.scripts[i].active = !prop.scripts[i].active;
+                            }
                         }
 
                         nk_layout_row_dynamic(ctx, 25, 1);
@@ -2332,8 +2364,105 @@ void asset_browser_window()
     nk_end(ctx);
 }
 
+void error_popup_window()
+{
+    int x = 800;
+    int y = 200;
+    int w = 300;
+    int h = 300;
+    if (nk_begin(ctx, "Gravity Error", nk_rect(x, y, w, h),
+        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+    {
+        nk_layout_row_dynamic(ctx, 150, 1);
+        nk_label_wrap(ctx, error_msg, NK_TEXT_LEFT);
+
+        nk_layout_row_dynamic(ctx, 25, 1);
+        if (nk_button_label(ctx, "Close"))
+        {
+            error_popup_act = nk_false;
+            free(error_msg);
+        }
+    }
+    nk_end(ctx);
+}
+
+void source_code_window()
+{
+
+    int x = 400;
+    int y = 200;
+    int w = 600;
+    int h = 600;
+    if (nk_begin(ctx, "Source Code", nk_rect(x, y, w, h),
+        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+    {
+        // nk_layout_row_dynamic(ctx, 150, 1);
+        // nk_label_wrap(ctx, source_code, NK_TEXT_LEFT);
+
+        if (source_code != NULL && 0 == 0)
+        {
+            int line_index = 0;
+            nk_layout_row_dynamic(ctx, 25, 1);
+            for (int c = 0; c < strlen(source_code); ++c)
+            {
+                if (isspace(source_code[c]) && source_code[c] != '\n')
+                {
+                    source_code[c] = ' ';
+                }
+                else if (source_code[c] == '\n')
+                {
+                    source_code[c] = ' ';
+
+                    assert(source_code != NULL);
+                    char* src = NULL;
+                    src = calloc(strlen(source_code), sizeof(char));
+                    strcpy(src, source_code);
+                    src[strlen(source_code) - 1] = '\0';
+                    char* line = str_trunc(src, -1 * (strlen(source_code) - c));
+                    if (line_index != 0)
+                    {
+                        line = str_trunc(line, line_index);
+                    }
+                    printf("line: %s\n", line);
+                    if (line == NULL) { printf("line is null !!!\n"); }
+                    line_index = c;
+                    nk_label(ctx, line, NK_TEXT_LEFT);
+                }
+                printf("finished source code\n");
+                printf("source code: \n%s\n", source_code);
+            }
+        }
+
+        nk_layout_row_dynamic(ctx, 25, 1);
+        if (nk_button_label(ctx, "Close"))
+        {
+            source_code_window_act = nk_false;
+            // free(source_code);
+        }
+    }
+    nk_end(ctx);
+
+}
 
 
+
+
+void set_error_popup(char* msg)
+{
+    error_popup_act = nk_true;
+    error_msg = calloc(strlen(msg), sizeof(char));
+    strcpy(error_msg, msg);
+    error_msg[strlen(msg) - 1] = '\0';
+}
+void set_source_code_window(char* src)
+{
+    source_code_window_act = nk_true;
+    source_code = calloc(strlen(src), sizeof(char));
+    strcpy(source_code, src);
+    source_code[strlen(src) - 1] = '\0';
+}
 static void set_style(struct nk_context* ctx, enum theme theme)
 {
     struct nk_color table[NK_COLOR_COUNT];

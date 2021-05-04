@@ -1,0 +1,50 @@
+extern var Entity;
+extern var Game;
+extern var Input;
+extern var Camera;
+extern var World;
+
+var crate_ent;
+var is_crate_move:Bool;
+
+func init()
+{
+	System.print("called init: game_controller");
+ 	var world = World();
+	
+	crate_ent = world.get_entity("crate");
+	is_crate_move = true;
+}
+
+func update()
+{
+	// var this  = Entity();
+	var game  = Game();
+	var input = Input();
+	var world = World();
+	// var cam   = Camera();
+	// System.print("called update: game_controller");
+
+	if (input.get_key_ESCAPE())
+	{
+		game.quit();
+	}
+	
+	if (input.get_key_SPACE())
+	{
+		is_crate_move = !is_crate_move;
+	}
+
+	if (is_crate_move)
+	{
+		var dist = Math.sin(game.get_total_secs() * 6);
+		world.move_z(crate_ent, (dist * game.get_delta_t() * 2));
+		System.print("crate z: " + world.get_z(crate_ent));
+	}
+
+}
+
+func cleanup()
+{
+}
+

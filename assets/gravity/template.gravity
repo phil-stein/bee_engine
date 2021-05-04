@@ -1,18 +1,20 @@
 extern var Entity;
 extern var Game;
+extern var Input;
+extern var Camera;
 
 func init()
 {
-	var delta = _args[0];
-	var this = Entity();
-	var game = Game();
 }
 
 func update()
 {
- 	var delta = _args[0];
-	var this = Entity();
-	var game = Game();
+	var this  = Entity();
+	var game  = Game();
+	var input = Input();
+	var cam   = Camera();
+
+	// code ...
 }
 
 func cleanup()

@@ -44,6 +44,7 @@ void get_entity_len(int* _entities_len);
 
 entity* get_entites();
 entity* get_entity(int i);
+int get_entity_id_by_name(char* name);
 
 
 void renderer_enable_wireframe_mode(bee_bool act);

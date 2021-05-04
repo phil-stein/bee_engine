@@ -346,11 +346,15 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 	ent.name = _name;
 	ent.rotate_global = BEE_TRUE;
 
-	glm_vec3_copy(pos, ent.pos);
-	glm_vec3_copy(rot, ent.rot);
-	glm_vec3_copy(scale, ent.scale);
+	ent.has_trans = (pos == NULL || rot == NULL || scale == NULL) ? BEE_FALSE : BEE_TRUE;
+	if (ent.has_trans)
+	{
+		glm_vec3_copy(pos, ent.pos);
+		glm_vec3_copy(rot, ent.rot);
+		glm_vec3_copy(scale, ent.scale);
+	}
 
-	ent.has_model = _mesh != NULL && mat != NULL ? BEE_TRUE : BEE_FALSE;
+	ent.has_model = (_mesh != NULL && mat != NULL) ? BEE_TRUE : BEE_FALSE;
 	if (ent.has_model)
 	{
 		ent._mesh	  = *_mesh;
@@ -380,15 +384,17 @@ void update_entity(entity* ent)
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)
 	{
-		if (ent->scripts[i].active == BEE_FALSE)
-		{ continue; }
+		if (ent->scripts[i].active == BEE_FALSE || ent->scripts[i].path_valid == BEE_FALSE || ent->scripts[i].has_error == BEE_TRUE)
+		{
+			continue;
+		}
 
 		// source not yet read
 		if (ent->scripts[i].source == NULL)
 		{
 			ent->scripts[i].source = read_text_file(ent->scripts[i].path);
 			assert(ent->scripts[i].source != NULL);
-			printf("read gravity source: \n%s\n", ent->scripts[i].source);
+			// printf("read gravity source: \n%s\n", ent->scripts[i].source);
 			
 			// @TODO: this needs to work to display the source code
 			// char* buffer = NULL;
@@ -405,7 +411,7 @@ void update_entity(entity* ent)
 		}
 		else 
 		{
-			// ent->scripts[i].source = read_text_file(ent->scripts[i].path);
+			assert(ent->scripts[i].vm != NULL);
 			gravity_run_update(&ent->scripts[i]);
 		}
 	}

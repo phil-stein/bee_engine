@@ -115,7 +115,7 @@ void create_texture(const char* name)
 {
 	assert(1 == 0); // not yet working
 	const char* path = NULL; // log this and retrieve it here
-	texture t = texture_create_from_path(path, name);
+	texture t = texture_create_from_path(path, name, BEE_FALSE);
 
 	shput(textures, name, tex_len);
 	arrput(tex, t);

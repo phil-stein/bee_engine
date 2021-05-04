@@ -20,6 +20,15 @@
 #include "str_util.h"
 
 
+bee_bool file_exists_check(const char* file_path)
+{
+    FILE* f = fopen(file_path, "rb");
+    if (f == NULL) {
+        return BEE_FALSE;
+    }
+    return BEE_TRUE;
+}
+
 char* read_text_file(const char* file_path, int* size)
 {
     FILE* f;
@@ -101,12 +110,16 @@ char* read_text_file(const char* file_path, int* size)
 }
 */
 
-void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t* height_out, int* channel_num) 
+void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t* height_out, int* channel_num, bee_bool flip_vertical) 
 {
     int width, height;
 
     // OpenGL has texture coordinates with (0, 0) on bottom
-    stbi_set_flip_vertically_on_load(true);
+    if (flip_vertical)
+    {
+        stbi_set_flip_vertically_on_load(BEE_TRUE);
+    }
+
     u8* image = stbi_load(path, &width, &height, channel_num, STBI_rgb_alpha);
     assert(image != NULL);
 
@@ -156,12 +169,12 @@ u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int chan
     return handle;
 }
 
-texture texture_create_from_path(const char* file_path, const char* name) 
+texture texture_create_from_path(const char* file_path, const char* name, bee_bool flip_vertical)
 {
     u8* pixels;
     size_t width, height;
     int channel_num = 0;
-    texture_load_pixels(file_path, &pixels, &width, &height, &channel_num);
+    texture_load_pixels(file_path, &pixels, &width, &height, &channel_num, flip_vertical);
     u32 handle = texture_create_from_pixels(pixels, width, height, channel_num);
     free(pixels);
 
@@ -203,7 +216,7 @@ u32 load_cubemap()
     for (u32 i = 0; i < 6; ++i)
     {
         // OpenGL has texture coordinates with (0, 0) on bottom
-        // stbi_set_flip_vertically_on_load(BEE_TRUE);
+        stbi_set_flip_vertically_on_load(BEE_TRUE);
         u8* data = stbi_load(cube_map_paths[i], &width, &height, &nrChannels, 0);
         if (data)
         {

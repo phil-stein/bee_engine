@@ -9,6 +9,9 @@
 #include "global.h"
 #include "object_data.h"
 
+
+bee_bool file_exists_check(const char* file_path);
+
 // read a text-file and output all contents as a char*
 // taken from: https://github.com/jdah/minecraft-weekend/blob/master/src/gfx/shader.c
 // warning --------------------------------------------
@@ -23,9 +26,9 @@ char* read_text_file(const char* file_path);
 //u32 load_image(const char* image_name);
 
 // taken from jdh's minecraft clone: https://github.com/jdah/minecraft-weekend
-void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t* height_out);
-u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height);
-texture texture_create_from_path(const char* file_path, const char* name);
+void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t* height_out, int* channel_num, bee_bool flip_vertical);
+u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int channel_num);
+texture texture_create_from_path(const char* file_path, const char* name, bee_bool flip_vertical);
 
 u32 load_cubemap();
 

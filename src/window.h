@@ -13,6 +13,8 @@
 // returns: <stddef.h> return_code
 rtn_code create_window(const int width, const int height, const char* title, bee_bool maximized);
 
+void close_window();
+
 // set the windows title
 void set_window_title(const char* title);
 
