@@ -147,7 +147,7 @@ void init()
 	int ent_crate = add_entity(pos05, rot01, scale02, &m_crate, &mat_crate, NULL, "crate");
 	
 	mesh m_robot = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\misc\\robot01_LD.obj"); //crate01.obj, hero_defense_char.obj
-	vec3 pos08 = { 0.0f, 0.0f, 0.0f };
+	vec3 pos08 = { 0.0f, -0.5f, 0.0f };
 	vec3 scale04;
 	glm_vec3_scale(scale, 0.25f, scale04);
 	int ent_robot = add_entity(pos08, rot01, scale04, &m_robot, &mat_robot, NULL, "robot");

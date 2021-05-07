@@ -6,6 +6,8 @@ Todo
 - buggs
   - [x] loading images is really slow
   - [x] vm corrupts between run_init() and run_update()
+  - [ ] solid objects don't get rendered in build_mode
+  - [ ] ~5-10 fps in build_mode
   
 - [ ] gravity scripting
   - [x] game is slow as h***
@@ -19,15 +21,19 @@ Todo
   - [ ] finish input interface
     - [ ] all keys
     - [ ] get_key() & get_key_down()
+    - [ ] mouse interface
+    - [ ] controller interface
+    - [ ] actions like unity ???
   - [ ] make attach script not be a popup but a window
   
 - [ ] in-engine text editor
-  - [ ] view source
-  - [ ] edit source
+  - [x] view source
+  - [x] viewability
   - [ ] syntax highlighting
+  - [ ] edit source ???
   
 - [ ] play-mode
-  - [ ] make it not be clear-color
+  - [x] make it not be clear-color
   - [ ] pause / start scripts
   - [x] ui
 - [ ] physics-system

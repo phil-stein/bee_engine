@@ -82,7 +82,7 @@ void ui_init()
 	
         // struct nk_font* roboto = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\Roboto-Regular.ttf", 16/*14*/, 0);
         // struct nk_font* roboto_bold = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\Roboto-Bold.ttf", 16/*14*/, 0);
-        struct nk_font *droid = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\DroidSans.ttf", 16/*14*/, 0);
+        struct nk_font *droid = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\DroidSans.ttf", 18/*16*//*14*/, 0);
 	    // struct nk_font *future = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\kenvector_future_thin.ttf", 13, 0);
 	    // struct nk_font *clean = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\ProggyClean.ttf", 12, 0);
 	    // struct nk_font *tiny = nk_font_atlas_add_from_file(atlas, "C:\\Workspace\\C\\BeeEngine\\assets\\fonts\\ProggyTiny.ttf", 10, 0);
@@ -2391,52 +2391,96 @@ void source_code_window()
 {
 
     int x = 400;
-    int y = 200;
+    int y = 10;
     int w = 600;
-    int h = 600;
+    int h = 950;
     if (nk_begin(ctx, "Source Code", nk_rect(x, y, w, h),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
     {
-        // nk_layout_row_dynamic(ctx, 150, 1);
-        // nk_label_wrap(ctx, source_code, NK_TEXT_LEFT);
+        
+        assert(source_code != NULL);
 
-        if (source_code != NULL && 0 == 0)
+        if (source_code != NULL)
         {
+            char buffer[512];
+            int buffer_pos = 0;
             int line_index = 0;
-            nk_layout_row_dynamic(ctx, 25, 1);
-            for (int c = 0; c < strlen(source_code); ++c)
+            nk_layout_row_dynamic(ctx, 15, 1);
+            char* src = NULL;
+            src = calloc(strlen(source_code), sizeof(char));
+            strcpy(src, source_code);
+            src[strlen(source_code) - 1] = '\0';
+            // printf("source code copy: \n%s\n", src);
+            for ( int c = 0; c < strlen(source_code); ++c )
             {
-                if (isspace(source_code[c]) && source_code[c] != '\n')
+                /*
+                if (src[c] == '\n')
                 {
-                    source_code[c] = ' ';
-                }
-                else if (source_code[c] == '\n')
-                {
-                    source_code[c] = ' ';
+                    src[c] = ' ';
 
-                    assert(source_code != NULL);
-                    char* src = NULL;
-                    src = calloc(strlen(source_code), sizeof(char));
-                    strcpy(src, source_code);
-                    src[strlen(source_code) - 1] = '\0';
-                    char* line = str_trunc(src, -1 * (strlen(source_code) - c));
+                    // char* line = str_trunc(src, -1 * (strlen(source_code) - ( c - line_index)));
+                    str_trunc(src, 1 * (strlen(source_code) - ( c - line_index)));
                     if (line_index != 0)
                     {
-                        line = str_trunc(line, line_index);
+                        // line = str_trunc(line, line_index);
+                        src = str_trunc(src, line_index);
                     }
-                    printf("line: %s\n", line);
-                    if (line == NULL) { printf("line is null !!!\n"); }
+                    // printf("line: %s\n", line);
+                    // assert(line != NULL);
                     line_index = c;
-                    nk_label(ctx, line, NK_TEXT_LEFT);
+                    // nk_label(ctx, line, NK_TEXT_LEFT);
+                    nk_label(ctx, src, NK_TEXT_LEFT);
                 }
-                printf("finished source code\n");
-                printf("source code: \n%s\n", source_code);
+                else if (isspace(src[c]))
+                {
+                    src[c] = ' ';
+                }
+                // printf("finished source code\n");
+                // printf("source code: \n%s\n", source_code);
+                */
+
+                if ( src[c] == '\n' )
+                {
+                    buffer[buffer_pos] = '\0';
+                    // new line
+                    nk_label(ctx, buffer, NK_TEXT_LEFT);
+                    line_index = c;
+                    buffer_pos = 0;
+                    for (int i = 0; i < 512; ++i) { buffer[i] = ' '; }
+                }
+                else if( isspace(src[c]) )
+                {
+                    // printf("whitesp. char: %c", src[c]);
+                    if (src[c] == '\t' || src[c] == '\r')
+                    {
+                        buffer[buffer_pos] = ' ';
+                        buffer_pos++;
+                        buffer[buffer_pos] = ' ';
+                        buffer_pos++;
+                        buffer[buffer_pos] = ' ';
+                        buffer_pos++;
+                        buffer[buffer_pos] = ' ';
+                        buffer_pos++;
+                    }
+                    else
+                    {
+                        buffer[buffer_pos] = ' ';
+                        buffer_pos++;
+                    }
+                }
+                else
+                {
+                    buffer[buffer_pos] = src[c];
+                    buffer_pos++;
+                }
+
             }
+            // free(src);
         }
 
         nk_layout_row_dynamic(ctx, 25, 1);
-        if (nk_button_label(ctx, "Close"))
+        if ( nk_button_label(ctx, "Close") )
         {
             source_code_window_act = nk_false;
             // free(source_code);
