@@ -19,12 +19,13 @@ Todo
     - [ ] wrong argument amount
   - [ ] entity get interface (World -> world.get_entity("name"))
   - [ ] finish input interface
-    - [ ] all keys
+    - [x] all keys
     - [ ] get_key() & get_key_down()
     - [ ] mouse interface
     - [ ] controller interface
     - [ ] actions like unity ???
   - [ ] make attach script not be a popup but a window
+  - [ ] load_file delegate for #import 
   
 - [ ] in-engine text editor
   - [x] view source

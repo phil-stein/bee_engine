@@ -671,6 +671,7 @@ void setup_input_class(gravity_vm* vm)
     gravity_class_t* c = gravity_class_new_pair(vm, "Input", NULL, 0, 0);
 
     // allocate and bind bar closure to the newly created class
+    // get_key()
     gravity_class_bind(c, "get_key_SPACE", NEW_CLOSURE_VALUE(get_key_SPACE));
     gravity_class_bind(c, "get_key_APOSTROPHE", NEW_CLOSURE_VALUE(get_key_APOSTROPHE));
     gravity_class_bind(c, "get_key_COMMA", NEW_CLOSURE_VALUE(get_key_COMMA));
@@ -740,355 +741,1044 @@ void setup_input_class(gravity_vm* vm)
     gravity_class_bind(c, "get_key_NUM_LOCK", NEW_CLOSURE_VALUE(get_key_NUM_LOCK));
     gravity_class_bind(c, "get_key_PRINT", NEW_CLOSURE_VALUE(get_key_PRINT));
     gravity_class_bind(c, "get_key_PAUSE", NEW_CLOSURE_VALUE(get_key_PAUSE));
+    gravity_class_bind(c, "get_key_F1", NEW_CLOSURE_VALUE(get_key_F1));
+    gravity_class_bind(c, "get_key_F2", NEW_CLOSURE_VALUE(get_key_F2));
+    gravity_class_bind(c, "get_key_F3", NEW_CLOSURE_VALUE(get_key_F3));
+    gravity_class_bind(c, "get_key_F4", NEW_CLOSURE_VALUE(get_key_F4));
+    gravity_class_bind(c, "get_key_F5", NEW_CLOSURE_VALUE(get_key_F5));
+    gravity_class_bind(c, "get_key_F6", NEW_CLOSURE_VALUE(get_key_F6));
+    gravity_class_bind(c, "get_key_F7", NEW_CLOSURE_VALUE(get_key_F7));
+    gravity_class_bind(c, "get_key_F8", NEW_CLOSURE_VALUE(get_key_F8));
+    gravity_class_bind(c, "get_key_F9", NEW_CLOSURE_VALUE(get_key_F9));
+    gravity_class_bind(c, "get_key_F10", NEW_CLOSURE_VALUE(get_key_F10));
+    gravity_class_bind(c, "get_key_F11", NEW_CLOSURE_VALUE(get_key_F11));
+    gravity_class_bind(c, "get_key_F12", NEW_CLOSURE_VALUE(get_key_F12));
+    // ...
+    gravity_class_bind(c, "get_key_DECIMAL", NEW_CLOSURE_VALUE(get_key_DECIMAL));
+    gravity_class_bind(c, "get_key_DIVIDE", NEW_CLOSURE_VALUE(get_key_DIVIDE));
+    gravity_class_bind(c, "get_key_MULTIPLY", NEW_CLOSURE_VALUE(get_key_MULTIPLY));
+    gravity_class_bind(c, "get_key_ADD", NEW_CLOSURE_VALUE(get_key_ADD));
+    gravity_class_bind(c, "get_key_EQUAL", NEW_CLOSURE_VALUE(get_key_EQUAL));
+    gravity_class_bind(c, "get_key_SUPER", NEW_CLOSURE_VALUE(get_key_SUPER));
+    gravity_class_bind(c, "get_key_WIN_MAC_SYMBOL", NEW_CLOSURE_VALUE(get_key_WIN_MAC_SYMBOL));
+    gravity_class_bind(c, "get_key_MENU", NEW_CLOSURE_VALUE(get_key_MENU));
+
+    // get_key_down()
+    gravity_class_bind(c, "get_key_down_SPACE", NEW_CLOSURE_VALUE(get_key_down_SPACE));
+    gravity_class_bind(c, "get_key_down_APOSTROPHE", NEW_CLOSURE_VALUE(get_key_down_APOSTROPHE));
+    gravity_class_bind(c, "get_key_down_COMMA", NEW_CLOSURE_VALUE(get_key_down_COMMA));
+    gravity_class_bind(c, "get_key_down_MINUS", NEW_CLOSURE_VALUE(get_key_down_MINUS));
+    gravity_class_bind(c, "get_key_down_PERIOD", NEW_CLOSURE_VALUE(get_key_down_PERIOD));
+    gravity_class_bind(c, "get_key_down_SLASH", NEW_CLOSURE_VALUE(get_key_down_SLASH));
+    gravity_class_bind(c, "get_key_down_0", NEW_CLOSURE_VALUE(get_key_down_0));
+    gravity_class_bind(c, "get_key_down_1", NEW_CLOSURE_VALUE(get_key_down_1));
+    gravity_class_bind(c, "get_key_down_2", NEW_CLOSURE_VALUE(get_key_down_2));
+    gravity_class_bind(c, "get_key_down_3", NEW_CLOSURE_VALUE(get_key_down_3));
+    gravity_class_bind(c, "get_key_down_4", NEW_CLOSURE_VALUE(get_key_down_4));
+    gravity_class_bind(c, "get_key_down_5", NEW_CLOSURE_VALUE(get_key_down_5));
+    gravity_class_bind(c, "get_key_down_6", NEW_CLOSURE_VALUE(get_key_down_6));
+    gravity_class_bind(c, "get_key_down_7", NEW_CLOSURE_VALUE(get_key_down_7));
+    gravity_class_bind(c, "get_key_down_8", NEW_CLOSURE_VALUE(get_key_down_8));
+    gravity_class_bind(c, "get_key_down_9", NEW_CLOSURE_VALUE(get_key_down_9));
+    gravity_class_bind(c, "get_key_down_SEMICOLON", NEW_CLOSURE_VALUE(get_key_down_SEMICOLON));
+    gravity_class_bind(c, "get_key_down_EQUAL", NEW_CLOSURE_VALUE(get_key_down_EQUAL));
+    gravity_class_bind(c, "get_key_down_A", NEW_CLOSURE_VALUE(get_key_down_A));
+    gravity_class_bind(c, "get_key_down_B", NEW_CLOSURE_VALUE(get_key_down_B));
+    gravity_class_bind(c, "get_key_down_C", NEW_CLOSURE_VALUE(get_key_down_C));
+    gravity_class_bind(c, "get_key_down_D", NEW_CLOSURE_VALUE(get_key_down_D));
+    gravity_class_bind(c, "get_key_down_E", NEW_CLOSURE_VALUE(get_key_down_E));
+    gravity_class_bind(c, "get_key_down_F", NEW_CLOSURE_VALUE(get_key_down_F));
+    gravity_class_bind(c, "get_key_down_G", NEW_CLOSURE_VALUE(get_key_down_G));
+    gravity_class_bind(c, "get_key_down_H", NEW_CLOSURE_VALUE(get_key_down_H));
+    gravity_class_bind(c, "get_key_down_I", NEW_CLOSURE_VALUE(get_key_down_I));
+    gravity_class_bind(c, "get_key_down_J", NEW_CLOSURE_VALUE(get_key_down_J));
+    gravity_class_bind(c, "get_key_down_K", NEW_CLOSURE_VALUE(get_key_down_K));
+    gravity_class_bind(c, "get_key_down_L", NEW_CLOSURE_VALUE(get_key_down_L));
+    gravity_class_bind(c, "get_key_down_M", NEW_CLOSURE_VALUE(get_key_down_M));
+    gravity_class_bind(c, "get_key_down_N", NEW_CLOSURE_VALUE(get_key_down_N));
+    gravity_class_bind(c, "get_key_down_O", NEW_CLOSURE_VALUE(get_key_down_O));
+    gravity_class_bind(c, "get_key_down_P", NEW_CLOSURE_VALUE(get_key_down_P));
+    gravity_class_bind(c, "get_key_down_Q", NEW_CLOSURE_VALUE(get_key_down_Q));
+    gravity_class_bind(c, "get_key_down_R", NEW_CLOSURE_VALUE(get_key_down_R));
+    gravity_class_bind(c, "get_key_down_S", NEW_CLOSURE_VALUE(get_key_down_S));
+    gravity_class_bind(c, "get_key_down_T", NEW_CLOSURE_VALUE(get_key_down_T));
+    gravity_class_bind(c, "get_key_down_U", NEW_CLOSURE_VALUE(get_key_down_U));
+    gravity_class_bind(c, "get_key_down_V", NEW_CLOSURE_VALUE(get_key_down_V));
+    gravity_class_bind(c, "get_key_down_W", NEW_CLOSURE_VALUE(get_key_down_W));
+    gravity_class_bind(c, "get_key_down_X", NEW_CLOSURE_VALUE(get_key_down_X));
+    gravity_class_bind(c, "get_key_down_Y", NEW_CLOSURE_VALUE(get_key_down_Y));
+    gravity_class_bind(c, "get_key_down_Z", NEW_CLOSURE_VALUE(get_key_down_Z));
+    gravity_class_bind(c, "get_key_down_LEFT_BRACKET", NEW_CLOSURE_VALUE(get_key_down_LEFT_BRACKET));
+    gravity_class_bind(c, "get_key_down_BACKSLASH", NEW_CLOSURE_VALUE(get_key_down_BACKSLASH));
+    gravity_class_bind(c, "get_key_down_RIGHT_BRACKET", NEW_CLOSURE_VALUE(get_key_down_RIGHT_BRACKET));
+    gravity_class_bind(c, "get_key_down_GRAVE_ACCENT", NEW_CLOSURE_VALUE(get_key_down_GRAVE_ACCENT));
+    gravity_class_bind(c, "get_key_down_WORLD_1", NEW_CLOSURE_VALUE(get_key_down_WORLD_1));
+    gravity_class_bind(c, "get_key_down_WORLD_2", NEW_CLOSURE_VALUE(get_key_down_WORLD_2));
+    gravity_class_bind(c, "get_key_down_ESCAPE", NEW_CLOSURE_VALUE(get_key_down_ESCAPE));
+    gravity_class_bind(c, "get_key_down_ENTER", NEW_CLOSURE_VALUE(get_key_down_ENTER));
+    gravity_class_bind(c, "get_key_down_TAB", NEW_CLOSURE_VALUE(get_key_down_TAB));
+    gravity_class_bind(c, "get_key_down_BACKSPACE", NEW_CLOSURE_VALUE(get_key_down_BACKSPACE));
+    gravity_class_bind(c, "get_key_down_INSERT", NEW_CLOSURE_VALUE(get_key_down_INSERT));
+    gravity_class_bind(c, "get_key_down_DELETE", NEW_CLOSURE_VALUE(get_key_down_DELETE));
+    gravity_class_bind(c, "get_key_down_ARROW_LEFT", NEW_CLOSURE_VALUE(get_key_down_ARROW_LEFT));
+    gravity_class_bind(c, "get_key_down_ARROW_RIGHT", NEW_CLOSURE_VALUE(get_key_down_ARROW_RIGHT));
+    gravity_class_bind(c, "get_key_down_ARROW_UP", NEW_CLOSURE_VALUE(get_key_down_ARROW_UP));
+    gravity_class_bind(c, "get_key_down_ARROW_DOWN", NEW_CLOSURE_VALUE(get_key_down_ARROW_DOWN));
+    gravity_class_bind(c, "get_key_down_PAGE_UP", NEW_CLOSURE_VALUE(get_key_down_PAGE_UP));
+    gravity_class_bind(c, "get_key_down_PAGE_DOWN", NEW_CLOSURE_VALUE(get_key_down_PAGE_DOWN));
+    gravity_class_bind(c, "get_key_down_HOME", NEW_CLOSURE_VALUE(get_key_down_HOME));
+    gravity_class_bind(c, "get_key_down_END", NEW_CLOSURE_VALUE(get_key_down_END));
+    gravity_class_bind(c, "get_key_down_CAPS_LOCK", NEW_CLOSURE_VALUE(get_key_down_CAPS_LOCK));
+    gravity_class_bind(c, "get_key_down_SCROLL_LOCK", NEW_CLOSURE_VALUE(get_key_down_SCROLL_LOCK));
+    gravity_class_bind(c, "get_key_down_NUM_LOCK", NEW_CLOSURE_VALUE(get_key_down_NUM_LOCK));
+    gravity_class_bind(c, "get_key_down_PRINT", NEW_CLOSURE_VALUE(get_key_down_PRINT));
+    gravity_class_bind(c, "get_key_down_PAUSE", NEW_CLOSURE_VALUE(get_key_down_PAUSE));
+    gravity_class_bind(c, "get_key_down_F1", NEW_CLOSURE_VALUE(get_key_down_F1));
+    gravity_class_bind(c, "get_key_down_F2", NEW_CLOSURE_VALUE(get_key_down_F2));
+    gravity_class_bind(c, "get_key_down_F3", NEW_CLOSURE_VALUE(get_key_down_F3));
+    gravity_class_bind(c, "get_key_down_F4", NEW_CLOSURE_VALUE(get_key_down_F4));
+    gravity_class_bind(c, "get_key_down_F5", NEW_CLOSURE_VALUE(get_key_down_F5));
+    gravity_class_bind(c, "get_key_down_F6", NEW_CLOSURE_VALUE(get_key_down_F6));
+    gravity_class_bind(c, "get_key_down_F7", NEW_CLOSURE_VALUE(get_key_down_F7));
+    gravity_class_bind(c, "get_key_down_F8", NEW_CLOSURE_VALUE(get_key_down_F8));
+    gravity_class_bind(c, "get_key_down_F9", NEW_CLOSURE_VALUE(get_key_down_F9));
+    gravity_class_bind(c, "get_key_down_F10", NEW_CLOSURE_VALUE(get_key_down_F10));
+    gravity_class_bind(c, "get_key_down_F11", NEW_CLOSURE_VALUE(get_key_down_F11));
+    gravity_class_bind(c, "get_key_down_F12", NEW_CLOSURE_VALUE(get_key_down_F12));
+    // ...
+    gravity_class_bind(c, "get_key_down_DECIMAL", NEW_CLOSURE_VALUE(get_key_down_DECIMAL));
+    gravity_class_bind(c, "get_key_down_DIVIDE", NEW_CLOSURE_VALUE(get_key_down_DIVIDE));
+    gravity_class_bind(c, "get_key_down_MULTIPLY", NEW_CLOSURE_VALUE(get_key_down_MULTIPLY));
+    gravity_class_bind(c, "get_key_down_ADD", NEW_CLOSURE_VALUE(get_key_down_ADD));
+    gravity_class_bind(c, "get_key_down_EQUAL", NEW_CLOSURE_VALUE(get_key_down_EQUAL));
+    gravity_class_bind(c, "get_key_down_SUPER", NEW_CLOSURE_VALUE(get_key_down_SUPER));
+    gravity_class_bind(c, "get_key_down_WIN_MAC_SYMBOL", NEW_CLOSURE_VALUE(get_key_down_WIN_MAC_SYMBOL));
+    gravity_class_bind(c, "get_key_down_MENU", NEW_CLOSURE_VALUE(get_key_down_MENU));
+
 
 
     // register class c inside VM
     gravity_vm_setvalue(vm, "Input", VALUE_FROM_OBJECT(c));
 }
 
+// get_key()
 static bee_bool get_key_SPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_SPACE()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Space)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Space)), rindex);
 }
 static bee_bool get_key_APOSTROPHE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_APOSTROPHE()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Apostrophe)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Apostrophe)), rindex);
 }
 static bee_bool get_key_COMMA(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_COMMA()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Comma)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Comma)), rindex);
 }
 static bee_bool get_key_MINUS(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_MINUS()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Minus)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Minus) || is_key_pressed(KEY_NumpadSubtract)), rindex);
 }
 static bee_bool get_key_PERIOD(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_PERIOD()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Period)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Period)), rindex);
 }
 static bee_bool get_key_SLASH(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_SLASH()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Slash)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Slash)), rindex);
 }
 static bee_bool get_key_0(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_0()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha0 | KEY_Numpad0)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha0) || is_key_pressed(KEY_Numpad0)), rindex);
 }
 static bee_bool get_key_1(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_1()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha1 | KEY_Numpad1)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha1) || is_key_pressed(KEY_Numpad1)), rindex);
 }
 static bee_bool get_key_2(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_2()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha2 | KEY_Numpad2)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha2) || is_key_pressed(KEY_Numpad2)), rindex);
 }
 static bee_bool get_key_3(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_3()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha3 | KEY_Numpad3)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha3) || is_key_pressed(KEY_Numpad3)), rindex);
 }
 static bee_bool get_key_4(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_4()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha4 | KEY_Numpad4)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha4) || is_key_pressed(KEY_Numpad4)), rindex);
 }
 static bee_bool get_key_5(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_5()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha5 | KEY_Numpad5)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha5) || is_key_pressed(KEY_Numpad5)), rindex);
 }
 static bee_bool get_key_6(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_6()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha6 | KEY_Numpad6)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha6) || is_key_pressed(KEY_Numpad6)), rindex);
 }
 static bee_bool get_key_7(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_7()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha7 | KEY_Numpad7)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha7) || is_key_pressed(KEY_Numpad7)), rindex);
 }
 static bee_bool get_key_8(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_8()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha8 | KEY_Numpad8)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha8) || is_key_pressed(KEY_Numpad8)), rindex);
 }
 static bee_bool get_key_9(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_9()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha9 | KEY_Numpad9)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Alpha9) || is_key_pressed(KEY_Numpad9)), rindex);
 }
 static bee_bool get_key_SEMICOLON(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_SEMICOLON()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_SemiColon)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_SemiColon)), rindex);
 }
 static bee_bool get_key_EQUAL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_EQUAL()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Equal)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Equal) || is_key_pressed(KEY_NumpadEqual)), rindex);
 }
 static bee_bool get_key_A(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_A()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_A)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_A)), rindex);
 }
 static bee_bool get_key_B(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_B()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_B)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_B)), rindex);
 }
 static bee_bool get_key_C(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_C()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_C)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_C)), rindex);
 }
 static bee_bool get_key_D(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_D()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_D)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_D)), rindex);
 }
 static bee_bool get_key_E(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_E()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_E)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_E)), rindex);
 }
 static bee_bool get_key_F(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_F()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F)), rindex);
 }
 static bee_bool get_key_G(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_G()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F)), rindex);
 }
 static bee_bool get_key_H(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_H()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_H)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_H)), rindex);
 }
 static bee_bool get_key_I(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_I()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_I)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_I)), rindex);
 }
 static bee_bool get_key_J(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_J()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_J)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_J)), rindex);
 }
 static bee_bool get_key_K(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_K()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_K)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_K)), rindex);
 }
 static bee_bool get_key_L(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_L()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_L)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_L)), rindex);
 }
 static bee_bool get_key_M(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_M()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_M)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_M)), rindex);
 }
 static bee_bool get_key_N(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_N()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_N)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_N)), rindex);
 }
 static bee_bool get_key_O(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_O()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_O)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_O)), rindex);
 }
 static bee_bool get_key_P(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_P()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_P)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_P)), rindex);
 }
 static bee_bool get_key_Q(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_Q()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Q)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Q)), rindex);
 }
 static bee_bool get_key_R(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_R()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_R)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_R)), rindex);
 }
 static bee_bool get_key_S(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_S()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_S)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_S)), rindex);
 }
 static bee_bool get_key_T(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_T()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_T)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_T)), rindex);
 }
 static bee_bool get_key_U(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_U()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_U)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_U)), rindex);
 }
 static bee_bool get_key_V(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_V()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_V)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_V)), rindex);
 }
 static bee_bool get_key_W(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_W()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_W)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_W)), rindex);
 }
 static bee_bool get_key_X(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_X()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_X)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_X)), rindex);
 }
 static bee_bool get_key_Y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
-    if (nargs != 1) { throw_error("[Input.get_key_Y()] Wrong amount of arguments, 0 arguments are needed."); }    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Y)), rindex);
+    if (nargs != 1) { throw_error("[Input.get_key_Y()] Wrong amount of arguments, 0 arguments are needed."); }    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Y)), rindex);
 }
 static bee_bool get_key_Z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1)  { throw_error("[Input.get_key_Z()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Z)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Z)), rindex);
 }
 static bee_bool get_key_LEFT_BRACKET(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_LEFT_BRACKET()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftBracket)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftBracket)), rindex);
 }
 static bee_bool get_key_BACKSLASH(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_BACKSLASH()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Backslash)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Backslash)), rindex);
 }
 static bee_bool get_key_RIGHT_BRACKET(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_RIGHT_BRACKET()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_RightBracket)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_RightBracket)), rindex);
 }
 static bee_bool get_key_GRAVE_ACCENT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_GRAVE_ACCENT()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_GraveAccent)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_GraveAccent)), rindex);
 }
 static bee_bool get_key_WORLD_1(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_WORLD_1()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_World1)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_World1)), rindex);
 }
 static bee_bool get_key_WORLD_2(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_WORLD_2()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_World2)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_World2)), rindex);
 }
 static bee_bool get_key_ESCAPE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_ESCAPE()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Escape)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Escape)), rindex);
 }
 static bee_bool get_key_ENTER(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_ENTER()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Enter)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Enter) || is_key_pressed(KEY_NumpadEnter)), rindex);
 }
 static bee_bool get_key_TAB(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_TAB()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Tab)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Tab)), rindex);
 }
 static bee_bool get_key_BACKSPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_BACKSPACE()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Backspace)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Backspace)), rindex);
 }
 static bee_bool get_key_INSERT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_INSERT()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Insert)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Insert)), rindex);
 }
 static bee_bool get_key_DELETE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_DELETE()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Delete)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Delete)), rindex);
 }
 static bee_bool get_key_ARROW_RIGHT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_ARROW_RIGHT()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_RightArrow)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_RightArrow)), rindex);
 }
 static bee_bool get_key_ARROW_LEFT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_ARROW_LEFT()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftArrow)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftArrow)), rindex);
 }static bee_bool get_key_ARROW_DOWN(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_ARROW_DOWN()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_DownArrow)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_DownArrow)), rindex);
 }
 static bee_bool get_key_ARROW_UP(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_ARROW_UP()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_UpArrow)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_UpArrow)), rindex);
 }
 static bee_bool get_key_PAGE_UP(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_PAGE_UP()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_PageUp)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_PageUp)), rindex);
 }
 static bee_bool get_key_PAGE_DOWN(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_PAGE_DOWN()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_PageDown)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_PageDown)), rindex);
 }
 static bee_bool get_key_HOME(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_HOME()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Home)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Home)), rindex);
 }
 static bee_bool get_key_END(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_END()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_End)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_End)), rindex);
 }
 static bee_bool get_key_CAPS_LOCK(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_CAPS_LOCK()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_CapsLock)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_CapsLock)), rindex);
 }
 static bee_bool get_key_SCROLL_LOCK(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_SCROLL_LOCK()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_ScrollLock)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_ScrollLock)), rindex);
 }
 static bee_bool get_key_NUM_LOCK(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_NUM_LOCK()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_NumLock)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_NumLock)), rindex);
 }
 static bee_bool get_key_PRINT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_PRINT()] Wrong amount of arguments, 0 arguments are needed."); }
-    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_PrintScreen)), rindex);
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_PrintScreen)), rindex);
 }
 static bee_bool get_key_PAUSE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[Input.get_key_PAUSE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Pause)), rindex);
+}
+static bee_bool get_key_F1(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F1()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F1)), rindex);
+}
+static bee_bool get_key_F2(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F2()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F2)), rindex);
+}
+static bee_bool get_key_F3(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F3()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F3)), rindex);
+}
+static bee_bool get_key_F4(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F4()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F4)), rindex);
+}
+static bee_bool get_key_F5(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F5()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F5)), rindex);
+}
+static bee_bool get_key_F6(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F6()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F6)), rindex);
+}
+static bee_bool get_key_F7(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F7()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F7)), rindex);
+}
+static bee_bool get_key_F8(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F8()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F8)), rindex);
+}
+static bee_bool get_key_F9(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F9()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F9)), rindex);
+}
+static bee_bool get_key_F10(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F10()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F10)), rindex);
+}
+static bee_bool get_key_F11(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F11()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F11)), rindex);
+}
+static bee_bool get_key_F12(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F12()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_F12)), rindex);
+}
+// ...
+static bee_bool get_key_DECIMAL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_DECIMAL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_NumpadDecimal)), rindex);
+}
+static bee_bool get_key_DIVIDE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_DIVIDE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_NumpadDivide)), rindex);
+}
+static bee_bool get_key_MULTIPLY(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_MULTIPLY()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_NumpadMultiply)), rindex);
+}
+static bee_bool get_key_ADD(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ADD()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_NumpadAdd)), rindex);
+}
+static bee_bool get_key_SHIFT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SHIFT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftShift) || is_key_pressed(KEY_RightShift)), rindex);
+}
+static bee_bool get_key_CONTROL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_CONTROL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftControl) || is_key_pressed(KEY_RightControl)), rindex);
+}
+static bee_bool get_key_ALT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ALT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftAlt) || is_key_pressed(KEY_RightAlt)), rindex);
+}
+static bee_bool get_key_SUPER(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SUPER()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftSuper) || is_key_pressed(KEY_RightSuper)), rindex);
+}
+static bee_bool get_key_WIN_MAC_SYMBOL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_WIN_MAC_SYMBOL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_LeftSuper) || is_key_pressed(KEY_RightSuper)), rindex);
+}
+static bee_bool get_key_MENU(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_MENU()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_pressed(KEY_Menu)), rindex);
+}
+
+// get_key_down()
+static bee_bool get_key_down_SPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SPACE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Space)), rindex);
+}
+static bee_bool get_key_down_APOSTROPHE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_APOSTROPHE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Apostrophe)), rindex);
+}
+static bee_bool get_key_down_COMMA(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_COMMA()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Comma)), rindex);
+}
+static bee_bool get_key_down_MINUS(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_MINUS()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Minus) || is_key_down(KEY_NumpadSubtract)), rindex);
+}
+static bee_bool get_key_down_PERIOD(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_PERIOD()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Period)), rindex);
+}
+static bee_bool get_key_down_SLASH(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SLASH()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Slash)), rindex);
+}
+static bee_bool get_key_down_0(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_0()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha0) || is_key_down(KEY_Numpad0)), rindex);
+}
+static bee_bool get_key_down_1(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_1()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha1) || is_key_down(KEY_Numpad1)), rindex);
+}
+static bee_bool get_key_down_2(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_2()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha2) || is_key_down(KEY_Numpad2)), rindex);
+}
+static bee_bool get_key_down_3(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_3()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha3) || is_key_down(KEY_Numpad3)), rindex);
+}
+static bee_bool get_key_down_4(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_4()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha4) || is_key_down(KEY_Numpad4)), rindex);
+}
+static bee_bool get_key_down_5(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_5()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha5) || is_key_down(KEY_Numpad5)), rindex);
+}
+static bee_bool get_key_down_6(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_6()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha6) || is_key_down(KEY_Numpad6)), rindex);
+}
+static bee_bool get_key_down_7(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_7()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha7) || is_key_down(KEY_Numpad7)), rindex);
+}
+static bee_bool get_key_down_8(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_8()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha8) || is_key_down(KEY_Numpad8)), rindex);
+}
+static bee_bool get_key_down_9(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_9()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Alpha9) || is_key_down(KEY_Numpad9)), rindex);
+}
+static bee_bool get_key_down_SEMICOLON(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SEMICOLON()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_SemiColon)), rindex);
+}
+static bee_bool get_key_down_EQUAL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_EQUAL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Equal) || is_key_down(KEY_NumpadEqual)), rindex);
+}
+static bee_bool get_key_down_A(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_A()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_A)), rindex);
+}
+static bee_bool get_key_down_B(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_B()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_B)), rindex);
+}
+static bee_bool get_key_down_C(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_C()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_C)), rindex);
+}
+static bee_bool get_key_down_D(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_D()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_D)), rindex);
+}
+static bee_bool get_key_down_E(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_E()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_E)), rindex);
+}
+static bee_bool get_key_down_F(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F)), rindex);
+}
+static bee_bool get_key_down_G(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_G()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F)), rindex);
+}
+static bee_bool get_key_down_H(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_H()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_H)), rindex);
+}
+static bee_bool get_key_down_I(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_I()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_I)), rindex);
+}
+static bee_bool get_key_down_J(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_J()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_J)), rindex);
+}
+static bee_bool get_key_down_K(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_K()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_K)), rindex);
+}
+static bee_bool get_key_down_L(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_L()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_L)), rindex);
+}
+static bee_bool get_key_down_M(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_M()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_M)), rindex);
+}
+static bee_bool get_key_down_N(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_N()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_N)), rindex);
+}
+static bee_bool get_key_down_O(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_O()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_O)), rindex);
+}
+static bee_bool get_key_down_P(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_P()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_P)), rindex);
+}
+static bee_bool get_key_down_Q(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_Q()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Q)), rindex);
+}
+static bee_bool get_key_down_R(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_R()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_R)), rindex);
+}
+static bee_bool get_key_down_S(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_S()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_S)), rindex);
+}
+static bee_bool get_key_down_T(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_T()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_T)), rindex);
+}
+static bee_bool get_key_down_U(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_U()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_U)), rindex);
+}
+static bee_bool get_key_down_V(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_V()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_V)), rindex);
+}
+static bee_bool get_key_down_W(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_W()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_W)), rindex);
+}
+static bee_bool get_key_down_X(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_X()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_X)), rindex);
+}
+static bee_bool get_key_down_Y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_Y()] Wrong amount of arguments, 0 arguments are needed."); }    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Y)), rindex);
+}
+static bee_bool get_key_down_Z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_Z()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Z)), rindex);
+}
+static bee_bool get_key_down_LEFT_BRACKET(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_LEFT_BRACKET()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftBracket)), rindex);
+}
+static bee_bool get_key_down_BACKSLASH(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_BACKSLASH()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Backslash)), rindex);
+}
+static bee_bool get_key_down_RIGHT_BRACKET(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_RIGHT_BRACKET()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_RightBracket)), rindex);
+}
+static bee_bool get_key_down_GRAVE_ACCENT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_GRAVE_ACCENT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_GraveAccent)), rindex);
+}
+static bee_bool get_key_down_WORLD_1(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_WORLD_1()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_World1)), rindex);
+}
+static bee_bool get_key_down_WORLD_2(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_WORLD_2()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_World2)), rindex);
+}
+static bee_bool get_key_down_ESCAPE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ESCAPE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Escape)), rindex);
+}
+static bee_bool get_key_down_ENTER(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ENTER()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Enter) || is_key_down(KEY_NumpadEnter)), rindex);
+}
+static bee_bool get_key_down_TAB(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_TAB()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Tab)), rindex);
+}
+static bee_bool get_key_down_BACKSPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_BACKSPACE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Backspace)), rindex);
+}
+static bee_bool get_key_down_INSERT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_INSERT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Insert)), rindex);
+}
+static bee_bool get_key_down_DELETE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_DELETE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Delete)), rindex);
+}
+static bee_bool get_key_down_ARROW_RIGHT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ARROW_RIGHT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_RightArrow)), rindex);
+}
+static bee_bool get_key_down_ARROW_LEFT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ARROW_LEFT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftArrow)), rindex);
+}
+static bee_bool get_key_down_ARROW_DOWN(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ARROW_DOWN()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_DownArrow)), rindex);
+}
+static bee_bool get_key_down_ARROW_UP(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ARROW_UP()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_UpArrow)), rindex);
+}
+static bee_bool get_key_down_PAGE_UP(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_PAGE_UP()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_PageUp)), rindex);
+}
+static bee_bool get_key_down_PAGE_DOWN(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_PAGE_DOWN()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_PageDown)), rindex);
+}
+static bee_bool get_key_down_HOME(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_HOME()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Home)), rindex);
+}
+static bee_bool get_key_down_END(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_END()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_End)), rindex);
+}
+static bee_bool get_key_down_CAPS_LOCK(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_CAPS_LOCK()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_CapsLock)), rindex);
+}
+static bee_bool get_key_down_SCROLL_LOCK(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SCROLL_LOCK()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_ScrollLock)), rindex);
+}
+static bee_bool get_key_down_NUM_LOCK(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_NUM_LOCK()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_NumLock)), rindex);
+}
+static bee_bool get_key_down_PRINT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_PRINT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_PrintScreen)), rindex);
+}
+static bee_bool get_key_down_PAUSE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_PAUSE()] Wrong amount of arguments, 0 arguments are needed."); }
     RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Pause)), rindex);
 }
+static bee_bool get_key_down_F1(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F1()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F1)), rindex);
+}
+static bee_bool get_key_down_F2(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F2()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F2)), rindex);
+}
+static bee_bool get_key_down_F3(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F3()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F3)), rindex);
+}
+static bee_bool get_key_down_F4(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F4()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F4)), rindex);
+}
+static bee_bool get_key_down_F5(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F5()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F5)), rindex);
+}
+static bee_bool get_key_down_F6(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F6()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F6)), rindex);
+}
+static bee_bool get_key_down_F7(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F7()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F7)), rindex);
+}
+static bee_bool get_key_down_F8(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F8()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F8)), rindex);
+}
+static bee_bool get_key_down_F9(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F9()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F9)), rindex);
+}
+static bee_bool get_key_down_F10(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F10()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F10)), rindex);
+}
+static bee_bool get_key_down_F11(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F11()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F11)), rindex);
+}
+static bee_bool get_key_down_F12(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_F12()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_F12)), rindex);
+}
+// ...
+static bee_bool get_key_down_DECIMAL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_DECIMAL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_NumpadDecimal)), rindex);
+}
+static bee_bool get_key_down_DIVIDE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_DIVIDE()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_NumpadDivide)), rindex);
+}
+static bee_bool get_key_down_MULTIPLY(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_MULTIPLY()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_NumpadMultiply)), rindex);
+}
+static bee_bool get_key_down_ADD(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ADD()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_NumpadAdd)), rindex);
+}
+static bee_bool get_key_down_SHIFT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SHIFT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftShift) || is_key_down(KEY_RightShift)), rindex);
+}
+static bee_bool get_key_down_CONTROL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_CONTROL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftControl) || is_key_down(KEY_RightControl)), rindex);
+}
+static bee_bool get_key_down_ALT(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_ALT()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftAlt) || is_key_down(KEY_RightAlt)), rindex);
+}
+static bee_bool get_key_down_SUPER(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_SUPER()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftSuper) || is_key_down(KEY_RightSuper)), rindex);
+}
+static bee_bool get_key_down_WIN_MAC_SYMBOL(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_WIN_MAC_SYMBOL()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_LeftSuper) || is_key_down(KEY_RightSuper)), rindex);
+}
+static bee_bool get_key_down_MENU(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.get_key_MENU()] Wrong amount of arguments, 0 arguments are needed."); }
+    RETURN_VALUE(VALUE_FROM_BOOL(is_key_down(KEY_Menu)), rindex);
+}
+
+
+
+
+
+
 
 
 
