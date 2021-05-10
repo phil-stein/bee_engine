@@ -8,31 +8,33 @@ Todo
   - [x] vm corrupts between run_init() and run_update()
   - [ ] solid objects don't get rendered in build_mode
   - [ ] ~5-10 fps in build_mode
-  
+- graphics
+  - geometry shader normal direction
+  - anti-aliasing
+  - ...
 - [ ] gravity scripting
   - [x] game is slow as h***
   - [x] camera interface
   - make it not crash when
     - [x] .gravity file not found
     - [x] .gravity file has errors
-    - [ ] wrong argument passed to func
+    - [ ] wrong argument passed to function
     - [ ] wrong argument amount
-  - [ ] entity get interface (World -> world.get_entity("name"))
+  - [ ] this entity interface (`Entity->this.rot_x()`)
+  - [ ] other entity interface (`World -> world.get_entity("name")`)
   - [ ] finish input interface
     - [x] all keys
-    - [ ] get_key() & get_key_down()
+    - [x] get_key() & get_key_down()
     - [ ] mouse interface
     - [ ] controller interface
     - [ ] actions like unity ???
   - [ ] make attach script not be a popup but a window
   - [ ] load_file delegate for #import 
-  
 - [ ] in-engine text editor
   - [x] view source
   - [x] viewability
   - [ ] syntax highlighting
   - [ ] edit source ???
-  
 - [ ] play-mode
   - [x] make it not be clear-color
   - [ ] pause / start scripts

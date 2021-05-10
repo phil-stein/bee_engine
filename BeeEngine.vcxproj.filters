@@ -63,6 +63,9 @@
     <ClCompile Include="src\gravity_script.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gravity_interface.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">
@@ -111,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gravity_script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gravity_interface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
