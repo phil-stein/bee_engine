@@ -184,6 +184,7 @@ void update()
 
 	// ---- update ----
 
+#endif
 	
 	// ---- fps ----
 
@@ -207,7 +208,6 @@ void update()
 	set_window_title(title);
 
 	// -------------
-#endif
 
 }
 

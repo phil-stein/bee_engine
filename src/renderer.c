@@ -165,6 +165,9 @@ void renderer_init()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //set blending function: 1 - source_alpha, e.g. 0.6(60%) transparency -> 1 - 0.6 = 0.4(40%)
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 #endif
+
+	// set background-color
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 }
 
 void renderer_update()
@@ -174,7 +177,7 @@ void renderer_update()
 	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
-#if EDITOR_ACT
+#ifdef EDITOR_ACT
 	// need to restore the opengl state after calling nuklear
 	glEnable(GL_DEPTH_TEST); // enable the z-buffer
 	glEnable(GL_CULL_FACE);
@@ -276,7 +279,6 @@ void renderer_update()
 
 	// draw transparent objects -----------------------------------------------
 #ifdef EDITOR_ACT
-
 	// change back after skybox
 	if (wireframe_mode_enabled == BEE_TRUE)
 	{
@@ -322,6 +324,13 @@ void renderer_update()
 	}
 
 	// ------------------------------------------------------------------------
+
+#ifdef EDITOR_ACT
+	// do this so the nuklear gui is always drawn in solid-mode
+	// enable solid-mode in case wireframe-mode is on
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+#endif
 }
 
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global)

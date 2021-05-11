@@ -4,8 +4,8 @@
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
-#include "GLAD/glad.h"
-//#include "CGLM/cglm.h"
+// #include "GLAD/glad.h"
+// #include "CGLM/cglm.h"
 
 #include "global.h"
 // #include "file_handler.h"
@@ -43,11 +43,6 @@ int main(void)
 	printf(" -> renderer_init() finished\n\n");
 
 
-	// set background-color
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-	// glfwSetWindowOpacity(window, 0.5f);
-
 	// main loop
 	while (!glfwWindowShouldClose(get_window()))
 	{
@@ -72,8 +67,6 @@ int main(void)
 
 
 #ifdef EDITOR_ACT
-		// enable solid-mode in case wireframe-mode is on
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);	// @PERFORMANCE: do this more effiently
 		ui_update();
 #endif
 

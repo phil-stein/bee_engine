@@ -8,10 +8,18 @@ Todo
   - [x] vm corrupts between run_init() and run_update()
   - [ ] solid objects don't get rendered in build_mode
   - [ ] ~5-10 fps in build_mode
+  - [ ] add entity >> cube doesn't get rendered
 - graphics
-  - geometry shader normal direction
-  - anti-aliasing
-  - ...
+  - [ ] geometry shader normal direction
+  - [ ] anti-aliasing
+  - [ ] ...
+- editor
+  - [ ] add entity
+  - [ ] deselect entities
+- [ ] asset manager
+  - [ ] register all assets
+  - [ ] load & store on demand
+
 - [ ] gravity scripting
   - [x] game is slow as h***
   - [x] camera interface
