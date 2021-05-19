@@ -31,17 +31,16 @@ int main(void)
 {
 
 	// initialize the application
-	init();
+	init(); // @TODO: this should be last
 	printf(" -> init() finished\n");
 	ui_init();
 	printf(" -> ui_init() finished\n");
 	input_init();
 	printf(" -> input_init() finished\n");
-	// assetm_init();
-	// printf(" -> assetm_init() finished\n");
+	assetm_init();
+	printf(" -> assetm_init() finished\n");
 	renderer_init();
 	printf(" -> renderer_init() finished\n\n");
-
 
 	// main loop
 	while (!glfwWindowShouldClose(get_window()))

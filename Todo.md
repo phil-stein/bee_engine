@@ -6,29 +6,39 @@ Todo
 - buggs
   - [x] loading images is really slow
   - [x] vm corrupts between run_init() and run_update()
+  - [x] editor [show source code] cuts off the last line 
   - [ ] solid objects don't get rendered in build_mode
-  - [ ] ~5-10 fps in build_mode
+  - [ ] ~5-10 fps in build_mode *(prop. something being called that's unnecessary without the editor)*
   - [ ] add entity >> cube doesn't get rendered
+  - [ ] attach script doesn't work anymore 
 - graphics
   - [ ] geometry shader normal direction
   - [ ] anti-aliasing
-  - [ ] ...
+  - [ ] advanced blinn-phong
+  - [ ] gamma correction
+  - [ ] shadows
 - editor
+  - [ ] **!!! asset manager !!!**
+    - [ ] register all assets
+    - [ ] load & store on demand
   - [ ] add entity
   - [ ] deselect entities
-- [ ] asset manager
-  - [ ] register all assets
-  - [ ] load & store on demand
-
+  - [ ] visualize normal-direction
+  - [ ] show shader source
+  - [ ] gizmos
+  - [ ] ...
+- [ ] input 
+  - [ ] mouse input 
+  - [ ] controller input
 - [ ] gravity scripting
   - [x] game is slow as h***
   - [x] camera interface
   - make it not crash when
     - [x] .gravity file not found
     - [x] .gravity file has errors
-    - [ ] wrong argument passed to function
-    - [ ] wrong argument amount
-  - [ ] this entity interface (`Entity->this.rot_x()`)
+    - [x] wrong argument passed to function
+    - [x] wrong argument amount
+  - [ ] this entity interface (`Entity -> this.rot_x()`)
   - [ ] other entity interface (`World -> world.get_entity("name")`)
   - [ ] finish input interface
     - [x] all keys
@@ -36,7 +46,6 @@ Todo
     - [ ] mouse interface
     - [ ] controller interface
     - [ ] actions like unity ???
-  - [ ] make attach script not be a popup but a window
   - [ ] load_file delegate for #import 
 - [ ] in-engine text editor
   - [x] view source
@@ -58,5 +67,10 @@ Todo
   - [ ] deserialization
   - [ ] switching
 - [ ] particle system
+  - [ ] object pooling
+  - [ ] instancing 
+  - [ ] textured & colored (also transparent)
+  - [ ] billboards (no cam projection) 
 - [ ] optimization
   - [ ] use uniform buffers for matrices and maybe lights
+  - [ ] compress asset key strings into int's or float's 

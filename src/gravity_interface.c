@@ -43,9 +43,12 @@ void setup_entity_class(gravity_vm* vm)
 static bee_bool move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 2);
+    if (nargs != 2) { throw_error("[Entity.move_x(float)] Wrong amount of arguments, 1 arguments are needed."); return;}
+
     gravity_value_t v1 = GET_VALUE(1);
-    //gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    { throw_error("[World.move_x(float)] Wrong argument types."); return; }
+
 
     int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(cur_script->entity_index);
@@ -63,9 +66,11 @@ static bee_bool move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 static bee_bool move_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 2);
+    if (nargs != 2) { throw_error("[Entity.move_y(float)] Wrong amount of arguments, 1 arguments are needed."); return; }
+    
     gravity_value_t v1 = GET_VALUE(1);
-    //gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    { throw_error("[World.move_x(float)] Wrong argument types."); return; }
 
     int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(cur_script->entity_index);
@@ -83,9 +88,10 @@ static bee_bool move_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 static bee_bool move_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 2);
+    if (nargs != 2) { throw_error("[Entity.move_z(float)] Wrong amount of arguments, 1 arguments are needed."); return; }
     gravity_value_t v1 = GET_VALUE(1);
-    //gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    { throw_error("[World.move_x(float)] Wrong argument types."); return; }
 
     int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(cur_script->entity_index);
@@ -104,7 +110,7 @@ static bee_bool move_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 static bee_bool get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Entity.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     // int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(cur_script->entity_index);
@@ -118,7 +124,7 @@ static bee_bool get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 static bee_bool get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Entity.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(cur_script->entity_index);
@@ -132,7 +138,7 @@ static bee_bool get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 static bee_bool get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Entity.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(cur_script->entity_index);
@@ -161,7 +167,7 @@ void setup_game_class(gravity_vm* vm)
 static bee_bool get_game_total_sec(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Game.get_total_secs()] Wrong amount of arguments, 0 arguments are needed."); }
 
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(get_total_secs()), rindex);
@@ -169,7 +175,7 @@ static bee_bool get_game_total_sec(gravity_vm* vm, gravity_value_t* args, uint16
 static bee_bool get_game_delta_t(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Game.get_delta_t()] Wrong amount of arguments, 0 arguments are needed."); }
 
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(get_delta_time()), rindex);
@@ -177,7 +183,8 @@ static bee_bool get_game_delta_t(gravity_vm* vm, gravity_value_t* args, uint16_t
 static bee_bool game_quit(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Game.quit()] Wrong amount of arguments, 0 arguments are needed."); }
+
 
     close_window();
 }
@@ -208,10 +215,14 @@ static bee_bool world_get_entity(gravity_vm* vm, gravity_value_t* args, uint16_t
     }
 
     gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_STRING(v1) == BEE_FALSE)
+    {
+        throw_error("[World.get_entity(string)] Wrong argument type.");
+    }
 
-    printf("passed ent name: %s\n", VALUE_AS_CSTRING(v1));
+    // printf("passed ent name: %s\n", VALUE_AS_CSTRING(v1));
     int id = get_entity_id_by_name(VALUE_AS_CSTRING(v1));
-    printf("returned ent id: %d\n", id);
+    // printf("returned ent id: %d\n", id);
 
     if (id == 9999)
     {
@@ -226,13 +237,13 @@ static bee_bool world_move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
     if (nargs != 3)
     {
-        throw_error("[World.move_x(int, float)] Wrong amount of arguments, 2 argument are needed.");
+        throw_error("[World.move_x(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     gravity_value_t v2 = GET_VALUE(2);
     if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
     {
-        throw_error("[World.move_x(int, float)] Wrong argument types.");
+        throw_error("[World.move_x(int, float)] Wrong argument types."); return;
     }
 
     // int ents_len; get_entity_len(&ents_len);
@@ -247,13 +258,13 @@ static bee_bool world_move_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
     if (nargs != 3)
     {
-        throw_error("[World.move_y(int, float)] Wrong amount of arguments, 2 argument are needed.");
+        throw_error("[World.move_y(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     gravity_value_t v2 = GET_VALUE(2);
     if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
     {
-        throw_error("[World.move_y(int, float)] Wrong argument types.");
+        throw_error("[World.move_y(int, float)] Wrong argument types."); return;
     }
 
     // int ents_len; get_entity_len(&ents_len);
@@ -267,13 +278,13 @@ static bee_bool world_move_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t
 {
     if (nargs != 3)
     {
-        throw_error("[World.move_z(int, float)] Wrong amount of arguments, 2 argument are needed.");
+        throw_error("[World.move_z(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     gravity_value_t v2 = GET_VALUE(2);
     if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
     {
-        throw_error("[World.move_z(int, float)] Wrong argument types.");
+        throw_error("[World.move_z(int, float)] Wrong argument types."); return;
     }
 
     // int ents_len; get_entity_len(&ents_len);
@@ -288,12 +299,12 @@ static bee_bool world_get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t 
 {
     if (nargs != 2)
     {
-        throw_error("[World.get_x(int)] Wrong amount of arguments, 1 argument is needed.");
+        throw_error("[World.get_x(int)] Wrong amount of arguments, 1 argument is needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     if (VALUE_ISA_INT(v1) == BEE_FALSE)
     {
-        throw_error("[World.move_x(int)] Wrong argument types.");
+        throw_error("[World.move_x(int)] Wrong argument types."); return;
     }
 
     entity* ent = get_entity(VALUE_AS_INT(v1));
@@ -307,12 +318,12 @@ static bee_bool world_get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t 
 {
     if (nargs != 2)
     {
-        throw_error("[World.get_y(int)] Wrong amount of arguments, 1 argument is needed.");
+        throw_error("[World.get_y(int)] Wrong amount of arguments, 1 argument is needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     if (VALUE_ISA_INT(v1) == BEE_FALSE)
     {
-        throw_error("[World.move_y(int)] Wrong argument types.");
+        throw_error("[World.move_y(int)] Wrong argument types."); return;
     }
 
     entity* ent = get_entity(VALUE_AS_INT(v1));
@@ -326,12 +337,12 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
 {
     if (nargs != 2)
     {
-        throw_error("[World.get_z(int)] Wrong amount of arguments, 1 argument is needed.");
+        throw_error("[World.get_z(int)] Wrong amount of arguments, 1 argument is needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     if (VALUE_ISA_INT(v1) == BEE_FALSE)
     {
-        throw_error("[World.move_z(int)] Wrong argument types.");
+        throw_error("[World.move_z(int)] Wrong argument types."); return;
     }
 
     entity* ent = get_entity(VALUE_AS_INT(v1));
@@ -364,8 +375,12 @@ void setup_camera_class(gravity_vm* vm)
 static bee_bool move_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 2);
+    if (nargs != 2) { throw_error("[Camera.move_x(float)] Wrong amount of arguments, 1 argument are needed."); return; }
     gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Camera.move_z(float)] Wrong argument type."); return;
+    }
 
     vec3 pos; get_camera_pos(&pos);
     pos[0] += VALUE_AS_FLOAT(v1);
@@ -374,9 +389,12 @@ static bee_bool move_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 static bee_bool move_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 2);
+    if (nargs != 2) { throw_error("[Camera.move_y(float)] Wrong amount of arguments, 1 argument are needed."); return;}
     gravity_value_t v1 = GET_VALUE(1);
-    //gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Camera.move_z(float)] Wrong argument type."); return;
+    }
 
     vec3 pos; get_camera_pos(&pos);
     pos[1] += VALUE_AS_FLOAT(v1);
@@ -385,8 +403,12 @@ static bee_bool move_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 static bee_bool move_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 2);
+    if (nargs != 2) { throw_error("[Camera.move_z(float)] Wrong amount of arguments, 1 argument are needed."); return;}
     gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Camera.move_z(float)] Wrong argument type."); return;
+    }
 
     vec3 pos; get_camera_pos(&pos);
     pos[2] += VALUE_AS_FLOAT(v1);
@@ -396,7 +418,7 @@ static bee_bool move_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 static bee_bool get_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Camera.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     vec3 pos; get_camera_pos(&pos);
 
@@ -406,7 +428,7 @@ static bee_bool get_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 static bee_bool get_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Camera.get_y()] Wrong amount of arguments, 0 arguments are needed."); return;}
 
     vec3 pos; get_camera_pos(&pos);
 
@@ -416,7 +438,7 @@ static bee_bool get_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 static bee_bool get_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
-    assert(nargs == 1);
+    if (nargs != 1) { throw_error("[Camera.get_z()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     vec3 pos; get_camera_pos(&pos);
 

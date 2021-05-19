@@ -1428,11 +1428,11 @@ void properties_window(int ent_len)
         nk_layout_row_static(ctx, 25, 80, 2);
         if (nk_button_label(ctx, "Play"))
         {
-            assert(0 == 1);
+            assert(0 == 1); // doesn't work yet
         }
         if (nk_button_label(ctx, "Pause"))
         {
-            assert(0 == 1);
+            assert(0 == 1); // doesn't work yet
         }
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
@@ -1949,6 +1949,26 @@ void properties_window(int ent_len)
                         *prop.tint_b = tint.b;
                     }
 
+                    // spacing
+                    nk_layout_row_static(ctx, 5, 10, 1);
+                    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
+                    nk_layout_row_dynamic(ctx, 25, 2);
+                    if (nk_button_label(ctx, "Vert Source Code"))
+                    {
+                        char* src = "\n\r\tNot Implemented lol\n...\r";
+                        set_source_code_window(src);
+                    }
+                    if (nk_button_label(ctx, "Frag Source Code"))
+                    {
+                        char* src = "\n\r\tNot Implemented lol\n...\r";
+                        set_source_code_window(src);
+                    }
+
+                    // spacing
+                    nk_layout_row_static(ctx, 5, 10, 1);
+                    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
                     if (nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
                     {
                         nk_layout_row_dynamic(ctx, 25, 2);
@@ -2412,7 +2432,7 @@ void source_code_window()
             strcpy(src, source_code);
             src[strlen(source_code) - 1] = '\0';
             // printf("source code copy: \n%s\n", src);
-            for ( int c = 0; c < strlen(source_code); ++c )
+            for ( int c = 0; c < strlen(source_code); ++c)
             {
                 /*
                 if (src[c] == '\n')
@@ -2440,7 +2460,7 @@ void source_code_window()
                 // printf("source code: \n%s\n", source_code);
                 */
 
-                if ( src[c] == '\n' )
+                if ( src[c] == '\n' || src[c] == '\0' )
                 {
                     buffer[buffer_pos] = '\0';
                     // new line
@@ -2476,6 +2496,7 @@ void source_code_window()
                 }
 
             }
+            // src = realloc(src, 0);
             // free(src);
         }
 

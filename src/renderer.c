@@ -641,6 +641,7 @@ entity_properties get_entity_properties(int index)
 		prop.dif_tex_name	=  entities[index]._material.dif_tex.name;
 		prop.spec_tex_name	=  entities[index]._material.spec_tex.name;
 		prop.is_transparent = &entities[index]._material.is_transparent;
+
 	}
 	if (entities[index].has_light == BEE_TRUE)
 	{

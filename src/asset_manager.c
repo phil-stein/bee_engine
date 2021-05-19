@@ -10,10 +10,12 @@
 
 // ---- vars ----
 // hashmaps using stb_ds.h
-// prob. should replace these with something faster sometime
-struct { char* key;  int  value; }* textures  = NULL;
+// prob. should replace these with something faster sometime [I mean maybe but it's actually pretty fast]
+struct { char* key;  int  value;  }* textures  = NULL;
+struct { int key;	 char* value; }*texture_paths = NULL;
 int tex_len = 0;
 texture* tex = NULL;
+
 struct { char* key;  material value; }* materials = NULL;
 struct { char* key;  mesh     value; }* meshes    = NULL;
 // light* lights; // seems weird idk why
@@ -31,7 +33,7 @@ void assetm_init()
 	assert(dir_path != NULL);
 
 	// printf("\n-------------\n");
-	// search_dir(dir_path);
+	search_dir(dir_path);
 	// printf("\n-------------\n");
 
 }
@@ -86,6 +88,8 @@ void assetm_cleanup()
 {
 	// free the allocated memory
 	shfree(textures);
+	hmfree(texture_paths);
+
 	shfree(materials);
 	shfree(meshes);
 
@@ -109,6 +113,9 @@ texture get_texture(const char* name)
 void log_texture(const char* path, const char* name)
 {
 	shput(textures, name, 9999);
+	int i = shgeti(textures, name);
+	hmput(texture_paths, i, path);
+	printf("texture path: %s\n", path);
 }
 
 void create_texture(const char* name)

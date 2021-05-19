@@ -47,6 +47,9 @@ typedef struct
 	char* spec_tex_name;
 	bee_bool* is_transparent;
 
+	char* vert_source;
+	char* frag_source;
+
 
 	// light
 	enum light_type* _light_type;
