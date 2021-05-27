@@ -12,7 +12,7 @@
 // hashmaps using stb_ds.h
 // prob. should replace these with something faster sometime [I mean maybe but it's actually pretty fast]
 struct { char* key;  int  value;  }* textures  = NULL;
-struct { int key;	 char* value; }*texture_paths = NULL;
+struct { int key;	 char* value; }* texture_paths = NULL;
 int tex_len = 0;
 texture* tex = NULL;
 
@@ -98,10 +98,11 @@ void assetm_cleanup()
 
 texture get_texture(const char* name)
 {
+	printf("requested texture : %s\n", name);
 	int i = shget(textures, name);
-	if (i == NULL)
+	if (0 == 1) // check if texture exits
 	{
-		fprintf(stderr, "");
+		fprintf(stderr, "ERROR: Requested Texture hasn't been logged.");
 	}
 	else if (i == 9999)
 	{
@@ -120,8 +121,9 @@ void log_texture(const char* path, const char* name)
 
 void create_texture(const char* name)
 {
-	assert(1 == 0); // not yet working
-	const char* path = NULL; // log this and retrieve it here
+	// assert(1 == 0); // not yet working
+	int path_idx = (int)hmgeti(textures, name);
+	const char* path = hmget(texture_paths, path_idx); // log this and retrieve it here
 	texture t = texture_create_from_path(path, name, BEE_FALSE);
 
 	shput(textures, name, tex_len);

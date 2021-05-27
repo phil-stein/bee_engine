@@ -15,6 +15,7 @@ typedef struct
 {
 	u32 handle;
 	char* name;
+	char* path;
 }texture;
 
 typedef struct

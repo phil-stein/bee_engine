@@ -66,8 +66,9 @@ void init()
 											   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag");
 	
 	// load texture
-	texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png", BEE_FALSE);
+	// texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png", BEE_FALSE);
 	texture crate_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_spec.png", "crate01_spec.png", BEE_FALSE);
+	texture crate_dif_tex  = get_texture("crate01_dif.png");
 
 	vec2 tile = { 1.0f, 1.0f };
 	material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");

@@ -30,6 +30,8 @@ f32 last_frame = 0.0f;	// Time of last frame
 int main(void)
 {
 
+	assetm_init();
+	printf(" -> assetm_init() finished\n");
 	// initialize the application
 	init(); // @TODO: this should be last
 	printf(" -> init() finished\n");
@@ -37,8 +39,6 @@ int main(void)
 	printf(" -> ui_init() finished\n");
 	input_init();
 	printf(" -> input_init() finished\n");
-	assetm_init();
-	printf(" -> assetm_init() finished\n");
 	renderer_init();
 	printf(" -> renderer_init() finished\n\n");
 
