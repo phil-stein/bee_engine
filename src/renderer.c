@@ -564,14 +564,28 @@ void entity_add_script(int entity_index, const char* path)
 {
 	gravity_script script = make_script(path);
 	script.entity_index = entity_index;
+#ifdef EDITOR_ACT
+	script.active = BEE_FALSE;
+#endif
 	arrput(entities[entity_index].scripts, script);
 	entities[entity_index].scripts_len++;
+
 }
 void entity_remove_script(int entity_index, int script_index)
 {
 	free_script(&entities[entity_index].scripts[script_index]);
 	arrdel(entities[entity_index].scripts, script_index);
 	entities[entity_index].scripts_len--;
+}
+void set_all_scripts(bee_bool act)
+{
+	for (int i = 0; i < entities_len; ++i)
+	{
+		for (int n = 0; n < entities[i].scripts_len; ++n)
+		{
+			entities[i].scripts[n].active = act;
+		}
+	}
 }
 
 void get_entity_len(int* _entities_len)

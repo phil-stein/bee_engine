@@ -33,6 +33,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name);
 void entity_add_script(int entity_index, const char* path);
 void entity_remove_script(int entity_index, int script_index);
+void set_all_scripts(bee_bool act);
 
 void add_entity_cube();
 

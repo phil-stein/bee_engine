@@ -11,10 +11,12 @@
 // ---- vars ----
 // hashmaps using stb_ds.h
 // prob. should replace these with something faster sometime [I mean maybe but it's actually pretty fast]
-struct { char* key;  int  value;  }* textures  = NULL;
-struct { int key;	 char* value; }* texture_paths = NULL;
-int tex_len = 0;
+struct { char* key;  int   value; }* textures	   = NULL;
+int textures_len = 0;
+struct { int   key;	 char* value; }* texture_paths = NULL; // turn this into an array, god damn ahhhh
+int texture_paths_len = 0;
 texture* tex = NULL;
+int tex_len = 0;
 
 struct { char* key;  material value; }* materials = NULL;
 struct { char* key;  mesh     value; }* meshes    = NULL;
@@ -35,6 +37,21 @@ void assetm_init()
 	// printf("\n-------------\n");
 	search_dir(dir_path);
 	// printf("\n-------------\n");
+
+	//
+	// !!! the values dont get put into the array or 9999 is overflow !!!
+	//
+
+	// debug print the contents of textures
+	for (int i = 0; i < textures_len; ++i)
+	{
+		printf("%d - texture_id: %d\n", i, textures[i]);
+		// if (shget(textures, i) != 9999)
+		// {
+		// 	int idx = shget(textures, i);
+		// 	printf("-> \"%s\"", hmget(texture_paths, idx));
+		// }
+	}
 
 }
 
@@ -89,6 +106,7 @@ void assetm_cleanup()
 	// free the allocated memory
 	shfree(textures);
 	hmfree(texture_paths);
+	arrfree(tex);
 
 	shfree(materials);
 	shfree(meshes);
@@ -98,32 +116,44 @@ void assetm_cleanup()
 
 texture get_texture(const char* name)
 {
-	printf("requested texture : %s\n", name);
+	printf("requested texture: \"%s\"\n", name);
 	int i = shget(textures, name);
+
 	if (0 == 1) // check if texture exits
 	{
-		fprintf(stderr, "ERROR: Requested Texture hasn't been logged.");
+		fprintf(stderr, "ERROR: Requested Texture hasn't been logged.\n");
 	}
-	else if (i == 9999)
+	else if (i == 9999 || i > tex_len || 0 == 0)
 	{
 		create_texture(name);
 	}
-	return tex[shget(textures, name)];
+
+	printf("id requested texture: %d\n", i);
+
+	printf("arrlen tex: %d, tex_len: %d\n", arrlen(tex), tex_len);
+	texture result = tex[shget(textures, name)];
+
+	assert(&result);
+	
+	return result;
 }
 
 void log_texture(const char* path, const char* name)
 {
 	shput(textures, name, 9999);
+	textures_len++;
 	int i = shgeti(textures, name);
 	hmput(texture_paths, i, path);
-	printf("texture path: %s\n", path);
+	texture_paths_len++;
+	printf("texture path: \"%s\"; texture name: \"%s\"; texture id: %d\n", path, name, i);
 }
 
 void create_texture(const char* name)
 {
 	// assert(1 == 0); // not yet working
-	int path_idx = (int)hmgeti(textures, name);
+	int path_idx = (int)shgeti(textures, name);
 	const char* path = hmget(texture_paths, path_idx); // log this and retrieve it here
+	printf("-> create texture path: \"%s\"; path index: %d\n", path, path_idx);
 	texture t = texture_create_from_path(path, name, BEE_FALSE);
 
 	shput(textures, name, tex_len);

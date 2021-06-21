@@ -1362,6 +1362,7 @@ void properties_window(int ent_len)
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
     {
+        static int scripts_act = 0;
         static float property_pos_x = 0.0f;
         static float property_pos_y = 0.0f;
         static float property_pos_z = 0.0f;
@@ -1425,15 +1426,14 @@ void properties_window(int ent_len)
 
         // ---- play / pause ----
         
-        nk_layout_row_static(ctx, 25, 80, 2);
-        if (nk_button_label(ctx, "Play"))
+        nk_layout_row_static(ctx, 25, 80, 1);
+        if (nk_button_label(ctx, scripts_act == 0 ? "Play" : "Pause"))
         {
-            assert(0 == 1); // doesn't work yet
+            
+            set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
+            scripts_act = scripts_act == 0 ? 1 : 0;
         }
-        if (nk_button_label(ctx, "Pause"))
-        {
-            assert(0 == 1); // doesn't work yet
-        }
+        
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
         nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
@@ -1770,20 +1770,19 @@ void properties_window(int ent_len)
             nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
             // ---- button ----
-            nk_layout_row_static(ctx, 25, 80, 1);
-            if (nk_button_label(ctx, "deselect"))
-            {
-                for (int i = 0; i < ent_len; ++i)
-                {
-                    selected_entities[i] = nk_false;
-                }
-            }
+            // nk_layout_row_static(ctx, 25, 80, 1);
+            // if (nk_button_label(ctx, "deselect"))
+            // {
+            //     for (int i = 0; i < ent_len; ++i)
+            //     {
+            //         selected_entities[i] = nk_false;
+            //     }
+            // }
             // ----------------
             
             // spacing
             nk_layout_row_static(ctx, 5, 10, 1);
             nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
-
 
             static int selected_entity_old;
             static int selected_entity = -999;
@@ -1809,7 +1808,17 @@ void properties_window(int ent_len)
             }
             selected_entity_old = selected_entity;
 
-            if (selected_entity == -999 || selected_entity >= ent_len || selected_entity < 0)
+            nk_bool is_selected = nk_false;
+            for (int i = 0; i < ent_len; ++i)
+            {
+                if (selected_entities[i] == nk_true)
+                {
+                    is_selected = nk_true;
+                    break;
+                }
+            }
+
+            if (is_selected == nk_false || selected_entity == -999 || selected_entity >= ent_len || selected_entity < 0)
             {
                 nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                 nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);

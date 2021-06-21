@@ -21,6 +21,7 @@ Todo
   - [ ] **!!! asset manager !!!**
     - [ ] register all assets
     - [ ] load & store on demand
+  - [ ] !!! editor cam v. game cam (camera entity)
   - [ ] add entity
   - [ ] deselect entities
   - [ ] visualize normal-direction

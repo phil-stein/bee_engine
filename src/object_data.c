@@ -152,7 +152,7 @@ mesh make_plane_mesh()
 
 	int vert_len = sizeof(verts) / sizeof(verts[0]);
 	int ind_len = sizeof(indices) / sizeof(indices[0]);
-	printf("vert_len: %d, ind_len: %d\n", vert_len, ind_len);
+	// printf("vert_len: %d, ind_len: %d\n", vert_len, ind_len);
 	return make_mesh(verts, vert_len, indices, ind_len, "plane");
 }
 
