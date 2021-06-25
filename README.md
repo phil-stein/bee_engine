@@ -33,17 +33,12 @@ bee engine is supposed to be a lightweight game-framework coupled with an editor
 ### planned features
 
 - [x] basic 3d rendering
-
 - [x] mesh, model structs & funcs
-
 - [x] loading .obj file
-
 - [x] renderer, etc. architecture & api
-
 - [x] nuklear
-
-- [ ] native scripting
-
+- [x] gravity scripting
+- [ ] asset manager
 - [ ] first game test
 
 ### possible features
@@ -52,7 +47,7 @@ bee engine is supposed to be a lightweight game-framework coupled with an editor
 
 - [ ] physics engine
 
-- [ ] scripting language (gravity / wren / lua)
+- [ ] custom game ui
 
 - [ ] advanced 3d
 	- [ ] shadows

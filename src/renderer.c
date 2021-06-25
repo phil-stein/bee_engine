@@ -645,16 +645,18 @@ entity_properties get_entity_properties(int index)
 		prop.mesh_visible = &entities[index]._mesh.visible;
 
 		// material
-		prop.material_name	=  entities[index]._material.name;
-		prop.shininess		= &entities[index]._material.shininess;
-		prop.tile_x			= &entities[index]._material.tile[0];
-		prop.tile_y			= &entities[index]._material.tile[1];
-		prop.tint_r			= &entities[index]._material.tint[0];
-		prop.tint_g			= &entities[index]._material.tint[1];
-		prop.tint_b			= &entities[index]._material.tint[2];
-		prop.dif_tex_name	=  entities[index]._material.dif_tex.name;
-		prop.spec_tex_name	=  entities[index]._material.spec_tex.name;
-		prop.is_transparent = &entities[index]._material.is_transparent;
+		prop.material_name	 =  entities[index]._material.name;
+		prop.shininess		 = &entities[index]._material.shininess;
+		prop.tile_x			 = &entities[index]._material.tile[0];
+		prop.tile_y			 = &entities[index]._material.tile[1];
+		prop.tint_r			 = &entities[index]._material.tint[0];
+		prop.tint_g			 = &entities[index]._material.tint[1];
+		prop.tint_b			 = &entities[index]._material.tint[2];
+		prop.dif_tex_name	 =  entities[index]._material.dif_tex.name;
+		prop.spec_tex_name	 =  entities[index]._material.spec_tex.name;
+		prop.is_transparent  = &entities[index]._material.is_transparent;
+		prop.dif_tex_handle  = &entities[index]._material.dif_tex.handle;
+		prop.spec_tex_handle = &entities[index]._material.spec_tex.handle;
 
 	}
 	if (entities[index].has_light == BEE_TRUE)

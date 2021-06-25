@@ -9,12 +9,18 @@
 #include "file_handler.h"
 
 // ---- vars ----
-// hashmaps using stb_ds.h
+// hashmaps & dyn.-arrays using stb_ds.h
 // prob. should replace these with something faster sometime [I mean maybe but it's actually pretty fast]
+
+// value: index of texture in 'tex', key: name of texture 
 struct { char* key;  int   value; }* textures	   = NULL;
 int textures_len = 0;
+
+// value: path to image, key: texture-index in 'textures'
 struct { int   key;	 char* value; }* texture_paths = NULL; // turn this into an array, god damn ahhhh
 int texture_paths_len = 0;
+
+// array of holding textures
 texture* tex = NULL;
 int tex_len = 0;
 
@@ -110,8 +116,6 @@ void assetm_cleanup()
 
 	shfree(materials);
 	shfree(meshes);
-
-	// arrfree(tex);
 }
 
 texture get_texture(const char* name)
@@ -123,7 +127,7 @@ texture get_texture(const char* name)
 	{
 		fprintf(stderr, "ERROR: Requested Texture hasn't been logged.\n");
 	}
-	else if (i == 9999 || i > tex_len || 0 == 0)
+	else if (i == 9999 || i > tex_len) // 0 == 0
 	{
 		create_texture(name);
 	}
@@ -150,7 +154,6 @@ void log_texture(const char* path, const char* name)
 
 void create_texture(const char* name)
 {
-	// assert(1 == 0); // not yet working
 	int path_idx = (int)shgeti(textures, name);
 	const char* path = hmget(texture_paths, path_idx); // log this and retrieve it here
 	printf("-> create texture path: \"%s\"; path index: %d\n", path, path_idx);

@@ -183,7 +183,7 @@ texture texture_create_from_path(const char* file_path, const char* name, bee_bo
     tex.name = name;
     tex.path = file_path;
 
-    printf("loaded texture: '%s' from '%s'\n", name, file_path);
+    printf("loaded texture: '%s' from '%s', handle: '%d'\n", name, file_path, handle);
 
     return tex;
 }

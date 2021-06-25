@@ -65,6 +65,8 @@ void init()
 	u32 shader_unlit = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
 											   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag");
 	
+	// texture test_tex  = get_texture("crate01_dif.png");
+	
 	// load texture
 	// texture crate_dif_tex  = get_texture("crate01_dif.png");
 	texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png", BEE_FALSE);

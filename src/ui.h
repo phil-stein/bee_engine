@@ -45,6 +45,8 @@ typedef struct
 	
 	char* dif_tex_name;
 	char* spec_tex_name;
+	u32* dif_tex_handle;
+	u32* spec_tex_handle;
 	bee_bool* is_transparent;
 
 	char* vert_source;
