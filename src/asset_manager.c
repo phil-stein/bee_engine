@@ -49,16 +49,18 @@ void assetm_init()
 	//
 
 	// debug print the contents of textures
-	for (int i = 0; i < textures_len; ++i)
-	{
-		printf("%d - texture_id: %d\n", i, textures[i]);
-		// if (shget(textures, i) != 9999)
-		// {
-		// 	int idx = shget(textures, i);
-		// 	printf("-> \"%s\"", hmget(texture_paths, idx));
-		// }
-	}
-
+	// for (int i = 0; i < textures_len; ++i)
+	// {
+	// 	printf("%d - texture_id: %d\n", i, textures[i]);
+	// 	// if (shget(textures, i) != 9999)
+	// 	// {
+	// 	// 	int idx = shget(textures, i);
+	// 	// 	printf("-> \"%s\"", hmget(texture_paths, idx));
+	// 	// }
+	// }
+	printf("'crate01_dif.png' texture id: '%d'\n", shget(textures, "crate01_dif.png"));
+	printf("'crate01_spec.png' texture id: '%d'\n", shget(textures, "crate01_spec.png"));
+	printf("'blank.png' texture id: '%d'\n", shget(textures, "blank.png"));
 }
 
 void search_dir(const char* dir_path)
@@ -120,8 +122,8 @@ void assetm_cleanup()
 
 texture get_texture(const char* name)
 {
-	printf("requested texture: \"%s\"\n", name);
 	int i = shget(textures, name);
+	printf("requested texture: \"%s\", id: \"%d\"\n", name, i);
 
 	if (0 == 1) // check if texture exits
 	{
@@ -129,6 +131,7 @@ texture get_texture(const char* name)
 	}
 	else if (i == 9999 || i > tex_len) // 0 == 0
 	{
+		printf(" ---- crating texture ----\n");
 		create_texture(name);
 	}
 
@@ -136,20 +139,25 @@ texture get_texture(const char* name)
 
 	printf("arrlen tex: %d, tex_len: %d\n", arrlen(tex), tex_len);
 	texture result = tex[shget(textures, name)];
-
-	assert(&result);
 	
 	return result;
 }
 
 void log_texture(const char* path, const char* name)
 {
-	shput(textures, name, 9999);
+	int len = 0;
+	do { len++; } 	while (name[len] != '\0');
+
+	char* name_cpy = calloc(len, sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+	shput(textures, name_cpy, 9999);
 	textures_len++;
 	int i = shgeti(textures, name);
 	hmput(texture_paths, i, path);
 	texture_paths_len++;
 	printf("texture path: \"%s\"; texture name: \"%s\"; texture id: %d\n", path, name, i);
+	free(name_cpy);
 }
 
 void create_texture(const char* name)

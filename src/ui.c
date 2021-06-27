@@ -2399,26 +2399,6 @@ void asset_browser_window()
 
         }
 
-        // only works once the asset-managfer works
-        // texture tex = get_texture("name.png");
-        // struct nk_image img = nk_image_id(tex.handle);
-        // struct nk_rect bounds;
-        // bounds.w = 100;
-        // bounds.h = 100;
-        // bounds.x = 100;
-        // bounds.y = 100;
-        // nk_draw_image(ctx, bounds, &img, nk_rgb(255, 255, 255));
-        
-        u32 handle = 1;
-        struct nk_image img = nk_image_id(handle);
-
-        // static const float ratio[] = { 0.15f, 0.50f, 0.35f };
-        // nk_layout_row(ctx, NK_DYNAMIC, 100, 3, ratio);
-        // nk_spacing(ctx, 1);
-        // nk_layout_row(ctx, NK_STATIC, 100, 1, &ratio);
-        nk_layout_row_static(ctx, 150, 150, 1);
-        nk_image(ctx, img);
-
     }
     nk_end(ctx);
 }
