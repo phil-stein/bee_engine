@@ -9,6 +9,23 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 <img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot06.png" alt="logo" width="1000">
 
+##  bee engine goal product
+
+bee engine is supposed to be a lightweight game-framework coupled with an editor acting mostly as a specialized and easily editable/extendable IDE.  
+
+<img src="https://github.com/phil-stein/Personal_Notes/blob/main/BeeEngine/BeeEngine_Prototype_Basic.png" alt="logo" width="600">
+
+**image just a concept**
+*Basic layout of the editor with code-editing and scene-inspection capabilities*
+
+
+<img src="https://github.com/phil-stein/Personal_Notes/blob/main/BeeEngine/BeeEngine_Prototype_Advanced.png" alt="logo" width="600">
+
+**image just a concept**
+*Editor with an extension a map-editor*
+
+<br>
+
 
 
 ## roadmap
