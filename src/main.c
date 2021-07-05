@@ -42,6 +42,10 @@ int main(void)
 	renderer_init();
 	printf(" -> renderer_init() finished\n\n");
 
+	// gui console test 
+	submit_txt_console("console messages working :)");
+	submit_txt_console("djfkvndfkjvhndifvhnjydlvhnldihfbvdfijbvhnpijubdhfvdihubvuihi");
+
 	// main loop
 	while (!glfwWindowShouldClose(get_window()))
 	{

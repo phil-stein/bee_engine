@@ -68,34 +68,43 @@ void init()
 	// texture test_tex  = get_texture("crate01_dif.png");
 	
 	// load texture
-	// texture crate_dif_tex  = get_texture("crate01_dif.png");
-	texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png", BEE_FALSE);
-	texture crate_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_spec.png", "crate01_spec.png", BEE_FALSE);
+	texture crate_dif_tex   = get_texture("crate01_dif.png");
+	// texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png", BEE_FALSE);
+	texture crate_spec_tex  = get_texture("crate01_spec.png");
+	// texture crate_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_spec.png", "crate01_spec.png", BEE_FALSE);
 
 	vec2 tile = { 1.0f, 1.0f };
 	material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");
 
-	texture grass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_dif.png", "grass01_dif.png", BEE_FALSE);
-	texture grass_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_spec.png", "grass01_spec.png", BEE_FALSE);
+	//texture grass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_dif.png", "grass01_dif.png", BEE_FALSE);
+	texture grass_dif_tex  = get_texture("grass01_dif.png");
+	// texture grass_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_spec.png", "grass01_spec.png", BEE_FALSE);
+	texture grass_spec_tex  = get_texture("grass01_spec.png");
 	material mat_grass	   = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_grass");
 
-	texture barrel_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_dif.png", "robot01_dif.png", BEE_FALSE);
-	texture barrel_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_spec.png", "robot01_spec.png", BEE_FALSE);
+	// texture barrel_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_dif.png", "robot01_dif.png", BEE_FALSE);
+	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
+	// texture barrel_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_spec.png", "robot01_spec.png", BEE_FALSE);
+	texture barrel_spec_tex = get_texture("barrel01_spec.png");
 	material mat_barrel		= make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_barrel");
 	
-	texture robot_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\robot01_dif.png", "barrel01_dif.png", BEE_FALSE);
-	texture robot_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\robot01_spec.png", "barrel01_spec.png", BEE_FALSE);
+	// texture robot_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\robot01_dif.png", "barrel01_dif.png", BEE_FALSE);
+	texture robot_dif_tex  = get_texture("robot01_dif.png");
+	// texture robot_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\robot01_spec.png", "barrel01_spec.png", BEE_FALSE);
+	texture robot_spec_tex = get_texture("robot01_spec.png");
 	material mat_robot	   = make_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_robot");
 
 	mesh m_cube = make_cube_mesh();
 
-	texture blank_texture	 = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\blank.png", "blank.png", BEE_FALSE);
-	material mat_blank		 = make_material(shader, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile, "MAT_blank");
-	material mat_blank_unlit = make_material(shader_unlit, blank_texture, blank_texture, BEE_FALSE, 1.0f, tile, "MAT_blank_unlit");
+	// texture blank_tex	 = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\blank.png", "blank.png", BEE_FALSE);
+	texture blank_tex = get_texture("blank.png");
+	material mat_blank		 = make_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank");
+	material mat_blank_unlit = make_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank_unlit");
 	
 
-	texture glass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\window.png", "window.png", BEE_FALSE);
-	material mat_glass = make_material(shader, glass_dif_tex, blank_texture, BEE_TRUE, 1.0f, tile, "MAT_glass");
+	// texture glass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\window.png", "window.png", BEE_FALSE);
+	texture glass_dif_tex = get_texture("window.png");
+	material mat_glass = make_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, "MAT_glass");
 	
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
 	entity_add_script(ent_empty, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\game_controller.gravity");

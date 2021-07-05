@@ -15,6 +15,7 @@
 #include "nuklear/nuklear.h"
 #include "nuklear/nuklear_glfw_gl3.h"
 
+#include "asset_manager.h"
 #include "file_handler.h"
 #include "str_util.h"
 #include "renderer.h"
@@ -59,8 +60,12 @@ int selected_entities_len = 100;
 int selected_entities[100];
 
 // ---- console ----
-static char box_buffer[512];
-static int box_len;
+char box_buffer[512];
+int box_len;
+int box_lines;
+const float console_ratio[] = { 120, 150 };
+char text[9][64];
+int text_len[9];
 
 // ---- gravity error ----
 static int error_popup_act = nk_false;
@@ -128,7 +133,7 @@ void ui_update()
 
     properties_window(entities_len);
 
-    //console_window();
+    console_window();
 
     asset_browser_window();
 
@@ -1372,12 +1377,14 @@ void properties_window(int ent_len)
         static const float ratio[] = { 120, 150 };
         char buffer[50];
 
+        static char name_edit_buffer[64];
+
 
         // ---- theme menu ----
         
         nk_menubar_begin(ctx);
         nk_layout_row_begin(ctx, NK_STATIC, 35, 3);
-        nk_layout_row_push(ctx, 65);
+        nk_layout_row_push(ctx, 85);
         if (nk_menu_begin_label(ctx, "Add Entity", NK_TEXT_LEFT, nk_vec2(80, 200)))
         {
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -1759,13 +1766,43 @@ void properties_window(int ent_len)
             }
             else
             {
-                nk_layout_row_static(ctx, 18, 100, 1);
-            
-                for (int i = 0; i < ent_len; ++i)
-                {
-                    entity_properties prop = get_entity_properties(i);
-                    nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
+                // nk_layout_row_static(ctx, 18, 100, 2);
+                nk_layout_row_dynamic(ctx, ent_len * 25, 2); // wrapping row
+
+                if (nk_group_begin(ctx, "entites", NK_WINDOW_NO_SCROLLBAR)) 
+                { 
+                    nk_layout_row_static(ctx, 18, 150, 1);
+                    for (int i = 0; i < ent_len; ++i)
+                    {
+                        entity_properties prop = get_entity_properties(i);
+                        nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
+                    }
+                    nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
+
+                    nk_group_end(ctx);
                 }
+
+                if (nk_group_begin(ctx, "type", NK_WINDOW_NO_SCROLLBAR)) 
+                {  
+                    nk_layout_row_static(ctx, 18, 150, 1);
+                    for (int i = 0; i < ent_len; ++i)
+                    {
+                        entity_properties prop = get_entity_properties(i);
+                        // nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
+                        char type_buffer[64]; strcpy(type_buffer, "empty");
+                        // if (*prop.has_trans && !*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "empty"); }
+                        if (*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "model"); }
+                        else if (*prop.has_light) { strcpy(type_buffer, "light"); }
+
+                        if (*prop.scripts_len > 0) { strcat(type_buffer, " | scripted"); }
+
+                        nk_label(ctx, type_buffer, NK_TEXT_LEFT);
+                    }
+                    nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
+
+                    nk_group_end(ctx);
+                }
+           
             }
 
             // spacing
@@ -1784,8 +1821,8 @@ void properties_window(int ent_len)
             // ----------------
             
             // spacing
-            nk_layout_row_static(ctx, 5, 10, 1);
-            nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+            // nk_layout_row_static(ctx, 5, 10, 1);
+            // nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
             static int selected_entity_old;
             static int selected_entity = -999;
@@ -1835,7 +1872,11 @@ void properties_window(int ent_len)
 
                 nk_layout_row_dynamic(ctx, 30, 2);
                 nk_label(ctx, "Name: ", NK_TEXT_LEFT);
-                nk_label(ctx, prop.ent_name, NK_TEXT_LEFT);
+                // nk_label(ctx, prop.ent_name, NK_TEXT_LEFT);
+                strcpy(name_edit_buffer, prop.ent_name);
+                nk_flags event = nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
+                // @TODO: set ent name
+                // strcpy(prop.ent_name, name_edit_buffer);
             
                 if (*prop.has_trans == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Transform", NK_MINIMIZED)) {
 
@@ -2303,39 +2344,21 @@ void properties_window(int ent_len)
 
 void console_window()
 {
-    if (nk_begin(ctx, "Console", nk_rect(1600, 700, 300, 300),
+    if (nk_begin(ctx, "Console", nk_rect(1575, 700, 300, 300),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
     {
-        static const float ratio[] = { 120, 150 };
-        static char text[9][64];
-        static int text_len[9];
-        nk_flags active;
-
-        nk_label(ctx, "Console:", NK_TEXT_LEFT);
-        nk_layout_row_static(ctx, 180, 278, 1);
+        nk_layout_row_static(ctx, 230, 278, 1);
         nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
-        
-        nk_layout_row_dynamic(ctx, 25, 2);
-        active = nk_edit_string(ctx, NK_EDIT_FIELD | NK_EDIT_SIG_ENTER, text[7], &text_len[7], 64, nk_filter_ascii);
-        if (nk_button_label(ctx, "Submit") ||
-            (active & NK_EDIT_COMMITED))
-        {
-            text[7][text_len[7]] = '\n';
-            text_len[7]++;
-            memcpy(&box_buffer[box_len], &text[7], (nk_size)text_len[7]);
-            box_len += text_len[7];
-            text_len[7] = 0;
-        }
     }
     nk_end(ctx);
 }
 
 void asset_browser_window()
 {
-    int x = 1600;
+    int x = 600;
     int y = 700;
-    int w = 300;
+    int w = 900;
     int h = 300;
     if (nk_begin(ctx, "Asset Browser", nk_rect(x, y, w, h),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
@@ -2344,40 +2367,35 @@ void asset_browser_window()
        //  nk_layout_row_dynamic(ctx, (f32)h - 25.0f, 2);
         if (nk_tree_push(ctx, NK_TREE_TAB, "Images", NK_MINIMIZED))
         {
-            int i = 0;
-            static nk_bool selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-            nk_layout_row_static(ctx, 50, 50, 4);
+            texture* textures = NULL;
+            int len = 0;
+            textures = get_all_textures(&len);
 
-            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i])) 
-            {
-                selected[i] ^= 1;
-            }
-            i++;
-            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i]))
-            {
-                selected[i] ^= 1;
-            }
-            i++;
-            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i]))
-            {
-                selected[i] ^= 1;
-            }
-            i++;
-            if (nk_selectable_label(ctx, "Image", NK_TEXT_ALIGN_BOTTOM, &selected[i]))
-            {
-                selected[i] ^= 1;
-            }
-            i++;
+            printf("textures len: %d\n", len);
 
-            // for (i = 0; i < 16; ++i) {
-            //     if (nk_selectable_label(ctx, "Z", NK_TEXT_CENTERED, &selected[i])) {
-            //         int x = (i % 4), y = i / 4;
-            //         if (x > 0) selected[i - 1] ^= 1;
-            //         if (x < 3) selected[i + 1] ^= 1;
-            //         if (y > 0) selected[i - 4] ^= 1;
-            //         if (y < 3) selected[i + 4] ^= 1;
-            //     }
-            // }
+            static nk_bool* selected;
+            const int selected_len = len;
+            selected = calloc(len, sizeof(nk_bool));
+            assert(selected != NULL);
+
+            // @TODO: use groupd here
+
+            nk_layout_row_static(ctx, 100, 100, 2);
+
+            for (int i = 0; i < selected_len; ++i)
+            {
+                if (nk_selectable_label(ctx, textures[i].name, NK_TEXT_ALIGN_CENTERED, &selected[i])) 
+                {
+                    // nk_bool deselect = selected[i] == 1 ? nk_true : nk_false;
+                    for (int n = 0; n < selected_len; ++n) { selected[n] = n != i ? 0 : selected[n]; }
+                    selected[i] = nk_true;
+                }
+                // nk_layout_row_static(ctx, 150, 150, 1);
+                struct nk_image img = nk_image_id(textures[i].handle);
+                nk_image(ctx, img);
+            }
+            
+            free(selected);
             nk_tree_pop(ctx);
         }
         if (nk_tree_push(ctx, NK_TREE_TAB, "Meshes", NK_MINIMIZED))
@@ -2396,9 +2414,7 @@ void asset_browser_window()
                 }
             }
             nk_tree_pop(ctx);
-
         }
-
     }
     nk_end(ctx);
 }
@@ -2428,7 +2444,7 @@ void error_popup_window()
 
 void source_code_window()
 {
-
+    static char edit_buffer[256]; // strcpy(edit_buffer, "editable text");
     int x = 400;
     int y = 10;
     int w = 600;
@@ -2453,31 +2469,6 @@ void source_code_window()
             // printf("source code copy: \n%s\n", src);
             for ( int c = 0; c < strlen(source_code); ++c)
             {
-                /*
-                if (src[c] == '\n')
-                {
-                    src[c] = ' ';
-
-                    // char* line = str_trunc(src, -1 * (strlen(source_code) - ( c - line_index)));
-                    str_trunc(src, 1 * (strlen(source_code) - ( c - line_index)));
-                    if (line_index != 0)
-                    {
-                        // line = str_trunc(line, line_index);
-                        src = str_trunc(src, line_index);
-                    }
-                    // printf("line: %s\n", line);
-                    // assert(line != NULL);
-                    line_index = c;
-                    // nk_label(ctx, line, NK_TEXT_LEFT);
-                    nk_label(ctx, src, NK_TEXT_LEFT);
-                }
-                else if (isspace(src[c]))
-                {
-                    src[c] = ' ';
-                }
-                // printf("finished source code\n");
-                // printf("source code: \n%s\n", source_code);
-                */
 
                 if ( src[c] == '\n' || src[c] == '\0' )
                 {
@@ -2519,18 +2510,36 @@ void source_code_window()
             // free(src);
         }
 
+        nk_layout_row_dynamic(ctx, 50, 1);
+        // must be keep the fllow code between nk_begin... and nk_end...
+        nk_flags event = nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX | NK_EDIT_AUTO_SELECT, //fcous will auto select all text (NK_EDIT_BOX not sure)
+        edit_buffer, sizeof(edit_buffer), nk_filter_ascii);//nk_filter_ascii Text Edit accepts text types.
+
         nk_layout_row_dynamic(ctx, 25, 1);
         if ( nk_button_label(ctx, "Close") )
         {
             source_code_window_act = nk_false;
             // free(source_code);
         }
+
     }
     nk_end(ctx);
-
 }
 
 
+void submit_txt_console(char* txt)
+{
+    // printf("\nmsg: \"%s\"\n", txt);
+    // printf("msg-len: %d\n", strlen(txt));
+    box_lines++;
+    #define BUFFER_SIZE 248
+    char buffer[BUFFER_SIZE];
+    assert(BUFFER_SIZE > strlen(txt) + 8);
+    // if (strlen(txt) > BUFFER_SIZE - 8) { txt = str_trunc(txt, (BUFFER_SIZE - 8) - strlen(txt)); }
+    sprintf(buffer, "%d | %s\n", box_lines, txt);
+    memcpy(&box_buffer[box_len], buffer, (nk_size)strlen(buffer));
+    box_len += strlen(buffer);
+}
 void set_error_popup(char* msg)
 {
     error_popup_act = nk_true;

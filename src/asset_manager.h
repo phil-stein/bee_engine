@@ -12,6 +12,8 @@ void search_dir(const char* dir_path);
 
 void assetm_cleanup();
 
+texture* get_all_textures(int* textures_len);
+
 texture get_texture(const char* name);
 
 void log_texture(const char* path, const char* name);

@@ -29,7 +29,7 @@ char* str_trunc(char* str, int pos)
         }
         else
         {
-            str[len + pos] = 0;
+            str[len + pos] = '\0';
         }
     }
 
