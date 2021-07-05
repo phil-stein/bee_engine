@@ -22,6 +22,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 - [x] nuklear
 - [x] gravity scripting
 - [ ] asset system
+  - [x] design
   - [ ] asset manager
   - [ ] asset browser ui
   - [ ] importing assets
