@@ -44,7 +44,7 @@ int main(void)
 
 	// gui console test 
 	submit_txt_console("console messages working :)");
-	submit_txt_console("djfkvndfkjvhndifvhnjydlvhnldihfbvdfijbvhnpijubdhfvdihubvuihi");
+	submit_txt_console("...");
 
 	// main loop
 	while (!glfwWindowShouldClose(get_window()))
