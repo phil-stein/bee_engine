@@ -2356,65 +2356,108 @@ void console_window()
 
 void asset_browser_window()
 {
-    int x = 600;
+    int x = 380;
     int y = 700;
-    int w = 900;
+    int w = 1175;
     int h = 300;
     if (nk_begin(ctx, "Asset Browser", nk_rect(x, y, w, h),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE | NK_WINDOW_NO_SCROLLBAR))
     {
-       //  nk_layout_row_dynamic(ctx, (f32)h - 25.0f, 2);
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Images", NK_MINIMIZED))
+
+        typedef enum selected_asset { TEXTURE, MESH, SHADER, MATERIAL, SCRIPT } selected_asset;
+        selected_asset selected = TEXTURE;
+        static int selected_check[3]; 
+        static int init = nk_true; 
+        if(init == nk_true) 
         {
-            texture* textures = NULL;
-            int len = 0;
-            textures = get_all_textures(&len);
+            selected_check[0] = nk_true; // auto-select textures
+            init = nk_false;
+        }
 
-            printf("textures len: %d\n", len);
+        // nk_layout_row_dynamic(ctx, 250, 2); // wrapping row
+        
+        nk_layout_row_begin(ctx, NK_STATIC, 250, 2);
+        {
 
-            static nk_bool* selected;
-            const int selected_len = len;
-            selected = calloc(len, sizeof(nk_bool));
-            assert(selected != NULL);
-
-            // @TODO: use groupd here
-
-            nk_layout_row_static(ctx, 100, 100, 2);
-
-            for (int i = 0; i < selected_len; ++i)
+            nk_layout_row_push(ctx, 200);
+            // if (nk_tree_push(ctx, NK_TREE_TAB, "Images", NK_MINIMIZED))
+            if (nk_group_begin(ctx, "Select", NK_WINDOW_NO_SCROLLBAR)) // NK_WINDOW_BORDER |
             {
-                if (nk_selectable_label(ctx, textures[i].name, NK_TEXT_ALIGN_CENTERED, &selected[i])) 
-                {
-                    // nk_bool deselect = selected[i] == 1 ? nk_true : nk_false;
-                    for (int n = 0; n < selected_len; ++n) { selected[n] = n != i ? 0 : selected[n]; }
-                    selected[i] = nk_true;
-                }
-                // nk_layout_row_static(ctx, 150, 150, 1);
-                struct nk_image img = nk_image_id(textures[i].handle);
-                nk_image(ctx, img);
-            }
-            
-            free(selected);
-            nk_tree_pop(ctx);
-        }
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Meshes", NK_MINIMIZED))
-        {
-            int i = 0;
-            static nk_bool selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-            nk_layout_row_static(ctx, 50, 50, 4);
+                nk_layout_row_static(ctx, 18, 150, 1);
+                nk_selectable_label(ctx, "Textures", NK_TEXT_LEFT, &selected_check[0]);
+                if (selected_check[0] == nk_true) { selected = TEXTURE; for (int i = 0; i < 3; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
+                nk_selectable_label(ctx, "Meshes", NK_TEXT_LEFT, &selected_check[1]);
+                if (selected_check[1] == nk_true) { selected = MESH; for (int i = 0; i < 3; ++i) { selected_check[i] = 0; } selected_check[1] = nk_true; }
+                nk_selectable_label(ctx, "Shaders", NK_TEXT_LEFT, &selected_check[2]);
+                if (selected_check[2] == nk_true) { selected = SHADER; for (int i = 0; i < 3; ++i) { selected_check[i] = 0; } selected_check[2] = nk_true; }
+                nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
 
-            for (i = 0; i < 4; ++i) {
-                if (nk_selectable_label(ctx, "Mesh", NK_TEXT_CENTERED, &selected[i])) {
-                    int x = (i % 4), y = i / 4;
-                    if (x > 0) selected[i - 1] ^= 1;
-                    if (x < 3) selected[i + 1] ^= 1;
-                    if (y > 0) selected[i - 4] ^= 1;
-                    if (y < 3) selected[i + 4] ^= 1;
-                }
+                // nk_tree_pop(ctx);
+                nk_group_end(ctx);
             }
-            nk_tree_pop(ctx);
+            nk_layout_row_push(ctx, 950);
+            // if (nk_tree_push(ctx, NK_TREE_TAB, "Meshes", NK_MINIMIZED))
+            if (nk_group_begin(ctx, "Assets", NK_WINDOW_BACKGROUND))
+            {
+                if (selected == TEXTURE)
+                {
+                    texture* textures = NULL;
+                    int len = 0;
+                    textures = get_all_textures(&len);
+
+                    printf("textures len: %d\n", len);
+
+                    static nk_bool* selected;
+                    const int selected_len = len;
+                    selected = calloc(len, sizeof(nk_bool));
+                    assert(selected != NULL);
+
+                    // @TODO: use groupd here
+                    nk_layout_row_static(ctx, 100, 100, 8);
+
+                    for (int i = 0; i < selected_len; ++i)
+                    {
+                        // if (nk_selectable_label(ctx, textures[i].name, NK_TEXT_ALIGN_CENTERED, &selected[i])) 
+                        // {
+                        //     // nk_bool deselect = selected[i] == 1 ? nk_true : nk_false;
+                        //     // for (int n = 0; n < selected_len; ++n) { selected[n] = 0; }
+                        //     selected[i] = nk_true;
+                        // }
+                        // nk_layout_row_static(ctx, 150, 150, 1);
+                        struct nk_image img = nk_image_id(textures[i].handle);
+                        // nk_image(ctx, img);
+                        if (nk_button_image_label(ctx, img, textures[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_LEFT)) 
+                        {
+                            selected[i] = nk_true;
+                        }
+                    }
+
+                    free(selected);
+                }
+                else if (selected == MESH)
+                {
+                    int i = 0;
+                    static nk_bool selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
+                    nk_layout_row_static(ctx, 50, 50, 4);
+                    nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
+
+                    for (i = 0; i < 4; ++i) {
+                        if (nk_selectable_label(ctx, "Mesh", NK_TEXT_CENTERED, &selected[i])) {
+                            int x = (i % 4), y = i / 4;
+                            if (x > 0) selected[i - 1] ^= 1;
+                            if (x < 3) selected[i + 1] ^= 1;
+                            if (y > 0) selected[i - 4] ^= 1;
+                            if (y < 3) selected[i + 4] ^= 1;
+                        }
+                    }
+                }
+
+                // nk_tree_pop(ctx);
+                nk_group_end(ctx);
+            }
         }
+        nk_layout_row_end(ctx);
     }
     nk_end(ctx);
 }
