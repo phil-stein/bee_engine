@@ -384,35 +384,23 @@ void update_entity(entity* ent)
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)
 	{
-		if (ent->scripts[i].active == BEE_FALSE || ent->scripts[i].path_valid == BEE_FALSE || ent->scripts[i].has_error == BEE_TRUE)
+		if (ent->scripts[i]->active == BEE_FALSE || ent->scripts[i]->path_valid == BEE_FALSE || ent->scripts[i]->has_error == BEE_TRUE)
 		{
 			continue;
 		}
 
 		// source not yet read
-		if (ent->scripts[i].source == NULL)
+		if (ent->scripts[i]->source == NULL)
 		{
-			ent->scripts[i].source = read_text_file(ent->scripts[i].path);
-			assert(ent->scripts[i].source != NULL);
-			// printf("read gravity source: \n%s\n", ent->scripts[i].source);
-			
-			// @TODO: this needs to work to display the source code
-			// char* buffer = NULL;
-			// buffer = malloc(strlen(ent->scripts[i].source) -1);
-			// assert(buffer != NULL);
-			// memcpy(buffer, ent->scripts[i].source, strlen(ent->scripts[i].source) -1);
-			// buffer[strlen(ent->scripts[i].source)- 1] = '\0';
-			// printf("copied gravity source: \n%s\nEOF copied\n", buffer);
+			ent->scripts[i]->source = read_text_file(ent->scripts[i]->path);
+			assert(ent->scripts[i]->source != NULL);
 
-
-			gravity_run_init(&ent->scripts[i], ent->scripts[i].source);
-
-			// free(buffer);
+			gravity_run_init(ent->scripts[i], ent->scripts[i]->source);
 		}
 		else 
 		{
-			assert(ent->scripts[i].vm != NULL);
-			gravity_run_update(&ent->scripts[i]);
+			assert(ent->scripts[i]->vm != NULL);
+			gravity_run_update(ent->scripts[i]);
 		}
 	}
 }
@@ -430,7 +418,7 @@ void free_entity(entity* ent)
 		// scripts
 		for (int i = 0; i < ent->scripts_len; ++i)
 		{
-			free_script(&ent->scripts[i]);
+			free_script(ent->scripts[i]);
 		}
 		arrfree(ent->scripts);
 	}

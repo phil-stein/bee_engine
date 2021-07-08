@@ -24,7 +24,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 - [ ] asset system
   - [x] design
   - [ ] asset manager
-  - [ ] asset browser ui
+  - [x] asset browser ui
   - [ ] importing assets
 - [ ] first game test
 - [ ] audio

@@ -27,6 +27,7 @@ typedef struct
 	f32* scale_z;
 
 	// mesh
+	mesh* mesh;
 	char* mesh_name;
 	u32* verts_len;
 	u32* indices_len;
@@ -34,6 +35,7 @@ typedef struct
 	enum bee_bool* mesh_visible;
 
 	// material
+	material* mat;
 	char* material_name;
 	f32* shininess;
 	f32* tile_x;
@@ -86,7 +88,7 @@ typedef struct
 	// -----------------
 
 	int* scripts_len;
-	gravity_script* scripts;
+	gravity_script** scripts;
 
 
 }entity_properties;

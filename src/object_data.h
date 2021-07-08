@@ -14,6 +14,8 @@
 typedef struct
 {
 	u32 handle;
+	int size_x;
+	int size_y;
 	char* name;
 	char* path;
 }texture;
@@ -100,7 +102,7 @@ typedef struct
 	// --------------------
 
 	int scripts_len;
-	gravity_script* scripts;
+	gravity_script** scripts;
 
 
 }entity;

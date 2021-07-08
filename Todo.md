@@ -20,7 +20,7 @@ Todo
 - editor
   - [ ] **!!! asset manager !!!**
     - [ ] register all assets
-    - [ ] load & store on demand
+    - [x] load & store on demand
   - [ ] !!! editor cam v. game cam (camera entity)
   - [ ] add entity
   - [ ] deselect entities

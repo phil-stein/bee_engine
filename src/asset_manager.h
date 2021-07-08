@@ -19,4 +19,17 @@ texture get_texture(const char* name);
 void log_texture(const char* path, const char* name);
 void create_texture(const char* name);
 
+
+mesh* get_all_meshes(int* meshes_len);
+mesh* get_mesh(const char* name);
+
+void log_mesh(const char* path, const char* name);
+void create_mesh(const char* name);
+
+
+gravity_script* get_all_scripts(int* meshes_len);
+gravity_script* get_script(const char* name);
+
+void create_script(const char* path, const char* name);
+
 #endif

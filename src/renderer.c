@@ -10,6 +10,7 @@
 #include "camera.h"
 #include "framebuffer.h"
 #include "file_handler.h"
+#include "asset_manager.h"
 
 
 #define BLEND_SORT_DEPTH 3
@@ -560,12 +561,13 @@ void add_entity_cube()
 	add_entity(pos, rot, scale, &m, &entities[0]._material, NULL, "cube");
 }
 
-void entity_add_script(int entity_index, const char* path)
+void entity_add_script(int entity_index, const char* name)
 {
-	gravity_script script = make_script(path);
-	script.entity_index = entity_index;
+	// gravity_script script = make_script(path);
+	gravity_script* script = get_script(name);
+	script->entity_index = entity_index;
 #ifdef EDITOR_ACT
-	script.active = BEE_FALSE;
+	script->active = BEE_FALSE;
 #endif
 	arrput(entities[entity_index].scripts, script);
 	entities[entity_index].scripts_len++;
@@ -573,7 +575,7 @@ void entity_add_script(int entity_index, const char* path)
 }
 void entity_remove_script(int entity_index, int script_index)
 {
-	free_script(&entities[entity_index].scripts[script_index]);
+	free_script(entities[entity_index].scripts[script_index]);
 	arrdel(entities[entity_index].scripts, script_index);
 	entities[entity_index].scripts_len--;
 }
@@ -583,7 +585,7 @@ void set_all_scripts(bee_bool act)
 	{
 		for (int n = 0; n < entities[i].scripts_len; ++n)
 		{
-			entities[i].scripts[n].active = act;
+			entities[i].scripts[n]->active = act;
 		}
 	}
 }
@@ -638,6 +640,7 @@ entity_properties get_entity_properties(int index)
 	if (entities[index].has_model == BEE_TRUE)
 	{
 		// mesh
+		prop.mesh		  = &entities[index]._mesh;
 		prop.mesh_name	  =  entities[index]._mesh.name;
 		prop.verts_len    = &entities[index]._mesh.vertices_len;
 		prop.indices_len  = &entities[index]._mesh.indices_len;
@@ -645,6 +648,7 @@ entity_properties get_entity_properties(int index)
 		prop.mesh_visible = &entities[index]._mesh.visible;
 
 		// material
+		prop.mat			 = &entities[index]._material;
 		prop.material_name	 =  entities[index]._material.name;
 		prop.shininess		 = &entities[index]._material.shininess;
 		prop.tile_x			 = &entities[index]._material.tile[0];

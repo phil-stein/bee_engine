@@ -15,6 +15,8 @@
 #include "nuklear/nuklear.h"
 #include "nuklear/nuklear_glfw_gl3.h"
 
+#include "stb/stb_ds.h"
+
 #include "asset_manager.h"
 #include "file_handler.h"
 #include "str_util.h"
@@ -154,6 +156,7 @@ void ui_cleanup()
     // free(selected_entities);
 }
 
+// overview window
 /*
 void overview_window()
 {
@@ -1929,7 +1932,24 @@ void properties_window(int ent_len)
 
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Name", NK_TEXT_LEFT);
-                    nk_label(ctx, prop.mesh_name, NK_TEXT_RIGHT);
+                    // nk_label(ctx, prop.mesh_name, NK_TEXT_RIGHT);
+                    mesh* meshes = NULL;
+                    int meshes_len = 0;
+                    meshes = get_all_meshes(&meshes_len);
+                    static int selected_mesh = 0;
+                    int selected_mesh_old = selected_mesh;
+                    char** meshes_names = malloc(meshes_len * sizeof(char*));
+                    assert(meshes_names != NULL);
+
+                    for (int i = 0; i < meshes_len; ++i)
+                    {
+                        meshes_names[i] = malloc((strlen(meshes[i].name) + 1) * sizeof(char));
+                        strcpy(meshes_names[i], meshes[i].name);
+                    }
+
+                    selected_mesh = nk_combo(ctx, meshes_names, meshes_len, selected_mesh, 25, nk_vec2(200, 200));
+
+                    if (selected_mesh_old != selected_mesh) { *prop.mesh = meshes[selected_mesh]; }
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_checkbox_label(ctx, " visible", prop.mesh_visible);
@@ -1955,7 +1975,7 @@ void properties_window(int ent_len)
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Name", NK_TEXT_LEFT);
-                    nk_label(ctx, prop.material_name, NK_TEXT_RIGHT);
+                    nk_label(ctx, prop.mat->name, NK_TEXT_RIGHT);
 
 
                     nk_layout_row_dynamic(ctx, 25, 1);
@@ -2028,8 +2048,30 @@ void properties_window(int ent_len)
                         nk_label(ctx, "Is transparent: ", NK_TEXT_LEFT);
                         nk_label(ctx, *prop.is_transparent == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
 
+
+                        texture* textures = NULL;
+                        int textures_len = 0;
+                        textures = get_all_textures(&textures_len);
+
                         nk_label(ctx, "Diffuse Texture: ", NK_TEXT_LEFT);
-                        nk_label(ctx, prop.dif_tex_name, NK_TEXT_RIGHT);
+                        // nk_label(ctx, prop.dif_tex_name, NK_TEXT_RIGHT);
+
+                        static int selected_dif = 0;
+                        int selected_dif_old = selected_dif;
+                        static int selected_spec = 0;
+                        int selected_spec_old = selected_spec;
+                        char** texture_names = malloc(textures_len * sizeof(char*));
+                        assert(texture_names != NULL);
+
+                        for (int i = 0; i < textures_len; ++i)
+                        {
+                            texture_names[i] = malloc( ( strlen(textures[i].name) + 1 ) * sizeof(char));
+                            strcpy(texture_names[i], textures[i].name);
+                        }
+
+                        selected_dif = nk_combo(ctx, texture_names, textures_len, selected_dif, 25, nk_vec2(200, 200));
+
+                        if (selected_dif_old != selected_dif) { prop.mat->dif_tex = textures[selected_dif]; }
 
                         struct nk_image img = nk_image_id(*prop.dif_tex_handle);
                         nk_layout_row_static(ctx, 150, 150, 1);
@@ -2037,11 +2079,17 @@ void properties_window(int ent_len)
 
                         nk_layout_row_dynamic(ctx, 25, 2);
                         nk_label(ctx, "Specular Texture: ", NK_TEXT_LEFT);
-                        nk_label(ctx, prop.spec_tex_name, NK_TEXT_RIGHT);
-                        
+                        // nk_label(ctx, prop.spec_tex_name, NK_TEXT_RIGHT);
+
+                        selected_spec = nk_combo(ctx, texture_names, textures_len, selected_spec, 25, nk_vec2(200, 200));
+
+                        if (selected_spec_old != selected_spec) { prop.mat->spec_tex = textures[selected_spec]; }
+
                         img = nk_image_id(*prop.spec_tex_handle);
                         nk_layout_row_static(ctx, 150, 150, 1);
                         nk_image(ctx, img);
+
+                        free(texture_names);
 
                         nk_tree_pop(ctx);
                     }            
@@ -2222,21 +2270,21 @@ void properties_window(int ent_len)
                     {
                         static int popup_active;
 
-                        if (prop.scripts[i].path_valid == BEE_FALSE)
+                        if (prop.scripts[i]->path_valid == BEE_FALSE)
                         {
                             nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                             nk_label_colored(ctx, "path not valid", NK_TEXT_LEFT, red);
                         }
-                        else if (prop.scripts[i].has_error == BEE_TRUE)
+                        else if (prop.scripts[i]->has_error == BEE_TRUE)
                         {
                             nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                             nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
                         }
 
-                        char* name = str_find_last_of(prop.scripts[i].path, "\\");
+                        char* name = str_find_last_of(prop.scripts[i]->path, "\\");
                         if (name == NULL)
                         {
-                            name = str_find_last_of(prop.scripts[i].path, "/");
+                            name = str_find_last_of(prop.scripts[i]->path, "/");
                         }
                         assert(name != NULL);
                         name = str_trunc(name, 1); // cut off the last "\"
@@ -2247,22 +2295,22 @@ void properties_window(int ent_len)
                         nk_label(ctx, name, NK_TEXT_RIGHT);
 
 
-                        if (prop.scripts[i].path_valid == BEE_TRUE)
+                        if (prop.scripts[i]->path_valid == BEE_TRUE)
                         {
                             nk_layout_row_dynamic(ctx, 25, 1);
                             if (nk_button_label(ctx, "Source Code"))
                             {
-                                char* src = read_text_file(prop.scripts[i].path);
+                                char* src = read_text_file(prop.scripts[i]->path);
                                 set_source_code_window(src);
                             }
                         }
 
-                        if (prop.scripts[i].path_valid == BEE_TRUE && prop.scripts[i].has_error == BEE_FALSE)
+                        if (prop.scripts[i]->path_valid == BEE_TRUE && prop.scripts[i]->has_error == BEE_FALSE)
                         {
                             nk_layout_row_dynamic(ctx, 25, 1);
-                            if (nk_button_label(ctx, prop.scripts[i].active == BEE_TRUE ? "Pause" : "Continue"))
+                            if (nk_button_label(ctx, prop.scripts[i]->active == BEE_TRUE ? "Pause" : "Continue"))
                             {
-                                prop.scripts[i].active = !prop.scripts[i].active;
+                                prop.scripts[i]->active = !prop.scripts[i]->active;
                             }
                         }
 
@@ -2367,93 +2415,202 @@ void asset_browser_window()
 
         typedef enum selected_asset { TEXTURE, MESH, SHADER, MATERIAL, SCRIPT } selected_asset;
         selected_asset selected = TEXTURE;
-        static int selected_check[3]; 
+        static int selected_check[5]; 
         static int init = nk_true; 
         if(init == nk_true) 
         {
             selected_check[0] = nk_true; // auto-select textures
             init = nk_false;
         }
+        texture* textures = NULL;
+        int textures_len = 0;
+        textures = get_all_textures(&textures_len);
+        static int selected_img = 9999;
+        
+        mesh* meshes = NULL;
+        int meshes_len = 0;
+        meshes = get_all_meshes(&meshes_len);
+        static int selected_mesh = 9999;
+
+        gravity_script* scripts = NULL;
+        int scripts_len = 0;
+        scripts = get_all_scripts(&scripts_len);
+        static int selected_script = 9999;
 
         // nk_layout_row_dynamic(ctx, 250, 2); // wrapping row
         
-        nk_layout_row_begin(ctx, NK_STATIC, 250, 2);
+        nk_layout_row_begin(ctx, NK_STATIC, 250, 3);
         {
 
             nk_layout_row_push(ctx, 200);
-            // if (nk_tree_push(ctx, NK_TREE_TAB, "Images", NK_MINIMIZED))
             if (nk_group_begin(ctx, "Select", NK_WINDOW_NO_SCROLLBAR)) // NK_WINDOW_BORDER |
             {
                 nk_layout_row_static(ctx, 18, 150, 1);
                 nk_selectable_label(ctx, "Textures", NK_TEXT_LEFT, &selected_check[0]);
-                if (selected_check[0] == nk_true) { selected = TEXTURE; for (int i = 0; i < 3; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
+                if (selected_check[0] == nk_true) { selected = TEXTURE;  for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
                 nk_selectable_label(ctx, "Meshes", NK_TEXT_LEFT, &selected_check[1]);
-                if (selected_check[1] == nk_true) { selected = MESH; for (int i = 0; i < 3; ++i) { selected_check[i] = 0; } selected_check[1] = nk_true; }
+                if (selected_check[1] == nk_true) { selected = MESH;     for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[1] = nk_true; }
                 nk_selectable_label(ctx, "Shaders", NK_TEXT_LEFT, &selected_check[2]);
-                if (selected_check[2] == nk_true) { selected = SHADER; for (int i = 0; i < 3; ++i) { selected_check[i] = 0; } selected_check[2] = nk_true; }
+                if (selected_check[2] == nk_true) { selected = SHADER;   for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[2] = nk_true; }
+                nk_selectable_label(ctx, "Materials", NK_TEXT_LEFT, &selected_check[3]);
+                if (selected_check[3] == nk_true) { selected = MATERIAL; for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[3] = nk_true; }
+                nk_selectable_label(ctx, "Scripts", NK_TEXT_LEFT, &selected_check[4]);
+                if (selected_check[4] == nk_true) { selected = SCRIPT;   for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[4] = nk_true; }
                 nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
 
                 // nk_tree_pop(ctx);
                 nk_group_end(ctx);
             }
-            nk_layout_row_push(ctx, 950);
-            // if (nk_tree_push(ctx, NK_TREE_TAB, "Meshes", NK_MINIMIZED))
-            if (nk_group_begin(ctx, "Assets", NK_WINDOW_BACKGROUND))
+            nk_layout_row_push(ctx, 750);
+            if (nk_group_begin(ctx, "Assets", 0))
             {
                 if (selected == TEXTURE)
                 {
-                    texture* textures = NULL;
-                    int len = 0;
-                    textures = get_all_textures(&len);
+                    nk_layout_row_static(ctx, 100, 100, 6);
 
-                    printf("textures len: %d\n", len);
-
-                    static nk_bool* selected;
-                    const int selected_len = len;
-                    selected = calloc(len, sizeof(nk_bool));
-                    assert(selected != NULL);
-
-                    // @TODO: use groupd here
-                    nk_layout_row_static(ctx, 100, 100, 8);
-
-                    for (int i = 0; i < selected_len; ++i)
+                    for (int i = 0; i < textures_len; ++i)
                     {
-                        // if (nk_selectable_label(ctx, textures[i].name, NK_TEXT_ALIGN_CENTERED, &selected[i])) 
-                        // {
-                        //     // nk_bool deselect = selected[i] == 1 ? nk_true : nk_false;
-                        //     // for (int n = 0; n < selected_len; ++n) { selected[n] = 0; }
-                        //     selected[i] = nk_true;
-                        // }
-                        // nk_layout_row_static(ctx, 150, 150, 1);
                         struct nk_image img = nk_image_id(textures[i].handle);
-                        // nk_image(ctx, img);
                         if (nk_button_image_label(ctx, img, textures[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_LEFT)) 
                         {
-                            selected[i] = nk_true;
+                            if (selected_img == i) { selected_img = 9999; }
+                            selected_img = i;
                         }
                     }
 
-                    free(selected);
                 }
                 else if (selected == MESH)
                 {
-                    int i = 0;
-                    static nk_bool selected[16] = { 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1 };
-                    nk_layout_row_static(ctx, 50, 50, 4);
-                    nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
+                    nk_layout_row_static(ctx, 100, 100, 6);
 
-                    for (i = 0; i < 4; ++i) {
-                        if (nk_selectable_label(ctx, "Mesh", NK_TEXT_CENTERED, &selected[i])) {
-                            int x = (i % 4), y = i / 4;
-                            if (x > 0) selected[i - 1] ^= 1;
-                            if (x < 3) selected[i + 1] ^= 1;
-                            if (y > 0) selected[i - 4] ^= 1;
-                            if (y < 3) selected[i + 4] ^= 1;
+                    for (int i = 0; i < meshes_len; ++i)
+                    {
+                        // struct nk_image img = nk_image_id(textures[i].handle);
+                        if (nk_button_label(ctx, meshes[i].name))
+                        {
+                            if (selected_mesh == i) { selected_mesh = 9999; }
+                            selected_mesh = i;
+                        }
+                    }
+                }
+                else if (selected == SCRIPT)
+                {
+                    nk_layout_row_static(ctx, 100, 100, 6);
+
+                    for (int i = 0; i < scripts_len; ++i)
+                    {
+
+                        char* name = str_find_last_of(scripts[i].path, "\\");
+                        if (name == NULL)
+                        {
+                            name = str_find_last_of(scripts[i].path, "/");
+                        }
+                        assert(name != NULL);
+                        name = str_trunc(name, 1); // cut off the last "\"
+                        assert(name != NULL);
+
+                        // struct nk_image img = nk_image_id(textures[i].handle);
+                        if (nk_button_label(ctx, name))
+                        {
+                            if (selected_script == i) { selected_script = 9999; }
+                            selected_script = i;
+                            char buf[64];
+                            sprintf(buf, "selected script: \"%s\"", name);
+                            submit_txt_console(buf);
                         }
                     }
                 }
 
                 // nk_tree_pop(ctx);
+                nk_group_end(ctx);
+            }
+            nk_layout_row_push(ctx, 200);
+            if (nk_group_begin(ctx, "Selected", NK_WINDOW_BORDER))
+            {
+                
+                if (selected == TEXTURE)
+                {
+                    if (selected_img == 9999)
+                    {
+                        struct nk_color red = { 255, 0, 0 };
+                        nk_label_colored(ctx, "no image selected", NK_TEXT_ALIGN_LEFT, red);
+                    }
+                    else
+                    {
+                        // properties of selected asset
+                        nk_layout_row_static(ctx, 145, 145, 1);
+                        struct nk_image img = nk_image_id(textures[selected_img].handle);
+                        nk_image(ctx, img);
+
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        char* buf[64];
+                        sprintf(buf, "Name: \"%s\"", textures[selected_img].name);
+                        nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Size: %dpx x %dpx", textures[selected_img].size_x, textures[selected_img].size_y);
+                        nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Handle: \"%d\"", textures[selected_img].handle);
+                        nk_label_wrap(ctx, buf);
+
+                    }
+                }
+                else if (selected == MESH)
+                {
+                    if (selected_mesh == 9999)
+                    {
+                        struct nk_color red = { 255, 0, 0 };
+                        nk_label_colored(ctx, "no mesh selected", NK_TEXT_ALIGN_LEFT, red);
+                    }
+                    else
+                    {
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        char* buf[64];
+                        sprintf(buf, "Name: \"%s\"", meshes[selected_mesh].name);
+                        nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Vertices: \"%d\"", meshes[selected_mesh].vertices_len);
+                        nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Indices: \"%d\"", meshes[selected_mesh].indices_len);
+                        nk_label_wrap(ctx, buf);
+                    }
+                }
+                else if (selected == SCRIPT)
+                {
+                    if (selected_script == 9999)
+                    {
+                        struct nk_color red = { 255, 0, 0 };
+                        nk_label_colored(ctx, "no script selected", NK_TEXT_ALIGN_LEFT, red);
+                    }
+                    else
+                    {
+                        char* name = str_find_last_of(scripts[selected_script].path, "\\");
+                        if (name == NULL)
+                        {
+                            name = str_find_last_of(scripts[selected_script].path, "/");
+                        }
+                        assert(name != NULL);
+                        name = str_trunc(name, 1); // cut off the last "\"
+                        assert(name != NULL);
+
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        char* buf[64];
+                        sprintf(buf, "Name: \"%s\"", name);
+                        nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Active: \"%s\"", scripts[selected_script].active == BEE_TRUE ? "true" : "false");
+                        nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Has Error: \"%s\"", scripts[selected_script].has_error == BEE_TRUE ? "true" : "false");
+                        nk_label_wrap(ctx, buf);
+
+                        if (scripts[selected_script].path_valid == BEE_TRUE)
+                        {
+                            nk_layout_row_dynamic(ctx, 25, 1);
+                            if (nk_button_label(ctx, "Source Code"))
+                            {
+                                char* src = read_text_file(scripts[selected_script].path);
+                                set_source_code_window(src);
+                            }
+                        }
+                    }
+                }
+
                 nk_group_end(ctx);
             }
         }

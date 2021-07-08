@@ -107,11 +107,15 @@ void init()
 	material mat_glass = make_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, "MAT_glass");
 	
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
-	entity_add_script(ent_empty, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\game_controller.gravity");
+	// entity_add_script(ent_empty, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\game_controller.gravity");
+	entity_add_script(ent_empty, "game_controller.gravity");
 
-	mesh m_lightbulb  = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\lightbulb.obj");
-	mesh m_flashlight = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\flashlight.obj");
-	mesh m_arrow      = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\arrow_down.obj");
+	// mesh m_lightbulb  = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\lightbulb.obj");
+	mesh* m_lightbulb = get_mesh("lightbulb.obj");
+	// mesh m_flashlight = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\flashlight.obj");
+	mesh* m_flashlight = get_mesh("flashlight.obj");
+	// mesh m_arrow      = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\arrow_down.obj");
+	mesh* m_arrow = get_mesh("arrow_down.obj");
 
 	vec3 ambient      = { 0.0f, 0.0f, 0.0f };
 	vec3 diffuse01    = { 1.0f, 1.0f, 1.0f };
@@ -129,10 +133,10 @@ void init()
 	vec3 scale_light01 = { 0.1f, 0.1f,  0.1f };
 	vec3 scale_light02 = { 0.5f, 0.5f,  0.5f };
 	glm_vec3_copy(diffuse01, mat_blank.tint);
-	add_entity(pos_light01, rot_light, scale_light02, &m_arrow,      &mat_blank_unlit, &dir_light,   "dir_light");
-	add_entity(pos_light03, rot_light, scale_light02, &m_flashlight, &mat_blank_unlit, &spot_light,  "spot_light");
+	add_entity(pos_light01, rot_light, scale_light02, m_arrow,      &mat_blank_unlit, &dir_light,   "dir_light");
+	add_entity(pos_light03, rot_light, scale_light02, m_flashlight, &mat_blank_unlit, &spot_light,  "spot_light");
 	glm_vec3_copy(diffuse02, mat_blank.tint);
-	add_entity(pos_light02, rot_light, scale_light01, &m_lightbulb,  &mat_blank_unlit, &point_light, "point_light");
+	add_entity(pos_light02, rot_light, scale_light01, m_lightbulb,  &mat_blank_unlit, &point_light, "point_light");
 	glm_vec3_copy(specular, mat_blank.tint); // all 1.0f
 
 	// plane
@@ -151,31 +155,34 @@ void init()
 	add_entity(pos04, rot01, scale, &m_plane, &mat_glass, NULL, "window_03");
 
 	// assimp
-	mesh m_crate = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\misc\\crate01.obj"); //crate01.obj, hero_defense_char.obj
+	mesh* m_crate = get_mesh("crate01.obj");
 	vec3 pos05 = { 1.0f, 0.0f, 1.0f };
 	vec3 scale02;
 	glm_vec3_scale(scale, 0.5f, scale02);
-	int ent_crate = add_entity(pos05, rot01, scale02, &m_crate, &mat_crate, NULL, "crate");
+	int ent_crate = add_entity(pos05, rot01, scale02, m_crate, &mat_crate, NULL, "crate");
 	
-	mesh m_robot = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\misc\\robot01_LD.obj"); //crate01.obj, hero_defense_char.obj
+	mesh* m_robot = get_mesh("robot01_LD.obj");
 	vec3 pos08 = { 0.0f, -0.5f, 0.0f };
 	vec3 scale04;
 	glm_vec3_scale(scale, 0.25f, scale04);
-	int ent_robot = add_entity(pos08, rot01, scale04, &m_robot, &mat_robot, NULL, "robot");
-	entity_add_script(ent_robot, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\move_arrows.gravity");
+	int ent_robot = add_entity(pos08, rot01, scale04, m_robot, &mat_robot, NULL, "robot");
+	// entity_add_script(ent_robot, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\move_arrows.gravity");
+	entity_add_script(ent_robot, "move_arrows.gravity");
 
-	mesh m_bunny = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\bunny.obj"); //crate01.obj, hero_defense_char.obj
+	mesh* m_bunny = get_mesh("bunny.obj");
 	vec3 pos06 = { 1.5f, -0.5f, -1.5f };
-	int ent_bunny = add_entity(pos06, rot01, scale, &m_bunny, &mat_blank, NULL, "bunny");
-	entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_y.gravity");
+	int ent_bunny = add_entity(pos06, rot01, scale, m_bunny, &mat_blank, NULL, "bunny");
+	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_y.gravity");
+	entity_add_script(ent_bunny, "sinewave_y.gravity");
 	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
 
-	mesh m_barrel = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\misc\\post_apocalyptic_barrel.obj");
+	mesh* m_barrel = get_mesh("post_apocalyptic_barrel.obj");
 	vec3 pos07 = { -1.5f, 0.0f, -1.5f };
 	vec3 scale03;
 	glm_vec3_scale(scale, 0.5f, scale03);
-	int ent_barrel = add_entity(pos07, rot01, scale03, &m_barrel, &mat_barrel, NULL, "barrel");
-	entity_add_script(ent_barrel, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
+	int ent_barrel = add_entity(pos07, rot01, scale03, m_barrel, &mat_barrel, NULL, "barrel");
+	// entity_add_script(ent_barrel, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
+	entity_add_script(ent_barrel, "sinewave_x.gravity");
 		
 	
 	// grid

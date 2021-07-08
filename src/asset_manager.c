@@ -12,6 +12,7 @@
 // hashmaps & dyn.-arrays using stb_ds.h
 // prob. should replace these with something faster sometime [I mean maybe but it's actually pretty fast]
 
+// ---- textures ----
 // value: index of texture in 'tex', key: name of texture 
 struct { char* key;  int   value; }* textures	   = NULL;
 int textures_len = 0;
@@ -21,12 +22,34 @@ struct { int   key;	 char* value; }* texture_paths = NULL; // turn this into an 
 int texture_paths_len = 0;
 
 // array of holding textures
-texture* tex = NULL;
-int tex_len = 0;
+texture* texture_data = NULL;
+int texure_data_len = 0;
 
-struct { char* key;  material value; }* materials = NULL;
-struct { char* key;  mesh     value; }* meshes    = NULL;
-// light* lights; // seems weird idk why
+// ---- meshes ----
+// value: index of mesh in 'mesh_data', key: name of mesh
+struct { char* key;  int   value; }*meshes = NULL;
+int meshes_len = 0;
+
+// value: path to mesh, key: mesh-index in 'meshes'
+struct { int   key;	 char* value; }*meshes_paths = NULL; // turn this into an array, god damn ahhhh
+int meshes_paths_len = 0;
+
+// array of holding meshes
+mesh* mesh_data = NULL;
+int mesh_data_len = 0;
+
+// ---- scripts ----
+// value: index of script in 'script_data', key: name of script
+struct { char* key;  int   value; }*scripts = NULL;
+int scripts_len = 0;
+
+// value: path to script, key: script-index in 'scripts'
+struct { int   key;	 char* value; }*scripts_paths = NULL; // turn this into an array, god damn ahhhh
+int scripts_paths_len = 0;
+
+// array of holding scripts
+gravity_script* scripts_data = NULL;
+int scripts_data_len = 0;
 
 
 
@@ -74,13 +97,43 @@ void search_dir(const char* dir_path)
 				strcpy(dir_path_cpy, dir_path);
 				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
 				strcat(t_path, dp->d_name); // add the name 
-				
-				// printf("dir_path:     '%s'\n", dir_path);
-				// printf("dir_path_cpy: '%s'\n", dir_path_cpy);
-				// printf("path:         '%s'\n---------------\n", t_path);
 
 				// log the texture with the created path and the file name 
 				log_texture(t_path, dp->d_name);
+			}
+			else if (dp->d_name[dp->d_namlen - 4] == '.' &&
+					 dp->d_name[dp->d_namlen - 3] == 'o' &&
+					 dp->d_name[dp->d_namlen - 2] == 'b' &&
+					 dp->d_name[dp->d_namlen - 1] == 'j')
+			{
+				// printf("^---- PNG ----^\n");
+				char* dir_path_cpy[250];
+				strcpy(dir_path_cpy, dir_path);
+				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+				strcat(t_path, dp->d_name); // add the name 
+
+				// log the mesh with the created path and the file name 
+				log_mesh(t_path, dp->d_name);
+			}
+			else if (dp->d_name[dp->d_namlen - 8] == '.' &&
+				dp->d_name[dp->d_namlen - 7] == 'g' &&
+				dp->d_name[dp->d_namlen - 6] == 'r' &&
+				dp->d_name[dp->d_namlen - 5] == 'a' &&
+				dp->d_name[dp->d_namlen - 4] == 'v' &&
+				dp->d_name[dp->d_namlen - 3] == 'i' &&
+				dp->d_name[dp->d_namlen - 2] == 't' &&
+				dp->d_name[dp->d_namlen - 1] == 'y')
+			{
+				// printf("^---- PNG ----^\n");
+				char* dir_path_cpy[250];
+				strcpy(dir_path_cpy, dir_path);
+				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+				strcat(t_path, dp->d_name); // add the name 
+
+				printf("script name: \"\%s\"\n", dp->d_name);
+
+				// log the mesh with the created path and the file name 
+				create_script(t_path, dp->d_name);
 			}
 
 			// construct new path from our base path
@@ -109,50 +162,46 @@ void assetm_cleanup()
 	// free the allocated memory
 	shfree(textures);
 	hmfree(texture_paths);
-	arrfree(tex);
+	arrfree(texture_data);
 
-	shfree(materials);
-	shfree(meshes);
+	// shfree(materials);
+	// shfree(meshes);
 
 }
 
+
+//
+// ---- textures ----
+// 
+
 texture* get_all_textures(int* textures_len)
 {
-	*textures_len = tex_len;
-	return tex;
+	*textures_len = texure_data_len;
+	return texture_data;
 }
 
 texture get_texture(const char* name)
 {
 	// get the index to the tex array from the hashmap
 	int i = shget(textures, name);
-	// printf("requested texture: \"%s\", id: \"%d\"\n", name, i);
 
 	// @TODO: add security check that the texture doesn't exist at all
 	//		  for example make the 0th texture allways be all pink etc.
 
 	// check if the texture hasn't been loaded yet 
-	if (i == 9999 || i > tex_len) // 0 == 0
+	if (i == 9999 || i > texure_data_len) // 0 == 0
 	{
-		// printf(" ---- crating texture ----\n");
 		create_texture(name);
 	}
 
-	// printf("id requested texture: %d\n", i);
-
-	// printf("arrlen tex: %d, tex_len: %d\n", arrlen(tex), tex_len);
-
 	// retrieve texture from tex array
-	texture result = tex[shget(textures, name)];
-	
-	return result;
+	return texture_data[shget(textures, name)];
 }
 
 void log_texture(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
-	int len = strlen(name);
-	char* name_cpy = calloc(len, sizeof(char));
+	char* name_cpy = calloc(strlen(name), sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 	// printf("texture name copy: \"%s\"\n", name_cpy);
@@ -163,8 +212,7 @@ void log_texture(const char* path, const char* name)
 	textures_len++;
 	
 	// make a persistent copy of the passed path
-	len = strlen(path);
-	char* path_cpy = calloc(len, sizeof(char));
+	char* path_cpy = calloc(strlen(path), sizeof(char));
 	assert(path_cpy != NULL);
 	strcpy(path_cpy, path);
 	// printf("texture path copy: \"%s\"\n", path_cpy);
@@ -189,7 +237,140 @@ void create_texture(const char* name)
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
 	// and put the created texture into the tex array
-	shput(textures, name, tex_len);
-	arrput(tex, t);
-	tex_len++;
+	shput(textures, name, texure_data_len);
+	arrput(texture_data, t);
+	texure_data_len++;
+}
+
+// 
+// ---- meshes ----
+// 
+
+mesh* get_all_meshes(int* meshes_len)
+{
+	*meshes_len = mesh_data_len;
+	return mesh_data;
+}
+
+mesh* get_mesh(const char* name)
+{
+	// get the index to the mesh_data array from the hashmap
+	int i = shget(meshes, name);
+
+	// @TODO: add security check that the texture doesn't exist at all
+	//		  for example make the 0th texture allways be all pink etc.
+
+	// check if the mesh hasn't been loaded yet 
+	if (i == 9999 || i > mesh_data_len) // 0 == 0
+	{
+		create_mesh(name);
+	}
+
+	// retrieve mesh from mesh_data array
+	return &mesh_data[shget(meshes, name)];
+}
+
+void log_mesh(const char* path, const char* name)
+{
+	// make a persistent copy of the passed name
+	char* name_cpy = calloc(strlen(name), sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+
+	// put that copy of the name into the hashmap as the key 
+	// to a value of 9999 as that indicates the asset hasnt been loaded yet
+	shput(meshes, name_cpy, 9999);
+	meshes_len++;
+
+	// make a persistent copy of the passed path
+	char* path_cpy = calloc(strlen(path), sizeof(char));
+	assert(path_cpy != NULL);
+	strcpy(path_cpy, path);
+	// printf("texture path copy: \"%s\"\n", path_cpy);
+
+	// put that copy of the path into the hashmap
+	int i = shgeti(meshes, name);
+	hmput(meshes_paths, i, path_cpy);
+	meshes_paths_len++;
+	// printf("texture path: \"%s\"; texture name: \"%s\"; texture id: %d\n", path, name, i);
+
+	// not freeing name_cpy and path_cpy as they need to be used in the future
+}
+
+void create_mesh(const char* name)
+{
+	// key for the path is the index of the texture in the hashmap
+	int path_idx = shgeti(meshes, name);
+	char* path = hmget(meshes_paths, path_idx);
+
+	mesh m = load_mesh(path);
+
+	// put texture index in tex array into the value of the hashmap with the texture name as key 
+	// and put the created texture into the tex array
+	shput(meshes, name, mesh_data_len);
+	arrput(mesh_data, m);
+	mesh_data_len++;
+}
+
+// 
+// ---- scripts ----
+// 
+
+gravity_script* get_all_scripts(int* scripts_len)
+{
+	*scripts_len = scripts_data_len;
+	return scripts_data;
+}
+
+gravity_script* get_script(const char* name)
+{
+	// get the index to the mesh_data array from the hashmap
+	int i = shget(scripts, name);
+
+	// @TODO: add security check that the texture doesn't exist at all
+	//		  for example make the 0th texture allways be all pink etc.
+
+	// check if the mesh hasn't been loaded yet 
+	// if (i == 9999 || i > scripts_data_len) // 0 == 0
+	// {
+	// 	create_script(name);
+	// }
+
+	// retrieve mesh from mesh_data array
+	return &scripts_data[shget(scripts, name)];
+}
+
+void create_script(const char* path, const char* name)
+{
+	// make a persistent copy of the passed name
+	char* name_cpy = calloc(strlen(name), sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+
+	// make a persistent copy of the passed path
+	char* path_cpy = calloc(strlen(path), sizeof(char));
+	assert(path_cpy != NULL);
+	strcpy(path_cpy, path);
+	// printf("texture path copy: \"%s\"\n", path_cpy);
+
+	// put that copy of the path into the hashmap
+	int i = shgeti(scripts, name);
+	hmput(scripts_paths, i, path_cpy);
+	scripts_paths_len++;
+
+	// key for the path is the index of the texture in the hashmap
+	// int path_idx = shgeti(scripts, name);
+	// char* path = hmget(scripts_paths, path_idx);
+
+	printf("script path: \"%s\"\n", path_cpy);
+	gravity_script script = make_script(path_cpy);
+
+	// put texture index in tex array into the value of the hashmap with the texture name as key 
+	// and put the created texture into the tex array
+	shput(scripts, name_cpy, scripts_data_len);
+	scripts_len++;
+	arrput(scripts_data, script);
+	scripts_data_len++;
+
+	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
