@@ -61,10 +61,21 @@ gravity_script make_script(char* path)
     script.path_valid = file_exists_check(path);
     script.source     = NULL;
 
-    script.entity_index = 0;
+    // script.entity_index = 0;
 
     script.closure = NULL;
     script.update_closure_assigned = BEE_FALSE;
+
+    char* name = str_find_last_of(path, "\\");
+    if (name == NULL)
+    {
+        name = str_find_last_of(path, "/");
+    }
+    assert(name != NULL);
+    name = str_trunc(name, 1); // cut off the last "\"
+    assert(name != NULL);
+
+    script.name = name;
 
     return script;
 }
@@ -130,9 +141,9 @@ rtn_code gravity_run(char* source_code)
 }
 
 
-rtn_code gravity_run_init(gravity_script* script, const char* src)
+rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_index)
 {
-    set_cur_script(script);
+    set_cur_script(script, entity_index);
 
     // setup a delegate struct
     gravity_delegate_t delegate = { .error_callback = report_error};
@@ -186,9 +197,9 @@ rtn_code gravity_run_init(gravity_script* script, const char* src)
     return BEE_OK;
 }
 
-rtn_code gravity_run_update(gravity_script* script)
+rtn_code gravity_run_update(gravity_script* script, int entity_index)
 {
-    set_cur_script(script);
+    set_cur_script(script, entity_index);
     
     // load closure into VM
     gravity_vm_loadclosure(script->vm, script->closure);
@@ -217,9 +228,9 @@ rtn_code gravity_run_update(gravity_script* script)
     return BEE_OK;
 }
 
-rtn_code gravity_run_cleanup(gravity_script* script)
+rtn_code gravity_run_cleanup(gravity_script* script, int entity_index)
 {
-    set_cur_script(script);
+    set_cur_script(script, entity_index);
 
     
     // setup a delegate struct

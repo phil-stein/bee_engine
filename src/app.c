@@ -184,7 +184,10 @@ void init()
 	// entity_add_script(ent_barrel, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
 	entity_add_script(ent_barrel, "sinewave_x.gravity");
 		
-	
+
+	texture screenshot_tex = get_texture("screenshot08.png");
+	material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
+
 	// grid
 	// mesh m_grid = make_grid_mesh(10, 10);
 	// model grid_model = make_model(&m_grid, &mat);
@@ -313,8 +316,9 @@ void process_input(GLFWwindow* window)
 	// exit on esc
 	if (is_key_pressed(KEY_Escape))
 	{
-		printf("pressed esc\n> exiting ...\n");
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
+		printf("pressed esc\n> not used for exiting anymore\n");
+		// printf("pressed esc\n> exiting ...\n");
+		// glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
 
 	// wireframe- / solid-mode switch on tab

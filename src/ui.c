@@ -23,6 +23,7 @@
 #include "renderer.h"
 #include "window.h"
 #include "camera.h"
+#include "input.h"
 #include "app.h"
 
 #define MAX_VERTEX_BUFFER 512 * 1024
@@ -1872,24 +1873,34 @@ void properties_window(int ent_len)
                 struct nk_rect bounds;
 
                 entity_properties prop = get_entity_properties(selected_entity);
+                entity* ent = get_entitiy_ptr(selected_entity);
 
                 nk_layout_row_dynamic(ctx, 30, 2);
                 nk_label(ctx, "Name: ", NK_TEXT_LEFT);
                 // nk_label(ctx, prop.ent_name, NK_TEXT_LEFT);
-                strcpy(name_edit_buffer, prop.ent_name);
-                nk_flags event = nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
-                // @TODO: set ent name
-                // strcpy(prop.ent_name, name_edit_buffer);
+                static nk_flags event = NK_EDIT_DEACTIVATED;
+                if(event == NK_EDIT_DEACTIVATED || event == NK_EDIT_INACTIVE) { strcpy(name_edit_buffer, ent->name); }
+                event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
+                // set ent name on commit
+                if (event == NK_EDIT_COMMITED || is_key_pressed(KEY_Enter))
+                {
+                    // copy name and path as passed name might be deleted
+                    char* name_cpy = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+                    assert(name_cpy != NULL);
+                    strcpy(name_cpy, name_edit_buffer);
+                    ent->name = name_cpy;
+                    event = NK_EDIT_INACTIVE;
+                }
             
-                if (*prop.has_trans == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Transform", NK_MINIMIZED)) {
+                if (ent->has_trans == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Transform", NK_MINIMIZED)) {
 
                     if (nk_tree_push(ctx, NK_TREE_NODE, "Position", NK_MINIMIZED))
                     {
-                        nk_property_float(ctx, "Pos X:", -1024.0f, prop.pos_x, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Pos X:", -1024.0f, &ent->pos[0], 1024.0f, 0.1f, 0.2f);
                        
-                        nk_property_float(ctx, "Pos Y:", -1024.0f, prop.pos_y, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Pos Y:", -1024.0f, &ent->pos[1], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Pos Z:", -1024.0f, prop.pos_z, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Pos Z:", -1024.0f, &ent->pos[2], 1024.0f, 0.1f, 0.2f);
 
                         nk_tree_pop(ctx);
                     }
@@ -1901,21 +1912,21 @@ void properties_window(int ent_len)
                         option = nk_option_label(ctx, "local",  option == 1) ? 1 : option;
 
                         nk_layout_row_dynamic(ctx, 20, 1);
-                        nk_property_float(ctx, "Rot X:", -1024.0f, prop.rot_x, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Rot X:", -1024.0f, &ent->rot[0], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Rot Y:", -1024.0f, prop.rot_y, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Rot Y:", -1024.0f, &ent->rot[1], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Rot Z:", -1024.0f, prop.rot_z, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Rot Z:", -1024.0f, &ent->rot[2], 1024.0f, 0.1f, 0.2f);
 
                         nk_tree_pop(ctx);
                     }
                     if (nk_tree_push(ctx, NK_TREE_NODE, "Scale", NK_MINIMIZED))
                     {
-                        nk_property_float(ctx, "Scale X:", -1024.0f, prop.scale_x, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Scale X:", -1024.0f, &ent->scale[0], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Scale Y:", -1024.0f, prop.scale_y, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Scale Y:", -1024.0f, &ent->scale[0], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Scale Z:", -1024.0f, prop.scale_z, 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Scale Z:", -1024.0f, &ent->scale[0], 1024.0f, 0.1f, 0.2f);
                     
                         nk_tree_pop(ctx);
                     }
@@ -1937,6 +1948,7 @@ void properties_window(int ent_len)
                     int meshes_len = 0;
                     meshes = get_all_meshes(&meshes_len);
                     static int selected_mesh = 0;
+                    selected_mesh = get_mesh_idx(prop.mesh_name);
                     int selected_mesh_old = selected_mesh;
                     char** meshes_names = malloc(meshes_len * sizeof(char*));
                     assert(meshes_names != NULL);
@@ -2057,8 +2069,10 @@ void properties_window(int ent_len)
                         // nk_label(ctx, prop.dif_tex_name, NK_TEXT_RIGHT);
 
                         static int selected_dif = 0;
+                        selected_dif = get_texture_idx(prop.dif_tex_name);
                         int selected_dif_old = selected_dif;
                         static int selected_spec = 0;
+                        selected_spec = get_texture_idx(prop.spec_tex_name);
                         int selected_spec_old = selected_spec;
                         char** texture_names = malloc(textures_len * sizeof(char*));
                         assert(texture_names != NULL);
@@ -2281,18 +2295,25 @@ void properties_window(int ent_len)
                             nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
                         }
 
-                        char* name = str_find_last_of(prop.scripts[i]->path, "\\");
-                        if (name == NULL)
-                        {
-                            name = str_find_last_of(prop.scripts[i]->path, "/");
-                        }
-                        assert(name != NULL);
-                        name = str_trunc(name, 1); // cut off the last "\"
-                        assert(name != NULL);
+                        gravity_script* scripts = NULL;
+                        int scripts_len = 0;
+                        scripts = get_all_scripts(&scripts_len);
+                        static int selected_script = 0;
+                        selected_script = get_script_idx(prop.scripts[i]->name);
+                        int selected_script_old = selected_script;
+                        char** scripts_names = malloc(scripts_len * sizeof(char*));
+                        assert(scripts_names != NULL);
 
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        nk_label(ctx, "Name", NK_TEXT_LEFT);
-                        nk_label(ctx, name, NK_TEXT_RIGHT);
+                        for (int i = 0; i < scripts_len; ++i)
+                        {
+                            scripts_names[i] = malloc((strlen(scripts[i].name) + 1) * sizeof(char));
+                            strcpy(scripts_names[i], scripts[i].name);
+                        }
+
+                        selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
+
+                        // doesnt work because the script holds the entity index
+                        if (selected_script_old != selected_script) { prop.scripts[i] = &scripts[selected_script]; }
 
 
                         if (prop.scripts[i]->path_valid == BEE_TRUE)
@@ -2329,11 +2350,46 @@ void properties_window(int ent_len)
                 nk_layout_row_static(ctx, 5, 10, 1);
                 nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
+                nk_layout_row(ctx, NK_STATIC, 25, 2, ratio);
+                nk_label(ctx, "Attach Script", NK_TEXT_LEFT);
+                gravity_script* scripts = NULL;
+                int scripts_len = 0;
+                scripts = get_all_scripts(&scripts_len);
+                int selected_script = 0;
+                int selected_script_old = selected_script;
+                char** scripts_names = malloc((scripts_len +1) * sizeof(char*));
+                assert(scripts_names != NULL);
+
+                scripts_names[0] = malloc((strlen("Select Script") + 1) * sizeof(char));
+                strcpy(scripts_names[0], "Select Script");
+                for (int i = 1; i < scripts_len +1; ++i)
+                {
+                    scripts_names[i] = malloc((strlen(scripts[i -1].name) + 1) * sizeof(char));
+                    strcpy(scripts_names[i], scripts[i -1].name);
+                }
+
+                selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
+
+                if (selected_script != 0)
+                {
+                    entity_add_script(selected_entity, scripts_names[selected_script]);
+                }
+}
+            nk_tree_pop(ctx);
+        }
+
+    }
+    nk_end(ctx);
+}
+
+// old attach script popup
+/*
                 static int attach_popup_active;
                 nk_layout_row_dynamic(ctx, 25, 1);
                 if (nk_button_label(ctx, "Attach Script"))
                 {
-                    attach_popup_active = 1;
+                    // attach_popup_active = 1;
+
                 }
 
                 if (attach_popup_active)
@@ -2382,13 +2438,7 @@ void properties_window(int ent_len)
                     }
                     else attach_popup_active = nk_false;
                 }
-}
-            nk_tree_pop(ctx);
-        }
-
-    }
-    nk_end(ctx);
-}
+*/
 
 void console_window()
 {
@@ -2426,6 +2476,13 @@ void asset_browser_window()
         int textures_len = 0;
         textures = get_all_textures(&textures_len);
         static int selected_img = 9999;
+        static char* selected_logged = NULL;
+        if (selected_logged == NULL) 
+        {
+            selected_logged = malloc(strlen("") * sizeof(char));
+            assert(selected_logged != NULL);
+            strcpy(selected_logged, "");
+        }
         
         mesh* meshes = NULL;
         int meshes_len = 0;
@@ -2442,10 +2499,10 @@ void asset_browser_window()
         nk_layout_row_begin(ctx, NK_STATIC, 250, 3);
         {
 
-            nk_layout_row_push(ctx, 200);
+            nk_layout_row_push(ctx, 125);
             if (nk_group_begin(ctx, "Select", NK_WINDOW_NO_SCROLLBAR)) // NK_WINDOW_BORDER |
             {
-                nk_layout_row_static(ctx, 18, 150, 1);
+                nk_layout_row_static(ctx, 18, 100, 1);
                 nk_selectable_label(ctx, "Textures", NK_TEXT_LEFT, &selected_check[0]);
                 if (selected_check[0] == nk_true) { selected = TEXTURE;  for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
                 nk_selectable_label(ctx, "Meshes", NK_TEXT_LEFT, &selected_check[1]);
@@ -2461,12 +2518,12 @@ void asset_browser_window()
                 // nk_tree_pop(ctx);
                 nk_group_end(ctx);
             }
-            nk_layout_row_push(ctx, 750);
+            nk_layout_row_push(ctx, 850);
             if (nk_group_begin(ctx, "Assets", 0))
             {
                 if (selected == TEXTURE)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 6);
+                    nk_layout_row_static(ctx, 100, 100, 8);
 
                     for (int i = 0; i < textures_len; ++i)
                     {
@@ -2475,13 +2532,31 @@ void asset_browser_window()
                         {
                             if (selected_img == i) { selected_img = 9999; }
                             selected_img = i;
+                            // reset selected_logged_img to not have two selected assets at once
+                            if (strcmp(selected_logged, "")) 
+                            { 
+                                selected_logged = realloc(selected_logged, (strlen("") +1) * sizeof(char));
+                                strcpy(selected_logged, ""); 
+                            }
+                        }
+                    }
+                    int logged_tex_names_len = 0;
+                    char** logged_tex_names = get_all_logged_textures(&logged_tex_names_len);
+                    // printf("logged-tex-len: %d\n", logged_tex_names_len);
+                    for (int i = 0; i < logged_tex_names_len; ++i)
+                    {
+                        if (nk_button_label(ctx, logged_tex_names[i])) // test
+                        {
+                            selected_logged = realloc(selected_logged, (strlen(logged_tex_names[i]) +1) * sizeof(char));
+                            assert(selected_logged != NULL);
+                            strcpy(selected_logged, logged_tex_names[i]);
                         }
                     }
 
                 }
                 else if (selected == MESH)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 6);
+                    nk_layout_row_static(ctx, 100, 100, 8);
 
                     for (int i = 0; i < meshes_len; ++i)
                     {
@@ -2490,12 +2565,30 @@ void asset_browser_window()
                         {
                             if (selected_mesh == i) { selected_mesh = 9999; }
                             selected_mesh = i;
+                            // reset selected_logged to not have two selected assets at once
+                            if (strcmp(selected_logged, ""))
+                            {
+                                selected_logged = realloc(selected_logged, (strlen("") + 1) * sizeof(char));
+                                strcpy(selected_logged, "");
+                            }
+                        }
+                    }
+                    int logged_meshes_names_len = 0;
+                    char** logged_meshes_names = get_all_logged_meshes(&logged_meshes_names_len);
+                    // printf("logged-tex-len: %d\n", logged_tex_names_len);
+                    for (int i = 0; i < logged_meshes_names_len; ++i)
+                    {
+                        if (nk_button_label(ctx, logged_meshes_names[i]))
+                        {
+                            selected_logged = realloc(selected_logged, (strlen(logged_meshes_names[i]) + 1) * sizeof(char));
+                            assert(selected_logged != NULL);
+                            strcpy(selected_logged, logged_meshes_names[i]);
                         }
                     }
                 }
                 else if (selected == SCRIPT)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 6);
+                    nk_layout_row_static(ctx, 100, 100, 8);
 
                     for (int i = 0; i < scripts_len; ++i)
                     {
@@ -2524,28 +2617,45 @@ void asset_browser_window()
                 // nk_tree_pop(ctx);
                 nk_group_end(ctx);
             }
-            nk_layout_row_push(ctx, 200);
+            nk_layout_row_push(ctx, 175);
             if (nk_group_begin(ctx, "Selected", NK_WINDOW_BORDER))
             {
                 
                 if (selected == TEXTURE)
                 {
-                    if (selected_img == 9999)
+                    if (selected_img == 9999 && !strcmp(selected_logged, ""))
                     {
+                        // no texture selected
                         struct nk_color red = { 255, 0, 0 };
                         nk_label_colored(ctx, "no image selected", NK_TEXT_ALIGN_LEFT, red);
                     }
+                    else if (strcmp(selected_logged, ""))
+                    {
+                        // logged texture
+                        nk_layout_row_dynamic(ctx, 40, 1);
+                        char* buf[64];
+                        sprintf(buf, "Name: \"%s\"", selected_logged);
+                        nk_label_wrap(ctx, buf);
+
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        if (nk_button_label(ctx, "Load Texture"))
+                        {
+                            get_texture(selected_logged);
+                        }
+                    }
                     else
                     {
+                        //loaded texyture selected
                         // properties of selected asset
                         nk_layout_row_static(ctx, 145, 145, 1);
                         struct nk_image img = nk_image_id(textures[selected_img].handle);
                         nk_image(ctx, img);
 
-                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
                         sprintf(buf, "Name: \"%s\"", textures[selected_img].name);
                         nk_label_wrap(ctx, buf);
+                        nk_layout_row_dynamic(ctx, 30, 1);
                         sprintf(buf, "Size: %dpx x %dpx", textures[selected_img].size_x, textures[selected_img].size_y);
                         nk_label_wrap(ctx, buf);
                         sprintf(buf, "Handle: \"%d\"", textures[selected_img].handle);
@@ -2555,17 +2665,32 @@ void asset_browser_window()
                 }
                 else if (selected == MESH)
                 {
-                    if (selected_mesh == 9999)
+                    if (selected_mesh == 9999 && !strcmp(selected_logged, ""))
                     {
                         struct nk_color red = { 255, 0, 0 };
                         nk_label_colored(ctx, "no mesh selected", NK_TEXT_ALIGN_LEFT, red);
                     }
+                    else if (strcmp(selected_logged, ""))
+                    {
+                        // logged texture
+                        nk_layout_row_dynamic(ctx, 40, 1);
+                        char* buf[64];
+                        sprintf(buf, "Name: \"%s\"", selected_logged);
+                        nk_label_wrap(ctx, buf);
+
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        if (nk_button_label(ctx, "Load Mesh"))
+                        {
+                            get_mesh(selected_logged);
+                        }
+                    }
                     else
                     {
-                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
                         sprintf(buf, "Name: \"%s\"", meshes[selected_mesh].name);
                         nk_label_wrap(ctx, buf);
+                        nk_layout_row_dynamic(ctx, 30, 1);
                         sprintf(buf, "Vertices: \"%d\"", meshes[selected_mesh].vertices_len);
                         nk_label_wrap(ctx, buf);
                         sprintf(buf, "Indices: \"%d\"", meshes[selected_mesh].indices_len);
@@ -2590,10 +2715,11 @@ void asset_browser_window()
                         name = str_trunc(name, 1); // cut off the last "\"
                         assert(name != NULL);
 
-                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
                         sprintf(buf, "Name: \"%s\"", name);
                         nk_label_wrap(ctx, buf);
+                        nk_layout_row_dynamic(ctx, 30, 1);
                         sprintf(buf, "Active: \"%s\"", scripts[selected_script].active == BEE_TRUE ? "true" : "false");
                         nk_label_wrap(ctx, buf);
                         sprintf(buf, "Has Error: \"%s\"", scripts[selected_script].has_error == BEE_TRUE ? "true" : "false");

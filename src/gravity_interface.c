@@ -11,11 +11,13 @@
 
 // ---- vars ----
 gravity_script* cur_script = NULL;
+int cur_script_entity = 0;
 
 
-void set_cur_script(gravity_script* script)
+void set_cur_script(gravity_script* script, int entity_index)
 {
     cur_script = script;
+    cur_script_entity = entity_index;
 }
 gravity_script* get_cur_script()
 {
@@ -51,7 +53,7 @@ static bee_bool move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
 
 
     int ents_len; get_entity_len(&ents_len);
-    entity* ent = get_entity(cur_script->entity_index);
+    entity* ent = get_entity(cur_script_entity);
 
     f32* x = &ent->pos[0];
     if (ent->pos == NULL) { f32 val = 0;  x = &val; }
@@ -73,7 +75,7 @@ static bee_bool move_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
     { throw_error("[World.move_x(float)] Wrong argument types."); return; }
 
     int ents_len; get_entity_len(&ents_len);
-    entity* ent = get_entity(cur_script->entity_index);
+    entity* ent = get_entity(cur_script_entity);
 
     f32* y = &ent->pos[1];
     if (ent->pos == NULL) { f32 val = 0;  y = &val; }
@@ -94,7 +96,7 @@ static bee_bool move_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
     { throw_error("[World.move_x(float)] Wrong argument types."); return; }
 
     int ents_len; get_entity_len(&ents_len);
-    entity* ent = get_entity(cur_script->entity_index);
+    entity* ent = get_entity(cur_script_entity);
 
     f32* z = &ent->pos[2];
     if (ent->pos == NULL) { f32 val = 0;  z = &val; }
@@ -113,7 +115,7 @@ static bee_bool get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     if (nargs != 1) { throw_error("[Entity.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     // int ents_len; get_entity_len(&ents_len);
-    entity* ent = get_entity(cur_script->entity_index);
+    entity* ent = get_entity(cur_script_entity);
 
     f32 x = ent->pos[0];
     if (ent->pos == NULL) { x = 0; }
@@ -127,7 +129,7 @@ static bee_bool get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     if (nargs != 1) { throw_error("[Entity.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     int ents_len; get_entity_len(&ents_len);
-    entity* ent = get_entity(cur_script->entity_index);
+    entity* ent = get_entity(cur_script_entity);
 
     f32 y = ent->pos[0];
     if (ent->pos == NULL) { y = 0; }
@@ -141,7 +143,7 @@ static bee_bool get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     if (nargs != 1) { throw_error("[Entity.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     int ents_len; get_entity_len(&ents_len);
-    entity* ent = get_entity(cur_script->entity_index);
+    entity* ent = get_entity(cur_script_entity);
 
     f32 z = ent->pos[0];
     if (ent->pos == NULL) { z = 0; }

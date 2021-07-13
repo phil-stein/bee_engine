@@ -2,8 +2,9 @@
 
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION is defined in renderer.c
 
-#include "object_data.h"
 #include "file_handler.h"
+#include "object_data.h"
+#include "renderer.h"
 #include "shader.h"
 #include "camera.h"
 #include "window.h"
@@ -395,12 +396,12 @@ void update_entity(entity* ent)
 			ent->scripts[i]->source = read_text_file(ent->scripts[i]->path);
 			assert(ent->scripts[i]->source != NULL);
 
-			gravity_run_init(ent->scripts[i], ent->scripts[i]->source);
+			gravity_run_init(ent->scripts[i], ent->scripts[i]->source, get_entity_id_by_name(ent->name));
 		}
 		else 
 		{
 			assert(ent->scripts[i]->vm != NULL);
-			gravity_run_update(ent->scripts[i]);
+			gravity_run_update(ent->scripts[i], get_entity_id_by_name(ent->name));
 		}
 	}
 }
@@ -416,10 +417,7 @@ void free_entity(entity* ent)
 	if (ent->scripts_len > 0)
 	{
 		// scripts
-		for (int i = 0; i < ent->scripts_len; ++i)
-		{
-			free_script(ent->scripts[i]);
-		}
+		// scripts get freed in asset-manager as the same script might be on multiple entites
 		arrfree(ent->scripts);
 	}
 }

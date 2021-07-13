@@ -13,11 +13,12 @@
 
 typedef struct
 {
+	char* name;
 	char* path;
 	bee_bool path_valid;
 	char* source;
 
-	int entity_index;
+	// int entity_index;
 
 	gravity_vm* vm;
 
@@ -36,9 +37,9 @@ gravity_script make_script(char* path);
 void free_script(gravity_script* script);
 
 rtn_code gravity_run(const char* source_code);
-rtn_code gravity_run_init(gravity_script* script, const char* src);
-rtn_code gravity_run_update(gravity_script* script);
-rtn_code gravity_run_cleanup(gravity_script* script);
+rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_index);
+rtn_code gravity_run_update(gravity_script* script, int entity_index);
+rtn_code gravity_run_cleanup(gravity_script* script, int entity_index);
 
 
 #endif

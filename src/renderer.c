@@ -565,7 +565,6 @@ void entity_add_script(int entity_index, const char* name)
 {
 	// gravity_script script = make_script(path);
 	gravity_script* script = get_script(name);
-	script->entity_index = entity_index;
 #ifdef EDITOR_ACT
 	script->active = BEE_FALSE;
 #endif
@@ -614,7 +613,10 @@ int get_entity_id_by_name(char* name)
 	assert(0 == 1);
 	return 9999;
 }
-
+entity* get_entitiy_ptr(int idx)
+{
+	return &entities[idx];
+}
 entity_properties get_entity_properties(int index)
 {
 	entity_properties prop;

@@ -25,6 +25,10 @@ int texture_paths_len = 0;
 texture* texture_data = NULL;
 int texure_data_len = 0;
 
+// array holding the names of all textures not yet loaded
+char** logged_textures = NULL;
+
+
 // ---- meshes ----
 // value: index of mesh in 'mesh_data', key: name of mesh
 struct { char* key;  int   value; }*meshes = NULL;
@@ -37,6 +41,10 @@ int meshes_paths_len = 0;
 // array of holding meshes
 mesh* mesh_data = NULL;
 int mesh_data_len = 0;
+
+// array holding the names of all meshes not yet loaded
+char** logged_meshes = NULL;
+
 
 // ---- scripts ----
 // value: index of script in 'script_data', key: name of script
@@ -52,7 +60,6 @@ gravity_script* scripts_data = NULL;
 int scripts_data_len = 0;
 
 
-
 void assetm_init()
 {
 	// load all assets in "proj\assets\"
@@ -65,9 +72,6 @@ void assetm_init()
 
 	search_dir(dir_path);
 
-	// printf("'crate01_dif.png' texture id: '%d'\n", shget(textures, "crate01_dif.png"));
-	// printf("'crate01_spec.png' texture id: '%d'\n", shget(textures, "crate01_spec.png"));
-	// printf("'blank.png' texture id: '%d'\n", shget(textures, "blank.png"));
 }
 
 void search_dir(const char* dir_path)
@@ -164,8 +168,21 @@ void assetm_cleanup()
 	hmfree(texture_paths);
 	arrfree(texture_data);
 
-	// shfree(materials);
-	// shfree(meshes);
+	// free the allocated memory
+	shfree(meshes);
+	hmfree(meshes_paths);
+	arrfree(mesh_data);
+	
+	// free all scripts
+	for (int i = 0; i < scripts_data_len; ++i)
+	{
+		free_script(&scripts_data[i]);
+	}
+
+	// free the allocated memory
+	shfree(scripts);
+	hmfree(scripts_paths);
+	arrfree(scripts_data);
 
 }
 
@@ -173,6 +190,11 @@ void assetm_cleanup()
 //
 // ---- textures ----
 // 
+
+int get_texture_idx(char* name)
+{
+	return shget(textures, name);
+}
 
 texture* get_all_textures(int* textures_len)
 {
@@ -198,10 +220,20 @@ texture get_texture(const char* name)
 	return texture_data[shget(textures, name)];
 }
 
+char** get_all_logged_textures(int* len)
+{
+	*len = arrlen(logged_textures);
+	return logged_textures;
+}
+char* get_logged_texture(int idx)
+{
+	return logged_textures[idx];
+}
+
 void log_texture(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name), sizeof(char));
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 	// printf("texture name copy: \"%s\"\n", name_cpy);
@@ -212,7 +244,7 @@ void log_texture(const char* path, const char* name)
 	textures_len++;
 	
 	// make a persistent copy of the passed path
-	char* path_cpy = calloc(strlen(path), sizeof(char));
+	char* path_cpy = calloc(strlen(path) +1, sizeof(char));
 	assert(path_cpy != NULL);
 	strcpy(path_cpy, path);
 	// printf("texture path copy: \"%s\"\n", path_cpy);
@@ -222,6 +254,9 @@ void log_texture(const char* path, const char* name)
 	hmput(texture_paths, i, path_cpy);
 	texture_paths_len++;
 	// printf("texture path: \"%s\"; texture name: \"%s\"; texture id: %d\n", path, name, i);
+
+	// keep track of logged texture names
+	arrput(logged_textures, name_cpy);
 	
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
@@ -233,18 +268,56 @@ void create_texture(const char* name)
 	char* path = hmget(texture_paths, path_idx);
 	// printf("-> create texture path: \"%s\"; path index: %d\n", path, path_idx);
 	
-	texture t = texture_create_from_path(path, name, BEE_FALSE);
+	// copy name and path as passed name might be deleted
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+	texture t = texture_create_from_path(path, name_cpy, BEE_FALSE);
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
 	// and put the created texture into the tex array
 	shput(textures, name, texure_data_len);
 	arrput(texture_data, t);
 	texure_data_len++;
+
+	// remove texture from the logged_textures array
+	for (int i = 0; i < arrlen(logged_textures); ++i)
+	{
+		if (!strcmp(logged_textures[i], name))
+		{
+			char* ptr = logged_textures[i];
+			arrdel(logged_textures, i);
+			break;
+		}
+	}
 }
 
 // 
 // ---- meshes ----
 // 
+
+
+char** get_all_logged_meshes(int* len)
+{
+
+	printf("logged-meshes assetmanager:\n");
+	for (int i = 0; i < arrlen(logged_meshes); ++i)
+	{
+		printf(" -> %s\n", logged_meshes[i]);
+	}
+
+	*len = arrlen(logged_meshes);
+	return logged_meshes;
+}
+char* get_logged_mesh(int idx)
+{
+	return logged_meshes[idx];
+}
+
+int get_mesh_idx(char* name)
+{
+	return shget(meshes, name);
+}
 
 mesh* get_all_meshes(int* meshes_len)
 {
@@ -294,6 +367,9 @@ void log_mesh(const char* path, const char* name)
 	meshes_paths_len++;
 	// printf("texture path: \"%s\"; texture name: \"%s\"; texture id: %d\n", path, name, i);
 
+	// keep track of logged mesh names
+	arrput(logged_meshes, name_cpy);
+
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
 
@@ -310,11 +386,27 @@ void create_mesh(const char* name)
 	shput(meshes, name, mesh_data_len);
 	arrput(mesh_data, m);
 	mesh_data_len++;
+
+	// remove mesh from the logged_meshes array
+	for (int i = 0; i < arrlen(logged_meshes); ++i)
+	{
+		if (!strcmp(logged_meshes[i], name))
+		{
+			char* ptr = logged_meshes[i];
+			arrdel(logged_meshes, i);
+			break;
+		}
+	}
 }
 
 // 
 // ---- scripts ----
 // 
+
+int get_script_idx(char* name)
+{
+	return shget(scripts, name);
+}
 
 gravity_script* get_all_scripts(int* scripts_len)
 {

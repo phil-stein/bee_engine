@@ -114,12 +114,10 @@ void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t*
 {
     int width, height;
 
-    // OpenGL has texture coordinates with (0, 0) on bottom
-    if (flip_vertical)
-    {
-        stbi_set_flip_vertically_on_load(BEE_TRUE);
-    }
+    // @TODO: flip horizontaly
 
+    // OpenGL has texture coordinates with (0, 0) on bottom
+    stbi_set_flip_vertically_on_load(flip_vertical);
     u8* image = stbi_load(path, &width, &height, channel_num, STBI_rgb_alpha);
     assert(image != NULL);
 
