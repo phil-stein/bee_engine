@@ -51,4 +51,11 @@ gravity_script* get_script(const char* name);
 
 void create_script(const char* path, const char* name);
 
+
+material* add_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
+
+material* get_material(char* name);
+
+material* get_all_materials(int* materials_len);
+
 #endif

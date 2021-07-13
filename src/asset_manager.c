@@ -60,17 +60,13 @@ gravity_script* scripts_data = NULL;
 int scripts_data_len = 0;
 
 // ---- materials ----
-// value: index of script in 'script_data', key: name of script
+// value: index of script in 'material_data', key: name of material
 struct { char* key;  int   value; }*materials = NULL;
 int materials_len = 0;
 
-// value: path to script, key: script-index in 'scripts'
-struct { int   key;	 char* value; }*materials_paths = NULL; // turn this into an array, god damn ahhhh
-int materials_paths_len = 0;
-
-// array of holding scripts
-gravity_script* scripts_data = NULL;
-int scripts_data_len = 0;
+// array of holding materials
+material* materials_data = NULL;
+int materials_data_len = 0;
 
 
 void assetm_init()
@@ -478,4 +474,41 @@ void create_script(const char* path, const char* name)
 	scripts_data_len++;
 
 	// not freeing name_cpy and path_cpy as they need to be used in the future
+}
+
+
+//
+// ---- materials ----
+// 
+
+material* add_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
+{
+	material mat = make_material_tint(shader, dif_tex, spec_tex, is_transparent, shininess, tile, tint, name);
+	
+	// make a persistent copy of the passed name
+	char* name_cpy = calloc(strlen(name), sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+
+	shput(materials, name_cpy, materials_data_len);
+	materials_len++;
+	arrput(materials_data, mat);
+	materials_data_len++;
+
+	return &materials_data[shget(materials, name)];
+}
+
+material* get_material(char* name)
+{
+	// @TODO: add security check that the texture doesn't exist at all
+	//		  for example make the 0th texture allways be all pink etc.
+
+	// retrieve mesh from mesh_data array
+	return &materials_data[shget(materials, name)];
+}
+
+material* get_all_materials(int* materials_len)
+{
+	*materials_len = materials_data_len;
+	return materials_data;
 }

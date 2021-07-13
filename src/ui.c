@@ -1778,8 +1778,9 @@ void properties_window(int ent_len)
                     nk_layout_row_static(ctx, 18, 150, 1);
                     for (int i = 0; i < ent_len; ++i)
                     {
-                        entity_properties prop = get_entity_properties(i);
-                        nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
+                        // entity_properties prop = get_entity_properties(i);
+                        entity* ent = get_entitiy_ptr(i);
+                        nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[i]);
                     }
                     nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
 
@@ -1791,14 +1792,15 @@ void properties_window(int ent_len)
                     nk_layout_row_static(ctx, 18, 150, 1);
                     for (int i = 0; i < ent_len; ++i)
                     {
-                        entity_properties prop = get_entity_properties(i);
+                        // entity_properties prop = get_entity_properties(i);
+                        entity* ent = get_entitiy_ptr(i);
                         // nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
                         char type_buffer[64]; strcpy(type_buffer, "empty");
                         // if (*prop.has_trans && !*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "empty"); }
-                        if (*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "model"); }
-                        else if (*prop.has_light) { strcpy(type_buffer, "light"); }
+                        if (ent->has_model && !ent->has_light) { strcpy(type_buffer, "model"); }
+                        else if (ent->has_light) { strcpy(type_buffer, "light"); }
 
-                        if (*prop.scripts_len > 0) { strcat(type_buffer, " | scripted"); }
+                        if (ent->scripts_len > 0) { strcat(type_buffer, " | scripted"); }
 
                         nk_label(ctx, type_buffer, NK_TEXT_LEFT);
                     }
@@ -1987,19 +1989,19 @@ void properties_window(int ent_len)
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Name", NK_TEXT_LEFT);
-                    nk_label(ctx, ent->_material.name, NK_TEXT_RIGHT);
+                    nk_label(ctx, ent->_material->name, NK_TEXT_RIGHT);
 
 
                     nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_property_float(ctx, "Shininess", 0.0f, &ent->_material.shininess, 1.0f, 0.1f, 0.002f);
+                    nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 1.0f, 0.1f, 0.002f);
                     nk_layout_row_dynamic(ctx, 25, 2);
-                    nk_property_float(ctx, "Tile X", 0.0f, &ent->_material.tile[0], 100.0f, 0.1f, 0.1f);
-                    nk_property_float(ctx, "Tile Y", 0.0f, &ent->_material.tile[1], 100.0f, 0.1f, 0.1f);
+                    nk_property_float(ctx, "Tile X", 0.0f, &ent->_material->tile[0], 100.0f, 0.1f, 0.1f);
+                    nk_property_float(ctx, "Tile Y", 0.0f, &ent->_material->tile[1], 100.0f, 0.1f, 0.1f);
             
                     // tint-color
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Tint Color", NK_TEXT_LEFT);
-                    struct nk_colorf tint = { ent->_material.tint[0], ent->_material.tint[1], ent->_material.tint[2] };
+                    struct nk_colorf tint = { ent->_material->tint[0], ent->_material->tint[1], ent->_material->tint[2] };
                     if (nk_combo_begin_color(ctx, nk_rgb_cf(tint), nk_vec2(200, 400)))
                     {
                         enum color_mode { COL_RGB, COL_HSV };
@@ -2029,9 +2031,9 @@ void properties_window(int ent_len)
                         nk_combo_end(ctx);
 
                         // assign the altered color 
-                        ent->_material.tint[0] = tint.r;
-                        ent->_material.tint[1] = tint.g;
-                        ent->_material.tint[2] = tint.b;
+                        ent->_material->tint[0] = tint.r;
+                        ent->_material->tint[1] = tint.g;
+                        ent->_material->tint[2] = tint.b;
                     }
 
                     // spacing
@@ -2058,7 +2060,7 @@ void properties_window(int ent_len)
                     {
                         nk_layout_row_dynamic(ctx, 25, 2);
                         nk_label(ctx, "Is transparent: ", NK_TEXT_LEFT);
-                        nk_label(ctx, ent->_material.is_transparent == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
+                        nk_label(ctx, ent->_material->is_transparent == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
 
 
                         texture* textures = NULL;
@@ -2068,10 +2070,10 @@ void properties_window(int ent_len)
                         nk_label(ctx, "Diffuse Texture: ", NK_TEXT_LEFT);
 
                         static int selected_dif = 0;
-                        selected_dif = get_texture_idx(ent->_material.dif_tex.name);
+                        selected_dif = get_texture_idx(ent->_material->dif_tex.name);
                         int selected_dif_old = selected_dif;
                         static int selected_spec = 0;
-                        selected_spec = get_texture_idx(ent->_material.spec_tex.name);
+                        selected_spec = get_texture_idx(ent->_material->spec_tex.name);
                         int selected_spec_old = selected_spec;
                         char** texture_names = malloc(textures_len * sizeof(char*));
                         assert(texture_names != NULL);
@@ -2084,9 +2086,9 @@ void properties_window(int ent_len)
 
                         selected_dif = nk_combo(ctx, texture_names, textures_len, selected_dif, 25, nk_vec2(200, 200));
 
-                        if (selected_dif_old != selected_dif) { ent->_material.dif_tex = textures[selected_dif]; }
+                        if (selected_dif_old != selected_dif) { ent->_material->dif_tex = textures[selected_dif]; }
 
-                        struct nk_image img = nk_image_id(ent->_material.dif_tex.handle);
+                        struct nk_image img = nk_image_id(ent->_material->dif_tex.handle);
                         nk_layout_row_static(ctx, 150, 150, 1);
                         nk_image(ctx, img);
 
@@ -2095,9 +2097,9 @@ void properties_window(int ent_len)
 
                         selected_spec = nk_combo(ctx, texture_names, textures_len, selected_spec, 25, nk_vec2(200, 200));
 
-                        if (selected_spec_old != selected_spec) { ent->_material.spec_tex = textures[selected_spec]; }
+                        if (selected_spec_old != selected_spec) { ent->_material->spec_tex = textures[selected_spec]; }
 
-                        img = nk_image_id(ent->_material.spec_tex.handle);
+                        img = nk_image_id(ent->_material->spec_tex.handle);
                         nk_layout_row_static(ctx, 150, 150, 1);
                         nk_image(ctx, img);
 
@@ -2492,6 +2494,11 @@ void asset_browser_window()
         scripts = get_all_scripts(&scripts_len);
         static int selected_script = 9999;
 
+        material* materials = NULL;
+        int materials_len = 0;
+        materials = get_all_materials(&materials_len);
+        static int selected_material = 9999;
+
         // nk_layout_row_dynamic(ctx, 250, 2); // wrapping row
         
         nk_layout_row_begin(ctx, NK_STATIC, 250, 3);
@@ -2591,23 +2598,25 @@ void asset_browser_window()
                     for (int i = 0; i < scripts_len; ++i)
                     {
 
-                        char* name = str_find_last_of(scripts[i].path, "\\");
-                        if (name == NULL)
-                        {
-                            name = str_find_last_of(scripts[i].path, "/");
-                        }
-                        assert(name != NULL);
-                        name = str_trunc(name, 1); // cut off the last "\"
-                        assert(name != NULL);
-
                         // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_label(ctx, name))
+                        if (nk_button_label(ctx, scripts[i].name))
                         {
                             if (selected_script == i) { selected_script = 9999; }
                             selected_script = i;
-                            char buf[64];
-                            sprintf(buf, "selected script: \"%s\"", name);
-                            submit_txt_console(buf);
+                        }
+                    }
+                }
+                else if (selected == MATERIAL)
+                {
+                    nk_layout_row_static(ctx, 100, 100, 8);
+
+                    for (int i = 0; i < materials_len; ++i)
+                    {
+                        // struct nk_image img = nk_image_id(textures[i].handle);
+                        if (nk_button_label(ctx, materials[i].name))
+                        {
+                            if (selected_material == i) { selected_material = 9999; }
+                            selected_material = i;
                         }
                     }
                 }
@@ -2704,18 +2713,9 @@ void asset_browser_window()
                     }
                     else
                     {
-                        char* name = str_find_last_of(scripts[selected_script].path, "\\");
-                        if (name == NULL)
-                        {
-                            name = str_find_last_of(scripts[selected_script].path, "/");
-                        }
-                        assert(name != NULL);
-                        name = str_trunc(name, 1); // cut off the last "\"
-                        assert(name != NULL);
-
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
-                        sprintf(buf, "Name: \"%s\"", name);
+                        sprintf(buf, "Name: \"%s\"", scripts[selected_script].name);
                         nk_label_wrap(ctx, buf);
                         nk_layout_row_dynamic(ctx, 30, 1);
                         sprintf(buf, "Active: \"%s\"", scripts[selected_script].active == BEE_TRUE ? "true" : "false");
@@ -2732,6 +2732,27 @@ void asset_browser_window()
                                 set_source_code_window(src);
                             }
                         }
+                    }
+                }
+                else if (selected == MATERIAL)
+                {
+                    if (selected_material == 9999)
+                    {
+                        struct nk_color red = { 255, 0, 0 };
+                        nk_label_colored(ctx, "no material selected", NK_TEXT_ALIGN_LEFT, red);
+                    }
+                    else
+                    {
+                        nk_layout_row_dynamic(ctx, 40, 1);
+                        char* buf[64];
+                        sprintf(buf, "Name: \"%s\"", materials[selected_material].name);
+                        nk_label_wrap(ctx, buf);
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_property_float(ctx, "Shininess", 0.0f, &materials[selected_material].shininess, 1.0f, 0.1f, 0.002f);
+                        // nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_property_float(ctx, "Tile X", 0.0f, &materials[selected_material].tile[0], 100.0f, 0.1f, 0.1f);
+                        nk_property_float(ctx, "Tile Y", 0.0f, &materials[selected_material].tile[1], 100.0f, 0.1f, 0.1f);
+                        
                     }
                 }
 

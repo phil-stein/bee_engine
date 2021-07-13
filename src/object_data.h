@@ -94,7 +94,7 @@ typedef struct
 
 	bee_bool has_model;
 	mesh _mesh;
-	material _material;
+	material* _material;
 
 	bee_bool has_light;
 	light _light;

@@ -35,7 +35,7 @@ material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool i
 }
 material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
 {
-	material mat = make_material(shader, dif_tex, spec_tex, shininess, is_transparent, tile, name);
+	material mat = make_material(shader, dif_tex, spec_tex, is_transparent, shininess, tile, name);
 	glm_vec3_copy(tint, mat.tint);
 
 	return mat;
@@ -359,7 +359,7 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 	if (ent.has_model)
 	{
 		ent._mesh	  = *_mesh;
-		ent._material = *mat;
+		ent._material = mat;
 	}
 	ent.has_light = _light != NULL ? BEE_TRUE : BEE_FALSE;
 	if (_light != NULL)
@@ -376,11 +376,14 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 // for script, collider, etc. components
 void update_entity(entity* ent)
 {
+	#ifdef EDITOR_ACT
 	// if both light and model make the models color the lights diffuse color
+	// doesnt work as the material attached to the lights is likely on multiple lights
 	if (ent->has_light && ent->has_model)
 	{
-		glm_vec3_copy(ent->_light.diffuse, ent->_material.tint);
+		// glm_vec3_copy(ent->_light.diffuse, ent->_material->tint);
 	}
+	#endif
 
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)

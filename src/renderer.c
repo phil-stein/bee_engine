@@ -212,7 +212,10 @@ void renderer_update()
 		}
 		if (is_trans) { continue; }
 
-		draw_mesh(&entities[i]._mesh, &entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+		if (entities[i].has_model)
+		{
+			draw_mesh(&entities[i]._mesh, entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+		}
 	}
 
 	// sort transparent / translucent objects
@@ -290,7 +293,10 @@ void renderer_update()
 	for (int n = 0; n < transparent_ents_len; ++n)
 	{
 		int i = transparent_ents[n];
-		draw_mesh(&entities[i]._mesh, &entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+		if (entities[i].has_model)
+		{
+			draw_mesh(&entities[i]._mesh, entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+		}
 	}
 	// ------------------------------------------------------------------------
 

@@ -1,0 +1,23 @@
+extern var Entity;
+extern var Game;
+extern var Input;
+extern var Camera;
+
+func init()
+{
+}
+
+func update()
+{
+	var this  = Entity();
+	var game  = Game();
+	var input = Input();
+	var cam   = Camera();
+
+	// code ...
+}
+
+func cleanup()
+{
+}
+

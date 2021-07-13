@@ -69,52 +69,45 @@ void init()
 	
 	// load texture
 	texture crate_dif_tex   = get_texture("crate01_dif.png");
-	// texture crate_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_dif.png", "crate01_dif.png", BEE_FALSE);
 	texture crate_spec_tex  = get_texture("crate01_spec.png");
-	// texture crate_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\crate01_spec.png", "crate01_spec.png", BEE_FALSE);
 
 	vec2 tile = { 1.0f, 1.0f };
-	material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");
+	vec3 tint = { 1.0f, 1.0f, 1.0f };
+	// material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");
+	material* mat_crate = add_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_crate");
 
-	//texture grass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_dif.png", "grass01_dif.png", BEE_FALSE);
 	texture grass_dif_tex  = get_texture("grass01_dif.png");
-	// texture grass_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\grass01_spec.png", "grass01_spec.png", BEE_FALSE);
 	texture grass_spec_tex  = get_texture("grass01_spec.png");
-	material mat_grass	   = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_grass");
-
-	// texture barrel_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_dif.png", "robot01_dif.png", BEE_FALSE);
-	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
-	// texture barrel_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\barrel01_spec.png", "robot01_spec.png", BEE_FALSE);
-	texture barrel_spec_tex = get_texture("barrel01_spec.png");
-	material mat_barrel		= make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_barrel");
+	// material mat_grass	   = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_grass");
+	material* mat_grass	   = add_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_grass");
 	
-	// texture robot_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\robot01_dif.png", "barrel01_dif.png", BEE_FALSE);
+	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
+	texture barrel_spec_tex = get_texture("barrel01_spec.png");
+	// material mat_barrel		= make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_barrel");
+	material* mat_barrel		= add_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_barrel");
+	
 	texture robot_dif_tex  = get_texture("robot01_dif.png");
-	// texture robot_spec_tex = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\robot01_spec.png", "barrel01_spec.png", BEE_FALSE);
 	texture robot_spec_tex = get_texture("robot01_spec.png");
-	material mat_robot	   = make_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_robot");
+	// material mat_robot	   = make_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_robot");
+	material* mat_robot	   = add_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_robot");
 
 	mesh m_cube = make_cube_mesh();
 
-	// texture blank_tex	 = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\blank.png", "blank.png", BEE_FALSE);
 	texture blank_tex = get_texture("blank.png");
-	material mat_blank		 = make_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank");
-	material mat_blank_unlit = make_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank_unlit");
+	// material mat_blank		 = make_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank");
+	material* mat_blank		  = add_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_blank");
+	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_blank_unlit");
 	
 
-	// texture glass_dif_tex  = texture_create_from_path("C:\\Workspace\\C\\BeeEngine\\assets\\textures\\window.png", "window.png", BEE_FALSE);
 	texture glass_dif_tex = get_texture("window.png");
-	material mat_glass = make_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, "MAT_glass");
+	// material mat_glass = make_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, "MAT_glass");
+	material* mat_glass = add_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, "MAT_glass");
 	
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
-	// entity_add_script(ent_empty, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\game_controller.gravity");
 	entity_add_script(ent_empty, "game_controller.gravity");
 
-	// mesh m_lightbulb  = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\lightbulb.obj");
 	mesh* m_lightbulb = get_mesh("lightbulb.obj");
-	// mesh m_flashlight = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\flashlight.obj");
 	mesh* m_flashlight = get_mesh("flashlight.obj");
-	// mesh m_arrow      = load_mesh("C:\\Workspace\\C\\BeeEngine\\assets\\models\\Gizmos\\arrow_down.obj");
 	mesh* m_arrow = get_mesh("arrow_down.obj");
 
 	vec3 ambient      = { 0.0f, 0.0f, 0.0f };
@@ -132,12 +125,12 @@ void init()
 	vec3 rot_light	   = { 0.0f, 0.0f,  0.0f };
 	vec3 scale_light01 = { 0.1f, 0.1f,  0.1f };
 	vec3 scale_light02 = { 0.5f, 0.5f,  0.5f };
-	glm_vec3_copy(diffuse01, mat_blank.tint);
-	add_entity(pos_light01, rot_light, scale_light02, m_arrow,      &mat_blank_unlit, &dir_light,   "dir_light");
-	add_entity(pos_light03, rot_light, scale_light02, m_flashlight, &mat_blank_unlit, &spot_light,  "spot_light");
-	glm_vec3_copy(diffuse02, mat_blank.tint);
-	add_entity(pos_light02, rot_light, scale_light01, m_lightbulb,  &mat_blank_unlit, &point_light, "point_light");
-	glm_vec3_copy(specular, mat_blank.tint); // all 1.0f
+	glm_vec3_copy(diffuse01, mat_blank->tint);
+	add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_blank_unlit"), &dir_light,   "dir_light");	// mat_blank_unlit
+	add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_blank_unlit"), &spot_light,  "spot_light");	// mat_blank_unlit
+	glm_vec3_copy(diffuse02, mat_blank->tint);
+	add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_blank_unlit"), &point_light, "point_light");	// mat_blank_unlit
+	glm_vec3_copy(specular, mat_blank->tint); // all 1.0f
 
 	// plane
 	mesh m_plane = make_plane_mesh();
@@ -149,44 +142,40 @@ void init()
 	vec3 scale = { 1.0f, 1.0f, 1.0f };
 	vec3 scale01;
 	glm_vec3_scale(scale, 5.0f, scale01);
-	add_entity(pos01, rot01, scale01, &m_plane, &mat_grass, NULL, "ground");
-	add_entity(pos02, rot01, scale, &m_plane, &mat_glass, NULL, "window_01");
-	add_entity(pos03, rot01, scale, &m_plane, &mat_glass, NULL, "window_02");
-	add_entity(pos04, rot01, scale, &m_plane, &mat_glass, NULL, "window_03");
+	add_entity(pos01, rot01, scale01, &m_plane, get_material("MAT_grass"), NULL, "ground");  // mat_grass
+	add_entity(pos02, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_01"); // mat_glass
+	add_entity(pos03, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_02"); // mat_glass
+	add_entity(pos04, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_03"); // mat_glass
 
 	// assimp
 	mesh* m_crate = get_mesh("crate01.obj");
 	vec3 pos05 = { 1.0f, 0.0f, 1.0f };
 	vec3 scale02;
 	glm_vec3_scale(scale, 0.5f, scale02);
-	int ent_crate = add_entity(pos05, rot01, scale02, m_crate, &mat_crate, NULL, "crate");
+	int ent_crate = add_entity(pos05, rot01, scale02, m_crate, get_material("MAT_crate"), NULL, "crate"); // mat_crate
 	
 	mesh* m_robot = get_mesh("robot01_LD.obj");
 	vec3 pos08 = { 0.0f, -0.5f, 0.0f };
 	vec3 scale04;
 	glm_vec3_scale(scale, 0.25f, scale04);
-	int ent_robot = add_entity(pos08, rot01, scale04, m_robot, &mat_robot, NULL, "robot");
-	// entity_add_script(ent_robot, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\move_arrows.gravity");
+	int ent_robot = add_entity(pos08, rot01, scale04, m_robot, get_material("MAT_robot"), NULL, "robot"); // mat_robot
 	entity_add_script(ent_robot, "move_arrows.gravity");
 
 	mesh* m_bunny = get_mesh("bunny.obj");
 	vec3 pos06 = { 1.5f, -0.5f, -1.5f };
-	int ent_bunny = add_entity(pos06, rot01, scale, m_bunny, &mat_blank, NULL, "bunny");
-	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_y.gravity");
+	int ent_bunny = add_entity(pos06, rot01, scale, m_bunny, get_material("MAT_blank"), NULL, "bunny"); // mat_blank
 	entity_add_script(ent_bunny, "sinewave_y.gravity");
-	// entity_add_script(ent_bunny, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
 
 	mesh* m_barrel = get_mesh("post_apocalyptic_barrel.obj");
 	vec3 pos07 = { -1.5f, 0.0f, -1.5f };
 	vec3 scale03;
 	glm_vec3_scale(scale, 0.5f, scale03);
-	int ent_barrel = add_entity(pos07, rot01, scale03, m_barrel, &mat_barrel, NULL, "barrel");
-	// entity_add_script(ent_barrel, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\sinewave_x.gravity");
+	int ent_barrel = add_entity(pos07, rot01, scale03, m_barrel, get_material("MAT_barrel"), NULL, "barrel"); // mat_barrel
 	entity_add_script(ent_barrel, "sinewave_x.gravity");
 		
 
-	texture screenshot_tex = get_texture("screenshot08.png");
-	material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
+	// texture screenshot_tex = get_texture("screenshot08.png");
+	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
 
 	// grid
 	// mesh m_grid = make_grid_mesh(10, 10);
