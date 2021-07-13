@@ -1989,7 +1989,24 @@ void properties_window(int ent_len)
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Name", NK_TEXT_LEFT);
-                    nk_label(ctx, ent->_material->name, NK_TEXT_RIGHT);
+                    material* materials = NULL;
+                    int materials_len = 0;
+                    materials = get_all_materials(&materials_len);
+                    static int selected_material = 0;
+                    selected_material = get_material_idx(ent->_material->name);
+                    int selected_material_old = selected_material;
+                    char** material_names = malloc(materials_len * sizeof(char*));
+                    assert(material_names != NULL);
+
+                    for (int i = 0; i < materials_len; ++i)
+                    {
+                        material_names[i] = malloc((strlen(materials[i].name) + 1) * sizeof(char));
+                        strcpy(material_names[i], materials[i].name);
+                    }
+
+                    selected_material = nk_combo(ctx, material_names, materials_len, selected_material, 25, nk_vec2(200, 200));
+
+                    if (selected_material_old != selected_material) { ent->_material = &materials[selected_material]; }
 
 
                     nk_layout_row_dynamic(ctx, 25, 1);
@@ -2613,7 +2630,7 @@ void asset_browser_window()
                     for (int i = 0; i < materials_len; ++i)
                     {
                         // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_label(ctx, materials[i].name))
+                        if (nk_button_image_label(ctx, nk_image_id(materials[i].dif_tex.handle), materials[i].name, NK_TEXT_ALIGN_TOP))
                         {
                             if (selected_material == i) { selected_material = 9999; }
                             selected_material = i;
@@ -2743,15 +2760,16 @@ void asset_browser_window()
                     }
                     else
                     {
+                        nk_layout_row_static(ctx, 75, 75, 2);
+                        struct nk_image img = nk_image_id(materials[selected_material].dif_tex.handle);
+                        nk_image(ctx, img);
+                        img = nk_image_id(materials[selected_material].spec_tex.handle);
+                        nk_image(ctx, img);
+
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
                         sprintf(buf, "Name: \"%s\"", materials[selected_material].name);
                         nk_label_wrap(ctx, buf);
-                        nk_layout_row_dynamic(ctx, 30, 1);
-                        nk_property_float(ctx, "Shininess", 0.0f, &materials[selected_material].shininess, 1.0f, 0.1f, 0.002f);
-                        // nk_layout_row_dynamic(ctx, 25, 2);
-                        nk_property_float(ctx, "Tile X", 0.0f, &materials[selected_material].tile[0], 100.0f, 0.1f, 0.1f);
-                        nk_property_float(ctx, "Tile Y", 0.0f, &materials[selected_material].tile[1], 100.0f, 0.1f, 0.1f);
                         
                     }
                 }
