@@ -1872,7 +1872,7 @@ void properties_window(int ent_len)
                 const struct nk_input* in = &ctx->input;
                 struct nk_rect bounds;
 
-                entity_properties prop = get_entity_properties(selected_entity);
+                // entity_properties prop = get_entity_properties(selected_entity);
                 entity* ent = get_entitiy_ptr(selected_entity);
 
                 nk_layout_row_dynamic(ctx, 30, 2);
@@ -1924,21 +1924,21 @@ void properties_window(int ent_len)
                     {
                         nk_property_float(ctx, "Scale X:", -1024.0f, &ent->scale[0], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Scale Y:", -1024.0f, &ent->scale[0], 1024.0f, 0.1f, 0.2f);
-                        
-                        nk_property_float(ctx, "Scale Z:", -1024.0f, &ent->scale[0], 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Scale Y:", -1024.0f, &ent->scale[1], 1024.0f, 0.1f, 0.2f);
+                       
+                        nk_property_float(ctx, "Scale Z:", -1024.0f, &ent->scale[2], 1024.0f, 0.1f, 0.2f);
                     
                         nk_tree_pop(ctx);
                     }
                     nk_tree_pop(ctx);
                 }
-                if (*prop.has_trans == BEE_FALSE)
+                if (ent->has_trans == BEE_FALSE)
                 {
                     nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                     nk_label_colored(ctx, "no transform", NK_TEXT_LEFT, red);
                 }
 
-                if (*prop.has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Mesh", NK_MINIMIZED))
+                if (ent->has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Mesh", NK_MINIMIZED))
                 {
 
                     nk_layout_row_dynamic(ctx, 25, 2);
@@ -1948,7 +1948,7 @@ void properties_window(int ent_len)
                     int meshes_len = 0;
                     meshes = get_all_meshes(&meshes_len);
                     static int selected_mesh = 0;
-                    selected_mesh = get_mesh_idx(prop.mesh_name);
+                    selected_mesh = get_mesh_idx(ent->_mesh.name);
                     int selected_mesh_old = selected_mesh;
                     char** meshes_names = malloc(meshes_len * sizeof(char*));
                     assert(meshes_names != NULL);
@@ -1961,45 +1961,45 @@ void properties_window(int ent_len)
 
                     selected_mesh = nk_combo(ctx, meshes_names, meshes_len, selected_mesh, 25, nk_vec2(200, 200));
 
-                    if (selected_mesh_old != selected_mesh) { *prop.mesh = meshes[selected_mesh]; }
+                    if (selected_mesh_old != selected_mesh) { ent->_mesh = meshes[selected_mesh]; }
 
                     nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_checkbox_label(ctx, " visible", prop.mesh_visible);
+                    nk_checkbox_label(ctx, " visible", &ent->_mesh.visible);
 
                     nk_layout_row_dynamic(ctx, 25, 2);
                 
-                    sprintf(buffer, "%d", *prop.verts_len);
+                    sprintf(buffer, "%d", ent->_mesh.vertices_len);
                     nk_label(ctx, "Vertices: ", NK_TEXT_LEFT);
                     nk_label(ctx, buffer, NK_TEXT_RIGHT);
             
-                    sprintf(buffer, "%d", *prop.indices_len);
+                    sprintf(buffer, "%d", ent->_mesh.indices_len);
                     nk_label(ctx, "Indices: ", NK_TEXT_LEFT);
                     nk_label(ctx, buffer, NK_TEXT_RIGHT);
             
                     nk_label(ctx, "Indexed: ", NK_TEXT_LEFT);
-                    nk_label(ctx, *prop.mesh_indexed == 0 ? "false" : "true", NK_TEXT_RIGHT);
+                    nk_label(ctx, ent->_mesh.indexed == BEE_FALSE ? "false" : "true", NK_TEXT_RIGHT);
             
             
                     nk_tree_pop(ctx);
                 }
             
-                if (*prop.has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Material", NK_MINIMIZED))
+                if (ent->has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Material", NK_MINIMIZED))
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Name", NK_TEXT_LEFT);
-                    nk_label(ctx, prop.mat->name, NK_TEXT_RIGHT);
+                    nk_label(ctx, ent->_material.name, NK_TEXT_RIGHT);
 
 
                     nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_property_float(ctx, "Shininess", 0.0f, prop.shininess, 1.0f, 0.1f, 0.002f);
+                    nk_property_float(ctx, "Shininess", 0.0f, &ent->_material.shininess, 1.0f, 0.1f, 0.002f);
                     nk_layout_row_dynamic(ctx, 25, 2);
-                    nk_property_float(ctx, "Tile X", 0.0f, prop.tile_x, 100.0f, 0.1f, 0.1f);
-                    nk_property_float(ctx, "Tile Y", 0.0f, prop.tile_y, 100.0f, 0.1f, 0.1f);
+                    nk_property_float(ctx, "Tile X", 0.0f, &ent->_material.tile[0], 100.0f, 0.1f, 0.1f);
+                    nk_property_float(ctx, "Tile Y", 0.0f, &ent->_material.tile[1], 100.0f, 0.1f, 0.1f);
             
                     // tint-color
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Tint Color", NK_TEXT_LEFT);
-                    struct nk_colorf tint = { *prop.tint_r, *prop.tint_g, *prop.tint_b };
+                    struct nk_colorf tint = { ent->_material.tint[0], ent->_material.tint[1], ent->_material.tint[2] };
                     if (nk_combo_begin_color(ctx, nk_rgb_cf(tint), nk_vec2(200, 400)))
                     {
                         enum color_mode { COL_RGB, COL_HSV };
@@ -2029,9 +2029,9 @@ void properties_window(int ent_len)
                         nk_combo_end(ctx);
 
                         // assign the altered color 
-                        *prop.tint_r = tint.r;
-                        *prop.tint_g = tint.g;
-                        *prop.tint_b = tint.b;
+                        ent->_material.tint[0] = tint.r;
+                        ent->_material.tint[1] = tint.g;
+                        ent->_material.tint[2] = tint.b;
                     }
 
                     // spacing
@@ -2058,7 +2058,7 @@ void properties_window(int ent_len)
                     {
                         nk_layout_row_dynamic(ctx, 25, 2);
                         nk_label(ctx, "Is transparent: ", NK_TEXT_LEFT);
-                        nk_label(ctx, *prop.is_transparent == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
+                        nk_label(ctx, ent->_material.is_transparent == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
 
 
                         texture* textures = NULL;
@@ -2066,13 +2066,12 @@ void properties_window(int ent_len)
                         textures = get_all_textures(&textures_len);
 
                         nk_label(ctx, "Diffuse Texture: ", NK_TEXT_LEFT);
-                        // nk_label(ctx, prop.dif_tex_name, NK_TEXT_RIGHT);
 
                         static int selected_dif = 0;
-                        selected_dif = get_texture_idx(prop.dif_tex_name);
+                        selected_dif = get_texture_idx(ent->_material.dif_tex.name);
                         int selected_dif_old = selected_dif;
                         static int selected_spec = 0;
-                        selected_spec = get_texture_idx(prop.spec_tex_name);
+                        selected_spec = get_texture_idx(ent->_material.spec_tex.name);
                         int selected_spec_old = selected_spec;
                         char** texture_names = malloc(textures_len * sizeof(char*));
                         assert(texture_names != NULL);
@@ -2085,21 +2084,20 @@ void properties_window(int ent_len)
 
                         selected_dif = nk_combo(ctx, texture_names, textures_len, selected_dif, 25, nk_vec2(200, 200));
 
-                        if (selected_dif_old != selected_dif) { prop.mat->dif_tex = textures[selected_dif]; }
+                        if (selected_dif_old != selected_dif) { ent->_material.dif_tex = textures[selected_dif]; }
 
-                        struct nk_image img = nk_image_id(*prop.dif_tex_handle);
+                        struct nk_image img = nk_image_id(ent->_material.dif_tex.handle);
                         nk_layout_row_static(ctx, 150, 150, 1);
                         nk_image(ctx, img);
 
                         nk_layout_row_dynamic(ctx, 25, 2);
                         nk_label(ctx, "Specular Texture: ", NK_TEXT_LEFT);
-                        // nk_label(ctx, prop.spec_tex_name, NK_TEXT_RIGHT);
 
                         selected_spec = nk_combo(ctx, texture_names, textures_len, selected_spec, 25, nk_vec2(200, 200));
 
-                        if (selected_spec_old != selected_spec) { prop.mat->spec_tex = textures[selected_spec]; }
+                        if (selected_spec_old != selected_spec) { ent->_material.spec_tex = textures[selected_spec]; }
 
-                        img = nk_image_id(*prop.spec_tex_handle);
+                        img = nk_image_id(ent->_material.spec_tex.handle);
                         nk_layout_row_static(ctx, 150, 150, 1);
                         nk_image(ctx, img);
 
@@ -2111,18 +2109,18 @@ void properties_window(int ent_len)
                     nk_tree_pop(ctx);
                 }
                 
-                if (*prop.has_light == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Light", NK_MINIMIZED))
+                if (ent->has_light == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Light", NK_MINIMIZED))
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Type: ", NK_TEXT_LEFT);
-                    nk_label(ctx, *prop._light_type == DIR_LIGHT ? "Dir. Light" : *prop._light_type == POINT_LIGHT ? "Point Light" : *prop._light_type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
+                    nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
 
 
                     // ambient, diffuse, specular
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Ambient", NK_TEXT_LEFT);
                     // ambient complex color combobox
-                    struct nk_colorf ambient = { *prop.ambient_r, *prop.ambient_g, *prop.ambient_b };
+                    struct nk_colorf ambient = { ent->_light.ambient[0], ent->_light.ambient[1], ent->_light.ambient[2] };
                     if (nk_combo_begin_color(ctx, nk_rgb_cf(ambient), nk_vec2(200, 400)))
                     {
                         enum color_mode { COL_RGB, COL_HSV };
@@ -2152,14 +2150,14 @@ void properties_window(int ent_len)
                         nk_combo_end(ctx);
 
                         // assign the altered color 
-                        *prop.ambient_r = ambient.r;
-                        *prop.ambient_g = ambient.g;
-                        *prop.ambient_b = ambient.b;
+                        ent->_light.ambient[0] = ambient.r;
+                        ent->_light.ambient[1] = ambient.g;
+                        ent->_light.ambient[2] = ambient.b;
                     }
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Diffuse", NK_TEXT_LEFT);
                     // ambient complex color combobox
-                    struct nk_colorf diffuse = { *prop.diffuse_r, *prop.diffuse_g, *prop.diffuse_b };
+                    struct nk_colorf diffuse = { ent->_light.diffuse[0], ent->_light.diffuse[1], ent->_light.diffuse[2] };
                     if (nk_combo_begin_color(ctx, nk_rgb_cf(diffuse), nk_vec2(200, 400)))
                     {
                         enum color_mode { COL_RGB, COL_HSV };
@@ -2189,14 +2187,14 @@ void properties_window(int ent_len)
                         nk_combo_end(ctx);
 
                         // assign the altered color 
-                        *prop.diffuse_r = diffuse.r;
-                        *prop.diffuse_g = diffuse.g;
-                        *prop.diffuse_b = diffuse.b;
+                        ent->_light.diffuse[0] = diffuse.r;
+                        ent->_light.diffuse[1] = diffuse.g;
+                        ent->_light.diffuse[2] = diffuse.b;
                     }
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Specular", NK_TEXT_LEFT);
                     // ambient complex color combobox
-                    struct nk_colorf specular = { *prop.specular_r, *prop.specular_g, *prop.specular_b };
+                    struct nk_colorf specular = { ent->_light.specular[0], ent->_light.specular[1], ent->_light.specular[2] };
                     if (nk_combo_begin_color(ctx, nk_rgb_cf(specular), nk_vec2(200, 400)))
                     {
                         enum color_mode { COL_RGB, COL_HSV };
@@ -2226,13 +2224,13 @@ void properties_window(int ent_len)
                         nk_combo_end(ctx);
 
                         // assign the altered color 
-                        *prop.specular_r = specular.r;
-                        *prop.specular_g = specular.g;
-                        *prop.specular_b = specular.b;
+                        ent->_light.specular[0] = specular.r;
+                        ent->_light.specular[1] = specular.g;
+                        ent->_light.specular[2] = specular.b;
                     }
 
                     // direction
-                    if (*prop._light_type == DIR_LIGHT || *prop._light_type == SPOT_LIGHT)
+                    if (ent->_light.type == DIR_LIGHT || ent->_light.type == SPOT_LIGHT)
                     {
                         if (nk_tree_push(ctx, NK_TREE_NODE, "Direction", NK_MINIMIZED))
                         {
@@ -2242,11 +2240,11 @@ void properties_window(int ent_len)
                             option = nk_option_label(ctx, "local", option == 1) ? 1 : option;
 
                             nk_layout_row_dynamic(ctx, 20, 1);
-                            nk_property_float(ctx, "Dir X:", -1024.0f, prop.direction_x, 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir X:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
 
-                            nk_property_float(ctx, "Dir Y:", -1024.0f, prop.direction_y, 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
 
-                            nk_property_float(ctx, "Dir Z:", -1024.0f, prop.direction_z, 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
 
                             nk_tree_pop(ctx);
                         }
@@ -2258,18 +2256,18 @@ void properties_window(int ent_len)
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     // constant, linear, quadratic
-                    if (*prop._light_type == POINT_LIGHT || *prop._light_type == SPOT_LIGHT)
+                    if (ent->_light.type == POINT_LIGHT || ent->_light.type == SPOT_LIGHT)
                     {
-                        nk_property_float(ctx, "constant",  0.0f,      prop.constant,  2.0f, 0.1f, 0.2f);
-                        nk_property_float(ctx, "linear",    0.0014f,   prop.linear,    0.7f, 0.1f, 0.0005f);
-                        nk_property_float(ctx, "quadratic", 0.000007f, prop.quadratic, 1.8f, 0.1f, 0.0005f);
+                        nk_property_float(ctx, "constant",  0.0f,      &ent->_light.constant,  2.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "linear",    0.0014f,   &ent->_light.linear,    0.7f, 0.1f, 0.0005f);
+                        nk_property_float(ctx, "quadratic", 0.000007f, &ent->_light.quadratic, 1.8f, 0.1f, 0.0005f);
                     }
 
                     // cut_off
-                    if (*prop._light_type == SPOT_LIGHT)
+                    if (ent->_light.type == SPOT_LIGHT)
                     {
-                        nk_property_float(ctx, "cut off", 1.0f, prop.cut_off, 90.0f, 0.1f, 0.2f);
-                        nk_property_float(ctx, "outer cut off", *prop.cut_off, prop.outer_cut_off, 90.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "cut off", 1.0f, &ent->_light.cut_off, 90.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "outer cut off", ent->_light.cut_off + 0.1f, &ent->_light.outer_cut_off, 90.0f, 0.1f, 0.2f);
                     }
 
                     nk_tree_pop(ctx);
@@ -2277,19 +2275,19 @@ void properties_window(int ent_len)
 
 
                 // scritps always the last element
-                sprintf(buffer, "Scripts - %d", *prop.scripts_len);
-                if (*prop.scripts_len > 0 && nk_tree_push(ctx, NK_TREE_TAB, *prop.scripts_len == 1 ? "Script" : buffer , NK_MINIMIZED))
+                sprintf(buffer, "Scripts - %d", ent->scripts_len);
+                if (ent->scripts_len > 0 && nk_tree_push(ctx, NK_TREE_TAB, ent->scripts_len == 1 ? "Script" : buffer , NK_MINIMIZED))
                 {
-                    for (int i = 0; i < *prop.scripts_len; ++i)
+                    for (int i = 0; i < ent->scripts_len; ++i)
                     {
                         static int popup_active;
 
-                        if (prop.scripts[i]->path_valid == BEE_FALSE)
+                        if (ent->scripts[i]->path_valid == BEE_FALSE)
                         {
                             nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                             nk_label_colored(ctx, "path not valid", NK_TEXT_LEFT, red);
                         }
-                        else if (prop.scripts[i]->has_error == BEE_TRUE)
+                        else if (ent->scripts[i]->has_error == BEE_TRUE)
                         {
                             nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                             nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
@@ -2299,7 +2297,7 @@ void properties_window(int ent_len)
                         int scripts_len = 0;
                         scripts = get_all_scripts(&scripts_len);
                         static int selected_script = 0;
-                        selected_script = get_script_idx(prop.scripts[i]->name);
+                        selected_script = get_script_idx(ent->scripts[i]->name);
                         int selected_script_old = selected_script;
                         char** scripts_names = malloc(scripts_len * sizeof(char*));
                         assert(scripts_names != NULL);
@@ -2313,25 +2311,25 @@ void properties_window(int ent_len)
                         selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
 
                         // doesnt work because the script holds the entity index
-                        if (selected_script_old != selected_script) { prop.scripts[i] = &scripts[selected_script]; }
+                        if (selected_script_old != selected_script) { ent->scripts[i] = &scripts[selected_script]; }
 
 
-                        if (prop.scripts[i]->path_valid == BEE_TRUE)
+                        if (ent->scripts[i]->path_valid == BEE_TRUE)
                         {
                             nk_layout_row_dynamic(ctx, 25, 1);
                             if (nk_button_label(ctx, "Source Code"))
                             {
-                                char* src = read_text_file(prop.scripts[i]->path);
+                                char* src = read_text_file(ent->scripts[i]->path);
                                 set_source_code_window(src);
                             }
                         }
 
-                        if (prop.scripts[i]->path_valid == BEE_TRUE && prop.scripts[i]->has_error == BEE_FALSE)
+                        if (ent->scripts[i]->path_valid == BEE_TRUE && ent->scripts[i]->has_error == BEE_FALSE)
                         {
                             nk_layout_row_dynamic(ctx, 25, 1);
-                            if (nk_button_label(ctx, prop.scripts[i]->active == BEE_TRUE ? "Pause" : "Continue"))
+                            if (nk_button_label(ctx, ent->scripts[i]->active == BEE_TRUE ? "Pause" : "Continue"))
                             {
-                                prop.scripts[i]->active = !prop.scripts[i]->active;
+                                ent->scripts[i]->active = !ent->scripts[i]->active;
                             }
                         }
 

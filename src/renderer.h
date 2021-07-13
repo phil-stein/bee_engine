@@ -38,7 +38,7 @@ void set_all_scripts(bee_bool act);
 void add_entity_cube();
 
 entity* get_entitiy_ptr(int idx);
-entity_properties get_entity_properties(int index);
+// entity_properties get_entity_properties(int index);
 
 renderer_properties get_renderer_properties();
 

@@ -59,6 +59,19 @@ int scripts_paths_len = 0;
 gravity_script* scripts_data = NULL;
 int scripts_data_len = 0;
 
+// ---- materials ----
+// value: index of script in 'script_data', key: name of script
+struct { char* key;  int   value; }*materials = NULL;
+int materials_len = 0;
+
+// value: path to script, key: script-index in 'scripts'
+struct { int   key;	 char* value; }*materials_paths = NULL; // turn this into an array, god damn ahhhh
+int materials_paths_len = 0;
+
+// array of holding scripts
+gravity_script* scripts_data = NULL;
+int scripts_data_len = 0;
+
 
 void assetm_init()
 {

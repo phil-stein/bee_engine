@@ -617,6 +617,8 @@ entity* get_entitiy_ptr(int idx)
 {
 	return &entities[idx];
 }
+// entity_properties was the old way to pass data to the front-end
+/*
 entity_properties get_entity_properties(int index)
 {
 	entity_properties prop;
@@ -706,6 +708,7 @@ entity_properties get_entity_properties(int index)
 
 	return prop;
 }
+*/
 
 renderer_properties get_renderer_properties()
 {
