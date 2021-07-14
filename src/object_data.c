@@ -17,11 +17,11 @@
 
 // ---- material ----
 
-material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name)
+material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name)
 {
 	material mat;
 	mat.name = name;
-	mat.shader = shader;
+	mat.shader = s;
 	mat.dif_tex = dif_tex;
 	mat.spec_tex = spec_tex;
 	mat.is_transparent = is_transparent;
@@ -33,9 +33,9 @@ material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool i
 
 	return mat;
 }
-material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
+material make_material_tint(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
 {
-	material mat = make_material(shader, dif_tex, spec_tex, is_transparent, shininess, tile, name);
+	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, name);
 	glm_vec3_copy(tint, mat.tint);
 
 	return mat;
@@ -43,7 +43,7 @@ material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_b
 
 void free_material(material* mat)
 {
-	glDeleteProgram(mat->shader);
+	glDeleteProgram(mat->shader.handle);
 
 	// @UNCLEAR: do i need to tell opengl to unload the texture off the gpu
 	glDeleteTextures(1, &mat->dif_tex.handle);

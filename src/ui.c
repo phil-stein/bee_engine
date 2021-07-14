@@ -2008,6 +2008,25 @@ void properties_window(int ent_len)
 
                     if (selected_material_old != selected_material) { ent->_material = &materials[selected_material]; }
 
+                    nk_label(ctx, "Shader", NK_TEXT_LEFT);
+                    shader* shaders = NULL;
+                    int shaders_len = 0;
+                    shaders = get_all_shaders(&shaders_len);
+                    static int selected_shader = 0;
+                    selected_shader = get_shader_idx(ent->_material->shader.name);
+                    int selected_shader_old = selected_shader;
+                    char** shaders_names = malloc(shaders_len * sizeof(char*));
+                    assert(shaders_names != NULL);
+
+                    for (int i = 0; i < shaders_len; ++i)
+                    {
+                        shaders_names[i] = malloc((strlen(shaders[i].name) + 1) * sizeof(char));
+                        strcpy(shaders_names[i], shaders[i].name);
+                    }
+
+                    selected_shader = nk_combo(ctx, shaders_names, shaders_len, selected_shader, 25, nk_vec2(200, 200));
+
+                    if (selected_shader_old != selected_shader) { ent->_material->shader = shaders[selected_shader]; }
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 1.0f, 0.1f, 0.002f);
@@ -2516,6 +2535,11 @@ void asset_browser_window()
         materials = get_all_materials(&materials_len);
         static int selected_material = 9999;
 
+        shader* shaders = NULL;
+        int shaders_len = 0;
+        shaders = get_all_shaders(&shaders_len);
+        static int selected_shader = 9999;
+
         // nk_layout_row_dynamic(ctx, 250, 2); // wrapping row
         
         nk_layout_row_begin(ctx, NK_STATIC, 250, 3);
@@ -2630,10 +2654,24 @@ void asset_browser_window()
                     for (int i = 0; i < materials_len; ++i)
                     {
                         // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_image_label(ctx, nk_image_id(materials[i].dif_tex.handle), materials[i].name, NK_TEXT_ALIGN_TOP))
+                        if (nk_button_image_label(ctx, nk_image_id(materials[i].dif_tex.handle), materials[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED ))
                         {
                             if (selected_material == i) { selected_material = 9999; }
                             selected_material = i;
+                        }
+                    }
+                }
+                else if (selected == SHADER)
+                {
+                    nk_layout_row_static(ctx, 100, 100, 8);
+
+                    for (int i = 0; i < shaders_len; ++i)
+                    {
+                        // struct nk_image img = nk_image_id(textures[i].handle);
+                        if (nk_button_label(ctx, shaders[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+                        {
+                            if (selected_shader == i) { selected_shader = 9999; }
+                            selected_shader = i;
                         }
                     }
                 }
@@ -2770,8 +2808,29 @@ void asset_browser_window()
                         char* buf[64];
                         sprintf(buf, "Name: \"%s\"", materials[selected_material].name);
                         nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Shader: \"%s\"", materials[selected_material].shader.name);
+                        nk_label_wrap(ctx, buf);
                         
                     }
+                }
+                else if (selected == SHADER)
+                {
+                if (selected_shader == 9999)
+                {
+                    struct nk_color red = { 255, 0, 0 };
+                    nk_label_colored(ctx, "no shader selected", NK_TEXT_ALIGN_LEFT, red);
+                }
+                else
+                {
+                    nk_layout_row_dynamic(ctx, 40, 1);
+                    char* buf[64];
+                    sprintf(buf, "Name: \"%s\"", shaders[selected_shader].name);
+                    nk_label_wrap(ctx, buf);
+                    nk_layout_row_dynamic(ctx, 30, 1);
+                    sprintf(buf, "Handle: \"%d\"", shaders[selected_shader].handle);
+                    nk_label_wrap(ctx, buf);
+
+                }
                 }
 
                 nk_group_end(ctx);

@@ -2,8 +2,8 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
-#include "global.h"
 #include "object_data.h"
+#include "global.h"
 
 
 typedef enum asset_type { TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET } asset_type;
@@ -53,10 +53,19 @@ void create_script(const char* path, const char* name);
 
 int get_material_idx(char* name);
 
-material* add_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
+material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
 
 material* get_material(char* name);
 
 material* get_all_materials(int* materials_len);
+
+
+int get_shader_idx(char* name);
+
+shader add_shader(const char* vert_path, const char* frag_path, const char* name);
+
+shader get_shader(char* name);
+
+shader* get_all_shaders(int* shaders_len);
 
 #endif

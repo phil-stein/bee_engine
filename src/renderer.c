@@ -46,17 +46,17 @@ bee_bool normal_mode_enabled	 = BEE_FALSE;
 bee_bool uv_mode_enabled		 = BEE_FALSE;
 vec3 wireframe_color = { 0.0f, 0.0f, 0.0f };
 
-u32 modes_shader;
+shader modes_shader;
 
 // framebuffer
 mesh m;
-u32 screen_shader;
+shader screen_shader;
 u32 tex_col_buffer;
 u32 quad_vao, quad_vbo;
 
 // skybox
 u32 cube_map;
-u32 skybox_shader;
+shader skybox_shader;
 u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
 
@@ -65,8 +65,9 @@ void renderer_init()
 {
 	// framebuffer ----------------------------------------------------------------------------------
 	// m = make_plane_mesh();
-	screen_shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.vert",
-											"C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.frag");
+	// create_shader_from_file used before
+	screen_shader = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.vert",
+							   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.frag", "SHADER_framebuffer");
 
 	create_framebuffer(&tex_col_buffer);
 
@@ -94,8 +95,9 @@ void renderer_init()
 
 	// cube map -------------------------------------------------------------------------------------
 
-	skybox_shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.vert",
-										    "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.frag");
+	// create_shader_from_file used before
+	skybox_shader = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.vert",
+							   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.frag", "SHADER_skybox");
 
 	cube_map = load_cubemap();
 
@@ -155,8 +157,9 @@ void renderer_init()
 	// ----------------------------------------------------------------------------------------------
 
 #ifdef EDITOR_ACT
-	modes_shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-											"C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\modes.frag");
+	// create_shader_from_file used before
+	modes_shader = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
+							  "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\modes.frag", "SHADER_modes");
 #endif
 #ifndef EDITOR_ACT
 	// set opengl state, only once in build mode as we dont use nuklear
@@ -314,7 +317,7 @@ void renderer_update()
 	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glUseProgram(screen_shader);
+	glUseProgram(screen_shader.handle);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex_col_buffer);
 	shader_set_int(screen_shader, "tex", 0);

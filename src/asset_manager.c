@@ -7,6 +7,8 @@
 #include "dirent/dirent.h"
 
 #include "file_handler.h"
+#include "shader.h"
+
 
 // ---- vars ----
 // hashmaps & dyn.-arrays using stb_ds.h
@@ -59,6 +61,7 @@ int scripts_paths_len = 0;
 gravity_script* scripts_data = NULL;
 int scripts_data_len = 0;
 
+
 // ---- materials ----
 // value: index of script in 'material_data', key: name of material
 struct { char* key;  int   value; }*materials = NULL;
@@ -67,6 +70,16 @@ int materials_len = 0;
 // array of holding materials
 material* materials_data = NULL;
 int materials_data_len = 0;
+
+
+// ---- materials ----
+// value: index of script in 'material_data', key: name of material
+struct { char* key;  int   value; }*shaders = NULL;
+int shaders_len = 0;
+
+// array of holding materials
+shader* shaders_data = NULL;
+int shaders_data_len = 0;
 
 
 void assetm_init()
@@ -486,9 +499,9 @@ int get_material_idx(char* name)
 	return shget(materials, name);
 }
 
-material* add_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
+material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
 {
-	material mat = make_material_tint(shader, dif_tex, spec_tex, is_transparent, shininess, tile, tint, name);
+	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, name);
 	
 	// make a persistent copy of the passed name
 	char* name_cpy = calloc(strlen(name), sizeof(char));
@@ -516,4 +529,46 @@ material* get_all_materials(int* materials_len)
 {
 	*materials_len = materials_data_len;
 	return materials_data;
+}
+
+
+//
+// ---- shaders ----
+// 
+
+int get_shader_idx(char* name)
+{
+	return shget(shaders, name);
+}
+
+shader add_shader(const char* vert_path, const char* frag_path, const char* name)
+{
+	shader s = create_shader_from_file(vert_path, frag_path, name);
+
+	// make a persistent copy of the passed name
+	char* name_cpy = calloc(strlen(name), sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+
+	shput(shaders, name_cpy, shaders_data_len);
+	shaders_len++;
+	arrput(shaders_data, s);
+	shaders_data_len++;
+
+	return shaders_data[shget(shaders, name)];
+}
+
+shader get_shader(char* name)
+{
+	// @TODO: add security check that the texture doesn't exist at all
+	//		  for example make the 0th texture allways be all pink etc.
+
+	// retrieve mesh from mesh_data array
+	return shaders_data[shget(shaders, name)];
+}
+
+shader* get_all_shaders(int* shaders_len)
+{
+	*shaders_len = shaders_data_len;
+	return shaders_data;
 }

@@ -13,6 +13,13 @@
 
 typedef struct
 {
+	char* name;
+	u32 handle;
+
+}shader;
+
+typedef struct
+{
 	u32 handle;
 	int size_x;
 	int size_y;
@@ -22,7 +29,7 @@ typedef struct
 
 typedef struct
 {
-	u32 shader;
+	shader shader;
 
 	texture dif_tex;
 	texture spec_tex;
@@ -108,9 +115,9 @@ typedef struct
 }entity;
 
 // creates a material struct
-material make_material(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name);
+material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name);
 // creates a material struct, tints the material
-material make_material_tint(u32 shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
+material make_material_tint(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
 
 // creates a mesh struct 
 // dont do this manually

@@ -59,12 +59,14 @@ void init()
 	glfwSetCursorPosCallback(window, mouse_callback);
 
 	
-	u32 shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-										 "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag");
+	// u32 shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
+	// 									 "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag");
+	shader shader_default = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
+									   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag", "SHADER_default");
 
-	u32 shader_unlit = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-											   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag");
-	
+	shader shader_unlit	  = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
+									   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag", "SHADER_unlit");
+
 	// texture test_tex  = get_texture("crate01_dif.png");
 	
 	// load texture
@@ -74,34 +76,34 @@ void init()
 	vec2 tile = { 1.0f, 1.0f };
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
 	// material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");
-	material* mat_crate = add_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_crate");
+	material* mat_crate = add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_crate");
 
 	texture grass_dif_tex  = get_texture("grass01_dif.png");
 	texture grass_spec_tex  = get_texture("grass01_spec.png");
 	// material mat_grass	   = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_grass");
-	material* mat_grass	   = add_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_grass");
+	material* mat_grass	   = add_material(shader_default, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_grass");
 	
 	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
 	texture barrel_spec_tex = get_texture("barrel01_spec.png");
 	// material mat_barrel		= make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_barrel");
-	material* mat_barrel		= add_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_barrel");
+	material* mat_barrel		= add_material(shader_default, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_barrel");
 	
 	texture robot_dif_tex  = get_texture("robot01_dif.png");
 	texture robot_spec_tex = get_texture("robot01_spec.png");
 	// material mat_robot	   = make_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_robot");
-	material* mat_robot	   = add_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_robot");
+	material* mat_robot	   = add_material(shader_default, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_robot");
 
 	mesh m_cube = make_cube_mesh();
 
 	texture blank_tex = get_texture("blank.png");
 	// material mat_blank		 = make_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank");
-	material* mat_blank		  = add_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_blank");
+	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_blank");
 	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, "MAT_blank_unlit");
 	
 
 	texture glass_dif_tex = get_texture("window.png");
 	// material mat_glass = make_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, "MAT_glass");
-	material* mat_glass = add_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, "MAT_glass");
+	material* mat_glass = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, "MAT_glass");
 	
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
 	entity_add_script(ent_empty, "game_controller.gravity");
