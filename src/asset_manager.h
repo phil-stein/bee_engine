@@ -68,4 +68,7 @@ shader get_shader(char* name);
 
 shader* get_all_shaders(int* shaders_len);
 
+void log_vert_file(const char* path, const char* name);
+void log_frag_file(const char* path, const char* name);
+
 #endif

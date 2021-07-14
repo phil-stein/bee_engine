@@ -72,14 +72,30 @@ material* materials_data = NULL;
 int materials_data_len = 0;
 
 
-// ---- materials ----
-// value: index of script in 'material_data', key: name of material
+// ---- shaders ----
+// value: index of shader in 'shaders_data', key: name of shader
 struct { char* key;  int   value; }*shaders = NULL;
 int shaders_len = 0;
 
-// array of holding materials
+// array of holding shaders
 shader* shaders_data = NULL;
 int shaders_data_len = 0;
+
+// ---- vert-files 
+struct { char* key;  int   value; }*vert_files = NULL;
+int vert_files_len = 0;
+
+// value: path to vert_file, key: vert_file-index in 'vert_files'
+struct { int   key;	 char* value; }*vert_files_paths = NULL;
+int vert_files_paths_len = 0;
+
+// ---- frag-files 
+struct { char* key;  int   value; }*frag_files = NULL;
+int frag_files_len = 0;
+
+// value: path to frag_file, key: frag_file-index in 'frag_files'
+struct { int   key;	 char* value; }*frag_files_paths = NULL; 
+int frag_files_paths_len = 0;
 
 
 void assetm_init()
@@ -142,13 +158,13 @@ void search_dir(const char* dir_path)
 				log_mesh(t_path, dp->d_name);
 			}
 			else if (dp->d_name[dp->d_namlen - 8] == '.' &&
-				dp->d_name[dp->d_namlen - 7] == 'g' &&
-				dp->d_name[dp->d_namlen - 6] == 'r' &&
-				dp->d_name[dp->d_namlen - 5] == 'a' &&
-				dp->d_name[dp->d_namlen - 4] == 'v' &&
-				dp->d_name[dp->d_namlen - 3] == 'i' &&
-				dp->d_name[dp->d_namlen - 2] == 't' &&
-				dp->d_name[dp->d_namlen - 1] == 'y')
+					 dp->d_name[dp->d_namlen - 7] == 'g' &&
+					 dp->d_name[dp->d_namlen - 6] == 'r' &&
+					 dp->d_name[dp->d_namlen - 5] == 'a' &&
+					 dp->d_name[dp->d_namlen - 4] == 'v' &&
+					 dp->d_name[dp->d_namlen - 3] == 'i' &&
+					 dp->d_name[dp->d_namlen - 2] == 't' &&
+					 dp->d_name[dp->d_namlen - 1] == 'y')
 			{
 				// printf("^---- PNG ----^\n");
 				char* dir_path_cpy[250];
@@ -156,10 +172,38 @@ void search_dir(const char* dir_path)
 				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
 				strcat(t_path, dp->d_name); // add the name 
 
-				printf("script name: \"\%s\"\n", dp->d_name);
+				// create the script with the created path and the file name
+				// no logging as all scripts get created immediately
+				create_script(t_path, dp->d_name);
+			}
+			else if (dp->d_name[dp->d_namlen - 5] == '.' &&
+					 dp->d_name[dp->d_namlen - 4] == 'v' &&
+					 dp->d_name[dp->d_namlen - 3] == 'e' &&
+					 dp->d_name[dp->d_namlen - 2] == 'r' &&
+					 dp->d_name[dp->d_namlen - 1] == 't')
+			{
+				// printf("^---- PNG ----^\n");
+				char* dir_path_cpy[250];
+				strcpy(dir_path_cpy, dir_path);
+				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+				strcat(t_path, dp->d_name); // add the name 
 
 				// log the mesh with the created path and the file name 
-				create_script(t_path, dp->d_name);
+				log_vert_file(t_path, dp->d_name);
+			}
+			else if (dp->d_name[dp->d_namlen - 5] == '.' &&
+					 dp->d_name[dp->d_namlen - 4] == 'f' &&
+					 dp->d_name[dp->d_namlen - 3] == 'r' &&
+					 dp->d_name[dp->d_namlen - 2] == 'a' &&
+					 dp->d_name[dp->d_namlen - 1] == 'g')
+			{
+				char* dir_path_cpy[250];
+				strcpy(dir_path_cpy, dir_path);
+				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+				strcat(t_path, dp->d_name); // add the name 
+
+				// log the mesh with the created path and the file name 
+				log_frag_file(t_path, dp->d_name);
 			}
 
 			// construct new path from our base path
@@ -206,6 +250,13 @@ void assetm_cleanup()
 	hmfree(scripts_paths);
 	arrfree(scripts_data);
 
+	// free the allocated memory
+	shfree(materials);
+	arrfree(materials_data);
+
+	// free the allocated memory
+	shfree(shaders);
+	arrfree(shaders_data);
 }
 
 
@@ -397,7 +448,7 @@ void log_mesh(const char* path, const char* name)
 
 void create_mesh(const char* name)
 {
-	// key for the path is the index of the texture in the hashmap
+	// key for the path is the index of the mesh in the hashmap
 	int path_idx = shgeti(meshes, name);
 	char* path = hmget(meshes_paths, path_idx);
 
@@ -476,7 +527,7 @@ void create_script(const char* path, const char* name)
 	// int path_idx = shgeti(scripts, name);
 	// char* path = hmget(scripts_paths, path_idx);
 
-	printf("script path: \"%s\"\n", path_cpy);
+	// printf("script path: \"%s\"\n", path_cpy);
 	gravity_script script = make_script(path_cpy);
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
@@ -541,9 +592,16 @@ int get_shader_idx(char* name)
 	return shget(shaders, name);
 }
 
-shader add_shader(const char* vert_path, const char* frag_path, const char* name)
+shader add_shader(const char* vert_name, const char* frag_name, const char* name)
 {
+	// key for the path is the index of the file in the hashmap
+	int path_idx = shgeti(vert_files, vert_name);
+	char* vert_path = hmget(vert_files_paths, path_idx);
+	path_idx = shgeti(frag_files, frag_name);
+	char* frag_path = hmget(frag_files_paths, path_idx);
 	shader s = create_shader_from_file(vert_path, frag_path, name);
+	s.vert_name = vert_name;
+	s.frag_name = frag_name;
 
 	// make a persistent copy of the passed name
 	char* name_cpy = calloc(strlen(name), sizeof(char));
@@ -571,4 +629,58 @@ shader* get_all_shaders(int* shaders_len)
 {
 	*shaders_len = shaders_data_len;
 	return shaders_data;
+}
+
+void log_vert_file(const char* path, const char* name)
+{
+	// make a persistent copy of the passed name
+	char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+	// printf("texture name copy: \"%s\"\n", name_cpy);
+
+	// put that copy of the name into the hashmap as the key 
+	// to a value of 9999 as that indicates the asset hasnt been loaded yet
+	shput(vert_files, name_cpy, 9999);
+	vert_files_len++;
+
+	// make a persistent copy of the passed path
+	char* path_cpy = calloc(strlen(path) + 1, sizeof(char));
+	assert(path_cpy != NULL);
+	strcpy(path_cpy, path);
+
+	// printf("vert_file path: \"%s\"\n", path);
+
+	// put that copy of the path into the hashmap
+	int i = shgeti(vert_files, name);
+	hmput(vert_files_paths, i, path_cpy);
+	vert_files_paths_len++;
+
+	// not freeing name_cpy and path_cpy as they need to be used in the future
+}
+
+void log_frag_file(const char* path, const char* name)
+{
+	// make a persistent copy of the passed name
+	char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+	// printf("texture name copy: \"%s\"\n", name_cpy);
+
+	// put that copy of the name into the hashmap as the key 
+	// to a value of 9999 as that indicates the asset hasnt been loaded yet
+	shput(frag_files, name_cpy, 9999);
+	frag_files_len++;
+
+	// make a persistent copy of the passed path
+	char* path_cpy = calloc(strlen(path) + 1, sizeof(char));
+	assert(path_cpy != NULL);
+	strcpy(path_cpy, path);
+
+	// put that copy of the path into the hashmap
+	int i = shgeti(frag_files, name);
+	hmput(frag_files_paths, i, path_cpy);
+	frag_files_paths_len++;
+
+	// not freeing name_cpy and path_cpy as they need to be used in the future
 }

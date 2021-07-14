@@ -14,6 +14,8 @@
 typedef struct
 {
 	char* name;
+	char* vert_name;
+	char* frag_name;
 	u32 handle;
 
 }shader;

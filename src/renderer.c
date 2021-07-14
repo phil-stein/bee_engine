@@ -66,8 +66,8 @@ void renderer_init()
 	// framebuffer ----------------------------------------------------------------------------------
 	// m = make_plane_mesh();
 	// create_shader_from_file used before
-	screen_shader = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.vert",
-							   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.frag", "SHADER_framebuffer");
+	screen_shader = add_shader("screen.vert", // C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.vert"
+							   "screen.frag", "SHADER_framebuffer"); // C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.frag"
 
 	create_framebuffer(&tex_col_buffer);
 
@@ -96,8 +96,8 @@ void renderer_init()
 	// cube map -------------------------------------------------------------------------------------
 
 	// create_shader_from_file used before
-	skybox_shader = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.vert",
-							   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.frag", "SHADER_skybox");
+	skybox_shader = add_shader("cube_map.vert", // "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.vert"
+							   "cube_map.frag", "SHADER_skybox"); // "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.frag"
 
 	cube_map = load_cubemap();
 
@@ -158,8 +158,8 @@ void renderer_init()
 
 #ifdef EDITOR_ACT
 	// create_shader_from_file used before
-	modes_shader = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-							  "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\modes.frag", "SHADER_modes");
+	modes_shader = add_shader("basic.vert", //"C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert"
+							  "modes.frag", "SHADER_modes"); // "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\modes.frag"
 #endif
 #ifndef EDITOR_ACT
 	// set opengl state, only once in build mode as we dont use nuklear

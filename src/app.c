@@ -61,13 +61,16 @@ void init()
 	
 	// u32 shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
 	// 									 "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag");
+	/*
 	shader shader_default = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
 									   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag", "SHADER_default");
 
 	shader shader_unlit	  = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
 									   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag", "SHADER_unlit");
+	*/
+	shader shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
-	// texture test_tex  = get_texture("crate01_dif.png");
+	shader shader_unlit = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
 	
 	// load texture
 	texture crate_dif_tex   = get_texture("crate01_dif.png");

@@ -2829,6 +2829,11 @@ void asset_browser_window()
                     nk_layout_row_dynamic(ctx, 30, 1);
                     sprintf(buf, "Handle: \"%d\"", shaders[selected_shader].handle);
                     nk_label_wrap(ctx, buf);
+                    nk_layout_row_dynamic(ctx, 40, 1);
+                    sprintf(buf, "Vert Shader: \"%s\"", shaders[selected_shader].vert_name);
+                    nk_label_wrap(ctx, buf);
+                    sprintf(buf, "Frag Shader: \"%s\"", shaders[selected_shader].frag_name);
+                    nk_label_wrap(ctx, buf);
 
                 }
                 }
