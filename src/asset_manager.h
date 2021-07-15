@@ -1,4 +1,3 @@
-// #pragma once
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
@@ -9,8 +8,6 @@
 typedef enum asset_type { TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET } asset_type;
 
 
-void add_logged_asset(asset_type type, char* asset_name);
-void remove_logged_asset();
 
 
 void assetm_init();
@@ -28,6 +25,8 @@ texture* get_all_textures(int* textures_len);
 texture get_texture(const char* name);
 char** get_all_logged_textures(int* len);
 char* get_logged_texture(int idx);
+void remove_logged_texture(char* name);
+// void add_logged_asset(asset_type type, char* asset_name);
 
 void log_texture(const char* path, const char* name);
 void create_texture(const char* name);
@@ -35,6 +34,7 @@ void create_texture(const char* name);
 
 char** get_all_logged_meshes(int* len);
 char* get_logged_mesh(int idx);
+void remove_logged_mesh(char* name);
 
 int get_mesh_idx(char* name);
 

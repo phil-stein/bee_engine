@@ -2697,16 +2697,39 @@ void asset_browser_window()
                     }
                     int logged_tex_names_len = 0;
                     char** logged_tex_names = get_all_logged_textures(&logged_tex_names_len);
-                    // printf("logged-tex-len: %d\n", logged_tex_names_len);
+
+                    // logged assets marked by color
+                    struct nk_style_button button;
+                    button = ctx->style.button;
+                    ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 0.75f, button.normal.data.color.g * 0.75f, button.normal.data.color.b * 0.75f));
+                    ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 0.75f, button.hover.data.color.g * 0.75f, button.hover.data.color.b * 0.75f));
+                    ctx->style.button.active = nk_style_item_color(nk_rgb(button.active.data.color.r * 0.75f, button.active.data.color.g * 0.75f, button.active.data.color.b * 0.75f));
+
                     for (int i = 0; i < logged_tex_names_len; ++i)
                     {
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (!strcmp(selected_logged, logged_tex_names[i]))
+                        { 
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
                         if (nk_button_label(ctx, logged_tex_names[i])) // test
                         {
                             selected_logged = realloc(selected_logged, (strlen(logged_tex_names[i]) +1) * sizeof(char));
                             assert(selected_logged != NULL);
                             strcpy(selected_logged, logged_tex_names[i]);
                         }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 0.75f, button.normal.data.color.g * 0.75f, button.normal.data.color.b * 0.75f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 0.75f, button.hover.data.color.g * 0.75f, button.hover.data.color.b * 0.75f));
+                        }
                     }
+                    // reset to normal style
+                    ctx->style.button = button;
 
                 }
                 else if (selected == MESH)
@@ -2730,7 +2753,14 @@ void asset_browser_window()
                     }
                     int logged_meshes_names_len = 0;
                     char** logged_meshes_names = get_all_logged_meshes(&logged_meshes_names_len);
-                    // printf("logged-tex-len: %d\n", logged_tex_names_len);
+
+                    // logged assets marked by color
+                    struct nk_style_button button;
+                    button = ctx->style.button;
+                    ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 0.75f, button.normal.data.color.g * 0.75f, button.normal.data.color.b * 0.75f));
+                    ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 0.75f, button.hover.data.color.g * 0.75f, button.hover.data.color.b * 0.75f));
+                    ctx->style.button.active = nk_style_item_color(nk_rgb(button.active.data.color.r * 0.75f, button.active.data.color.g * 0.75f, button.active.data.color.b * 0.75f));
+
                     for (int i = 0; i < logged_meshes_names_len; ++i)
                     {
                         if (nk_button_label(ctx, logged_meshes_names[i]))
@@ -2740,6 +2770,8 @@ void asset_browser_window()
                             strcpy(selected_logged, logged_meshes_names[i]);
                         }
                     }
+                    // reset to normal style
+                    ctx->style.button = button;
                 }
                 else if (selected == SCRIPT)
                 {
@@ -2813,6 +2845,10 @@ void asset_browser_window()
                         {
                             get_texture(selected_logged);
                         }
+                        if (nk_button_label(ctx, "Remove Texture"))
+                        {
+                            remove_logged_texture(selected_logged);
+                        }
                     }
                     else
                     {
@@ -2854,6 +2890,10 @@ void asset_browser_window()
                         if (nk_button_label(ctx, "Load Mesh"))
                         {
                             get_mesh(selected_logged);
+                        }
+                        if (nk_button_label(ctx, "Remove Mesh"))
+                        {
+                            remove_logged_mesh(selected_logged);
                         }
                     }
                     else

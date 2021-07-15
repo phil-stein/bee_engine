@@ -165,7 +165,6 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		file_name[file_name_len - 2] == 'm' &&
 		file_name[file_name_len - 1] == 'p')
 	{
-		// printf("^---- PNG ----^\n");
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
 		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
@@ -191,7 +190,6 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 			 file_name[file_name_len - 2] == 'b' &&
 			 file_name[file_name_len - 1] == 'x')
 	{
-		// printf("^---- PNG ----^\n");
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
 		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
@@ -210,7 +208,6 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 			 file_name[file_name_len - 2] == 't' &&
 			 file_name[file_name_len - 1] == 'y')
 	{
-		// printf("^---- PNG ----^\n");
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
 		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
@@ -227,7 +224,6 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 			 file_name[file_name_len - 2] == 'r' &&
 			 file_name[file_name_len - 1] == 't')
 	{
-		// printf("^---- PNG ----^\n");
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
 		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
@@ -336,6 +332,17 @@ char* get_logged_texture(int idx)
 {
 	return logged_textures[idx];
 }
+void remove_logged_texture(char* name)
+{
+	for (int i = 0; i < arrlen(logged_textures); ++i)
+	{
+		if (!strcmp(logged_textures[i], name))
+		{
+			arrdel(logged_textures, i);
+			return;
+		}
+	}
+}
 
 void log_texture(const char* path, const char* name)
 {
@@ -412,6 +419,17 @@ char** get_all_logged_meshes(int* len)
 char* get_logged_mesh(int idx)
 {
 	return logged_meshes[idx];
+}
+void remove_logged_mesh(char* name)
+{
+	for (int i = 0; i < arrlen(logged_meshes); ++i)
+	{
+		if (!strcmp(logged_meshes[i], name))
+		{
+			arrdel(logged_meshes, i);
+			return;
+		}
+	}
 }
 
 int get_mesh_idx(char* name)
