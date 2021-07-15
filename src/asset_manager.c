@@ -108,6 +108,8 @@ void assetm_init()
 	// couldnt concat cwd
 	assert(dir_path != NULL);
 
+	// @TODO: add primitives & pink texture for missing texture & white material for added entities
+
 	search_dir(dir_path);
 
 }
@@ -128,83 +130,7 @@ void search_dir(const char* dir_path)
 		{
 			// printf("%s, \t[-1]%c, [-2]%c, [-3]%c, [-4]%c\n", dp->d_name, dp->d_name[dp->d_namlen - 1], dp->d_name[dp->d_namlen - 2], dp->d_name[dp->d_namlen - 3], dp->d_name[dp->d_namlen - 4]);
 
-			// check file extensions
-			if (dp->d_name[dp->d_namlen - 4] == '.' &&
-				dp->d_name[dp->d_namlen - 3] == 'p' &&
-				dp->d_name[dp->d_namlen - 2] == 'n' &&
-				dp->d_name[dp->d_namlen - 1] == 'g')
-			{
-				// printf("^---- PNG ----^\n");
-				char* dir_path_cpy[250]; 
-				strcpy(dir_path_cpy, dir_path);
-				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
-				strcat(t_path, dp->d_name); // add the name 
-
-				// log the texture with the created path and the file name 
-				log_texture(t_path, dp->d_name);
-			}
-			else if (dp->d_name[dp->d_namlen - 4] == '.' &&
-					 dp->d_name[dp->d_namlen - 3] == 'o' &&
-					 dp->d_name[dp->d_namlen - 2] == 'b' &&
-					 dp->d_name[dp->d_namlen - 1] == 'j')
-			{
-				// printf("^---- PNG ----^\n");
-				char* dir_path_cpy[250];
-				strcpy(dir_path_cpy, dir_path);
-				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
-				strcat(t_path, dp->d_name); // add the name 
-
-				// log the mesh with the created path and the file name 
-				log_mesh(t_path, dp->d_name);
-			}
-			else if (dp->d_name[dp->d_namlen - 8] == '.' &&
-					 dp->d_name[dp->d_namlen - 7] == 'g' &&
-					 dp->d_name[dp->d_namlen - 6] == 'r' &&
-					 dp->d_name[dp->d_namlen - 5] == 'a' &&
-					 dp->d_name[dp->d_namlen - 4] == 'v' &&
-					 dp->d_name[dp->d_namlen - 3] == 'i' &&
-					 dp->d_name[dp->d_namlen - 2] == 't' &&
-					 dp->d_name[dp->d_namlen - 1] == 'y')
-			{
-				// printf("^---- PNG ----^\n");
-				char* dir_path_cpy[250];
-				strcpy(dir_path_cpy, dir_path);
-				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
-				strcat(t_path, dp->d_name); // add the name 
-
-				// create the script with the created path and the file name
-				// no logging as all scripts get created immediately
-				create_script(t_path, dp->d_name);
-			}
-			else if (dp->d_name[dp->d_namlen - 5] == '.' &&
-					 dp->d_name[dp->d_namlen - 4] == 'v' &&
-					 dp->d_name[dp->d_namlen - 3] == 'e' &&
-					 dp->d_name[dp->d_namlen - 2] == 'r' &&
-					 dp->d_name[dp->d_namlen - 1] == 't')
-			{
-				// printf("^---- PNG ----^\n");
-				char* dir_path_cpy[250];
-				strcpy(dir_path_cpy, dir_path);
-				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
-				strcat(t_path, dp->d_name); // add the name 
-
-				// log the mesh with the created path and the file name 
-				log_vert_file(t_path, dp->d_name);
-			}
-			else if (dp->d_name[dp->d_namlen - 5] == '.' &&
-					 dp->d_name[dp->d_namlen - 4] == 'f' &&
-					 dp->d_name[dp->d_namlen - 3] == 'r' &&
-					 dp->d_name[dp->d_namlen - 2] == 'a' &&
-					 dp->d_name[dp->d_namlen - 1] == 'g')
-			{
-				char* dir_path_cpy[250];
-				strcpy(dir_path_cpy, dir_path);
-				char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
-				strcat(t_path, dp->d_name); // add the name 
-
-				// log the mesh with the created path and the file name 
-				log_frag_file(t_path, dp->d_name);
-			}
+			check_file(dp->d_name, strlen(dp->d_name), dir_path);
 
 			// construct new path from our base path
 			strcpy(path, dir_path);
@@ -217,6 +143,114 @@ void search_dir(const char* dir_path)
 
 	// close the stream
 	closedir(dir);
+}
+
+void check_file(char* file_name, int file_name_len, char* dir_path)
+{
+	// check file extensions
+	// ---- textures ----
+	if (// PNG
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'p' &&
+		file_name[file_name_len - 2] == 'n' &&
+		file_name[file_name_len - 1] == 'g' ||
+		// JPEG
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'j' &&
+		file_name[file_name_len - 2] == 'p' &&
+		file_name[file_name_len - 1] == 'g' ||
+		// BMP
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'b' &&
+		file_name[file_name_len - 2] == 'm' &&
+		file_name[file_name_len - 1] == 'p')
+	{
+		// printf("^---- PNG ----^\n");
+		char dir_path_cpy[250];
+		strcpy(dir_path_cpy, dir_path);
+		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+		strcat(t_path, file_name); // add the name 
+
+		// log the texture with the created path and the file name 
+		log_texture(t_path, file_name);
+	}
+	// ---- models ----
+	else if (// Wavefront .obj
+			 file_name[file_name_len - 4] == '.' &&
+			 file_name[file_name_len - 3] == 'o' &&
+			 file_name[file_name_len - 2] == 'b' &&
+			 file_name[file_name_len - 1] == 'j' ||
+			 // GLTF .glb 
+			 file_name[file_name_len - 4] == '.' &&
+			 file_name[file_name_len - 3] == 'g' &&
+			 file_name[file_name_len - 2] == 'l' &&
+			 file_name[file_name_len - 1] == 'b' ||
+			 // FBX .fbx
+			 file_name[file_name_len - 4] == '.' &&
+			 file_name[file_name_len - 3] == 'f' &&
+			 file_name[file_name_len - 2] == 'b' &&
+			 file_name[file_name_len - 1] == 'x')
+	{
+		// printf("^---- PNG ----^\n");
+		char dir_path_cpy[250];
+		strcpy(dir_path_cpy, dir_path);
+		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+		strcat(t_path, file_name); // add the name 
+
+		// log the mesh with the created path and the file name 
+		log_mesh(t_path, file_name);
+	}
+	// ---- gravity ----
+	else if (file_name[file_name_len - 8] == '.' &&
+			 file_name[file_name_len - 7] == 'g' &&
+			 file_name[file_name_len - 6] == 'r' &&
+			 file_name[file_name_len - 5] == 'a' &&
+			 file_name[file_name_len - 4] == 'v' &&
+			 file_name[file_name_len - 3] == 'i' &&
+			 file_name[file_name_len - 2] == 't' &&
+			 file_name[file_name_len - 1] == 'y')
+	{
+		// printf("^---- PNG ----^\n");
+		char dir_path_cpy[250];
+		strcpy(dir_path_cpy, dir_path);
+		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+		strcat(t_path, file_name); // add the name 
+
+		// create the script with the created path and the file name
+		// no logging as all scripts get created immediately
+		create_script(t_path, file_name);
+	}
+	// ---- vert-file ----
+	else if (file_name[file_name_len - 5] == '.' &&
+			 file_name[file_name_len - 4] == 'v' &&
+			 file_name[file_name_len - 3] == 'e' &&
+			 file_name[file_name_len - 2] == 'r' &&
+			 file_name[file_name_len - 1] == 't')
+	{
+		// printf("^---- PNG ----^\n");
+		char dir_path_cpy[250];
+		strcpy(dir_path_cpy, dir_path);
+		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+		strcat(t_path, file_name); // add the name 
+
+		// log the mesh with the created path and the file name 
+		log_vert_file(t_path, file_name);
+	}
+	// ---- frag-file ----
+	else if (file_name[file_name_len - 5] == '.' &&
+			 file_name[file_name_len - 4] == 'f' &&
+			 file_name[file_name_len - 3] == 'r' &&
+			 file_name[file_name_len - 2] == 'a' &&
+			 file_name[file_name_len - 1] == 'g')
+	{
+		char dir_path_cpy[250];
+		strcpy(dir_path_cpy, dir_path);
+		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+		strcat(t_path, file_name); // add the name 
+
+		// log the mesh with the created path and the file name 
+		log_frag_file(t_path, file_name);
+	}
 }
 
 void assetm_cleanup()
@@ -372,13 +406,6 @@ void create_texture(const char* name)
 
 char** get_all_logged_meshes(int* len)
 {
-
-	printf("logged-meshes assetmanager:\n");
-	for (int i = 0; i < arrlen(logged_meshes); ++i)
-	{
-		printf(" -> %s\n", logged_meshes[i]);
-	}
-
 	*len = arrlen(logged_meshes);
 	return logged_meshes;
 }
@@ -550,9 +577,9 @@ int get_material_idx(char* name)
 	return shget(materials, name);
 }
 
-material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
+material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name)
 {
-	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, name);
+	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name);
 	
 	// make a persistent copy of the passed name
 	char* name_cpy = calloc(strlen(name), sizeof(char));

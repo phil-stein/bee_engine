@@ -26,8 +26,8 @@ f32 far_plane   = 100.0f;
 // entities
 entity* entities;
 int entities_len = 0;
-size_t entities_size = 0;
-enum bee_bool entity_arr_init = BEE_FALSE;
+// size_t entities_size = 0;
+// bee_bool entity_arr_init = BEE_FALSE;
 
 int* transparent_ents     = NULL;
 int  transparent_ents_len = 0;
@@ -70,6 +70,7 @@ void renderer_init()
 							   "screen.frag", "SHADER_framebuffer"); // C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.frag"
 
 	create_framebuffer(&tex_col_buffer);
+	set_framebuffer_to_update(&tex_col_buffer); // updates framebuffer on window resize
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 	// positions   // texCoords
@@ -349,6 +350,10 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	{
 		return;
 	}
+	if (mat->draw_backfaces == BEE_TRUE)
+	{
+		glDisable(GL_CULL_FACE);
+	}
 
 	mat4 model = GLM_MAT4_IDENTITY_INIT;
 	f32 x = rot[0];  glm_make_rad(&x);
@@ -514,6 +519,10 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	{
 		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / 8)); // each vertices consist of 8 floats
 	}
+	if (mat->draw_backfaces == BEE_TRUE)
+	{
+		glEnable(GL_CULL_FACE);
+	}
 }
 
 
@@ -570,6 +579,40 @@ void add_entity_cube()
 	add_entity(pos, rot, scale, &m, &entities[0]._material, NULL, "cube");
 }
 
+// doesnt work yet
+void entity_switch_light_type(int entity_id, light_type new_type)
+{
+	// remove from old type categorisation
+	switch (entities[entity_id]._light.type)
+	{
+		case DIR_LIGHT:
+			arrdel(dir_lights, entity_id);
+			dir_lights_len--;
+		case POINT_LIGHT:
+			arrdel(point_lights, entity_id);
+			point_lights_len--;
+		case SPOT_LIGHT:
+			arrdel(spot_lights, entity_id);
+			spot_lights_len--;
+	}
+
+	// add to new type categorisation
+	switch (new_type)
+	{
+		case DIR_LIGHT:
+			arrput(dir_lights, entities_len - 1);
+			dir_lights_len++;
+		case POINT_LIGHT:
+			arrput(point_lights, entities_len - 1);
+			point_lights_len++;
+		case SPOT_LIGHT:
+			arrput(spot_lights, entities_len - 1);
+			spot_lights_len++;
+	}
+
+	entities[entity_id]._light.type = new_type;
+}
+
 void entity_add_script(int entity_index, const char* name)
 {
 	// gravity_script script = make_script(path);
@@ -598,6 +641,54 @@ void set_all_scripts(bee_bool act)
 	}
 }
 
+
+// doesnt work yet
+void entity_remove(int entity_idx)
+{
+	if (entities[entity_idx].has_light)
+	{
+		switch (entities[entity_idx]._light.type)
+		{
+			case DIR_LIGHT:
+				for (int i = 0; i < dir_lights_len; ++i)
+				{
+					if (dir_lights[i] == entity_idx)
+					{
+						arrdel(dir_lights, i);
+						dir_lights_len--;
+						break;
+					}
+				}
+			case POINT_LIGHT:
+				for (int i = 0; i < point_lights_len; ++i)
+				{
+					if (point_lights[i] == entity_idx)
+					{
+						arrdel(point_lights, i);
+						point_lights_len--;
+						break;
+					}
+				}
+			case SPOT_LIGHT:
+				for (int i = 0; i < spot_lights_len; ++i)
+				{
+					if (spot_lights[i] == entity_idx)
+					{
+						arrdel(spot_lights, i);
+						spot_lights_len--;
+						break;
+					}
+				}
+		}
+	}
+
+
+	// entity* ptr = &entities[entity_idx];
+	arrdel(entities, entity_idx);
+	entities_len--;
+	// free_entity(ptr);
+}
+
 void get_entity_len(int* _entities_len)
 {
 	*_entities_len = entities_len;
@@ -622,7 +713,7 @@ int get_entity_id_by_name(char* name)
 	assert(0 == 1);
 	return 9999;
 }
-entity* get_entitiy_ptr(int idx)
+entity* get_entity_ptr(int idx)
 {
 	return &entities[idx];
 }

@@ -60,6 +60,14 @@ void unbind_framebuffer()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void resize_frame_buffer_to_window(u32* tex_buffer)
+{
+	glBindTexture(GL_TEXTURE_2D, *tex_buffer);
+
+	int w, h; get_window_size(&w, &h);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+}
+
 // unnecessary
 
 void framebuffer_texture()

@@ -30,6 +30,8 @@ void  get_window_size(int* width, int* height);
 // get the windows current title
 char* get_window_title();
 
+void set_framebuffer_to_update(u32* texture_buffer);
+
 // --- callbacks ----
 
 // glfw error callback function

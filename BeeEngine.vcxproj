@@ -91,7 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <UndefinePreprocessorDefinitions>_cplusplus;</UndefinePreprocessorDefinitions>
@@ -107,7 +107,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>EDITOR_ACT;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -177,6 +177,7 @@
     <ClCompile Include="src\renderer.c" />
     <ClCompile Include="src\shader.c" />
     <ClCompile Include="src\str_util.c" />
+    <ClCompile Include="src\tinyfiledialogs.c" />
     <ClCompile Include="src\ui.c" />
     <ClCompile Include="src\window.c" />
   </ItemGroup>

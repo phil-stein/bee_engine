@@ -16,6 +16,7 @@
 #include "nuklear/nuklear_glfw_gl3.h"
 
 #include "stb/stb_ds.h"
+#include "tinyfd/tinyfiledialogs.h"
 
 #include "asset_manager.h"
 #include "file_handler.h"
@@ -1370,9 +1371,17 @@ void overview_window()
 
 void properties_window(int ent_len)
 {
-    if (nk_begin(ctx, "Properties", nk_rect(10, 10, 350, 1000),
-        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+    int w, h;
+    get_window_size(&w, &h);
+    
+    // less height because the window bar on top and below
+    const float w_ratio = 350.0f  / 1920.0f;
+    const float h_ratio = 1000.0f / 1020.0f;
+    const float x_ratio = 10.0f   / 1920.0f;
+    const float y_ratio = 10.0f   / 1020.0f;
+
+    if (nk_begin(ctx, "Properties", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
+        NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
         static int scripts_act = 0;
         static float property_pos_x = 0.0f;
@@ -1392,21 +1401,38 @@ void properties_window(int ent_len)
         if (nk_menu_begin_label(ctx, "Add Entity", NK_TEXT_LEFT, nk_vec2(80, 200)))
         {
             nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_menu_item_label(ctx, "Cube", NK_TEXT_LEFT))
+            if (nk_menu_item_label(ctx, "Empty", NK_TEXT_LEFT))
             {
-                add_entity_cube();
+                add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "empty");
             }
-            if (nk_menu_item_label(ctx, "Dir Light", NK_TEXT_LEFT))
+            if (nk_menu_item_label(ctx, "Mesh", NK_TEXT_LEFT))
             {
-                printf("Add Entity >> Dir Light not implemented\n");
+                vec3 zero = { 0.0f, 0.0f, 0.0f };
+                vec3 one  = { 1.0f, 1.0f, 1.0f };
+                add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, "mesh");
             }
-            if (nk_menu_item_label(ctx, "Point Light", NK_TEXT_LEFT))
+            if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
             {
-                printf("Add Entity >> Point Light not implemented\n");
+                vec3 zero      = { 0.0f, 0.0f, 0.0f };
+                vec3 one       = { 1.0f, 1.0f, 1.0f };
+                vec3 point_one = { 0.1f, 0.1f, 0.1f };
+                light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
+                add_entity(zero, zero, point_one, get_mesh("lightbulb.obj") , get_material("MAT_blank_unlit"), &point_light, "point_light");	// mat_blank_unlit
             }
-            if (nk_menu_item_label(ctx, "Spot Light", NK_TEXT_LEFT))
+            nk_menu_end(ctx);
+        }
+        if (nk_menu_begin_label(ctx, "Add Asset", NK_TEXT_LEFT, nk_vec2(80, 200)))
+        {
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if (nk_menu_item_label(ctx, "Material", NK_TEXT_LEFT))
             {
-                printf("Add Entity >> Spot Light not implemented\n");
+                vec2 tile = { 1.0f, 1.0f };
+                vec3 tint = { 1.0f, 1.0f, 1.0f };
+                add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material");
+            }
+            if (nk_menu_item_label(ctx, "Shader", NK_TEXT_LEFT))
+            {
+                // @TODO: add selection of vert and frag shaders to use for shader
             }
             nk_menu_end(ctx);
         }
@@ -1763,6 +1789,8 @@ void properties_window(int ent_len)
                 selected_entities_old[i] = selected_entities[i];
             }
 
+            static int ent_right_click_popup = 9999; // 9999 = inactive, otherwise entity id
+            static struct nk_rect ent_right_click_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
             if (ent_len <= 0)
             {
                 nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
@@ -1779,8 +1807,18 @@ void properties_window(int ent_len)
                     for (int i = 0; i < ent_len; ++i)
                     {
                         // entity_properties prop = get_entity_properties(i);
-                        entity* ent = get_entitiy_ptr(i);
+                        entity* ent = get_entity_ptr(i);
                         nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[i]);
+
+                        struct nk_rect bounds = nk_widget_bounds(ctx);
+
+                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
+                        {
+                            submit_txt_console("clicked on entity label");
+                            ent_right_click_popup = i +1; // setting it to the current entity id
+                            ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 100);
+                        }
+
                     }
                     nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
 
@@ -1793,7 +1831,7 @@ void properties_window(int ent_len)
                     for (int i = 0; i < ent_len; ++i)
                     {
                         // entity_properties prop = get_entity_properties(i);
-                        entity* ent = get_entitiy_ptr(i);
+                        entity* ent = get_entity_ptr(i);
                         // nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
                         char type_buffer[64]; strcpy(type_buffer, "empty");
                         // if (*prop.has_trans && !*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "empty"); }
@@ -1810,25 +1848,30 @@ void properties_window(int ent_len)
                 }
            
             }
+            // right-click on entity popup
+            if (ent_right_click_popup != 9999 && nk_popup_begin(ctx, NK_POPUP_STATIC, "right click entity", NK_WINDOW_NO_SCROLLBAR, ent_right_click_popup_bounds))
+            {
+                nk_layout_row_dynamic(ctx, 30, 1);
+                nk_bool remove = nk_false;
+                nk_selectable_label(ctx, "remove", NK_TEXT_LEFT, &remove);
+                if (remove)
+                {
+                    selected_entities[ent_right_click_popup] = nk_false;
+                    entity_remove(ent_right_click_popup);
+                    ent_right_click_popup = 9999;
+                }
+                if (nk_input_is_mouse_pressed(&ctx->input, NK_BUTTON_LEFT))
+                {
+                    ent_right_click_popup = 9999;
+                }
+
+                nk_popup_end(ctx);
+            }
 
             // spacing
             nk_layout_row_static(ctx, 5, 10, 1);
             nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
-
-            // ---- button ----
-            // nk_layout_row_static(ctx, 25, 80, 1);
-            // if (nk_button_label(ctx, "deselect"))
-            // {
-            //     for (int i = 0; i < ent_len; ++i)
-            //     {
-            //         selected_entities[i] = nk_false;
-            //     }
-            // }
-            // ----------------
             
-            // spacing
-            // nk_layout_row_static(ctx, 5, 10, 1);
-            // nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
             static int selected_entity_old;
             static int selected_entity = -999;
@@ -1868,6 +1911,7 @@ void properties_window(int ent_len)
             {
                 nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                 nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);
+
             }
             else 
             {
@@ -1875,7 +1919,7 @@ void properties_window(int ent_len)
                 struct nk_rect bounds;
 
                 // entity_properties prop = get_entity_properties(selected_entity);
-                entity* ent = get_entitiy_ptr(selected_entity);
+                entity* ent = get_entity_ptr(selected_entity);
 
                 nk_layout_row_dynamic(ctx, 30, 2);
                 nk_label(ctx, "Name: ", NK_TEXT_LEFT);
@@ -1929,6 +1973,18 @@ void properties_window(int ent_len)
                         nk_property_float(ctx, "Scale Y:", -1024.0f, &ent->scale[1], 1024.0f, 0.1f, 0.2f);
                        
                         nk_property_float(ctx, "Scale Z:", -1024.0f, &ent->scale[2], 1024.0f, 0.1f, 0.2f);
+                        
+                        static float prev_val = 1;
+                        static float set_val  = 1;
+                        prev_val = set_val;
+                        nk_property_float(ctx, "Scale XYZ:", -1024.0f, &set_val, 1024.0f, 0.1f, 0.2f);
+                        
+                        if (prev_val != set_val)
+                        {
+                            ent->scale[0] = set_val;
+                            ent->scale[1] = set_val;
+                            ent->scale[2] = set_val;
+                        }
                     
                         nk_tree_pop(ctx);
                     }
@@ -2029,11 +2085,12 @@ void properties_window(int ent_len)
                     if (selected_shader_old != selected_shader) { ent->_material->shader = shaders[selected_shader]; }
 
                     nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_checkbox_label(ctx, " draw backfaces", &ent->_material->draw_backfaces);
                     nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 1.0f, 0.1f, 0.002f);
                     nk_layout_row_dynamic(ctx, 25, 2);
-                    nk_property_float(ctx, "Tile X", 0.0f, &ent->_material->tile[0], 100.0f, 0.1f, 0.1f);
+                    nk_property_float(ctx, "Tile X", 0.0f, &ent->_material->tile[0], 100.0f, 0.1f, 0.1f);         
                     nk_property_float(ctx, "Tile Y", 0.0f, &ent->_material->tile[1], 100.0f, 0.1f, 0.1f);
-            
+
                     // tint-color
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Tint Color", NK_TEXT_LEFT);
@@ -2124,8 +2181,9 @@ void properties_window(int ent_len)
 
                         if (selected_dif_old != selected_dif) { ent->_material->dif_tex = textures[selected_dif]; }
 
+                        float ratio_x = ent->_material->dif_tex.size_y / ent->_material->dif_tex.size_x;
                         struct nk_image img = nk_image_id(ent->_material->dif_tex.handle);
-                        nk_layout_row_static(ctx, 150, 150, 1);
+                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
                         nk_image(ctx, img);
 
                         nk_layout_row_dynamic(ctx, 25, 2);
@@ -2135,8 +2193,9 @@ void properties_window(int ent_len)
 
                         if (selected_spec_old != selected_spec) { ent->_material->spec_tex = textures[selected_spec]; }
 
+                        ratio_x = ent->_material->spec_tex.size_y / ent->_material->spec_tex.size_x;
                         img = nk_image_id(ent->_material->spec_tex.handle);
-                        nk_layout_row_static(ctx, 150, 150, 1);
+                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
                         nk_image(ctx, img);
 
                         free(texture_names);
@@ -2152,7 +2211,18 @@ void properties_window(int ent_len)
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Type: ", NK_TEXT_LEFT);
                     nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
-
+                    
+                    int selected_type = ent->_light.type == POINT_LIGHT ? 0 : ent->_light.type == SPOT_LIGHT ? 1 : ent->_light.type == DIR_LIGHT ? 2 : 0;
+                    int selected_type_old = selected_type;
+                    char* type_names[] = { "Point Light", "Spot Light", "Dir Light" };
+                    selected_type = nk_combo(ctx, type_names, 3, selected_type, 25, nk_vec2(200, 200));
+                    if (selected_type_old != selected_type)
+                    {
+                        // switched types
+                        submit_txt_console("switched light types");
+                        light_type new_type = selected_type == 0 ? POINT_LIGHT : selected_type == 1 ? SPOT_LIGHT : selected_type == 2 ? DIR_LIGHT : POINT_LIGHT;
+                        entity_switch_light_type(get_entity_id_by_name(ent->name), new_type);
+                    }
 
                     // ambient, diffuse, specular
                     nk_layout_row_dynamic(ctx, 25, 1);
@@ -2478,9 +2548,18 @@ void properties_window(int ent_len)
 
 void console_window()
 {
-    if (nk_begin(ctx, "Console", nk_rect(1575, 700, 300, 300),
-        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+    int w, h;
+    get_window_size(&w, &h);
+
+
+    // less height because the window bar on top and below
+    const float w_ratio = 300.0f  / 1920.0f;
+    const float h_ratio = 310.0f  / 1020.0f;
+    const float x_ratio = 1600.0f / 1920.0f;
+    const float y_ratio = 700.0f  / 1020.0f;
+
+    if (nk_begin(ctx, "Console", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
+        NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
         nk_layout_row_static(ctx, 230, 278, 1);
         nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
@@ -2490,13 +2569,23 @@ void console_window()
 
 void asset_browser_window()
 {
-    int x = 380;
-    int y = 700;
-    int w = 1175;
-    int h = 300;
-    if (nk_begin(ctx, "Asset Browser", nk_rect(x, y, w, h),
-        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE | NK_WINDOW_NO_SCROLLBAR))
+
+    int w, h;
+    get_window_size(&w, &h);
+
+
+    // less height because the window bar on top and below
+    const float w_ratio = 1200.0f / 1920.0f;
+    const float h_ratio = 310.0f  / 1020.0f;
+    const float x_ratio = 380.0f  / 1920.0f;
+    const float y_ratio = 700.0f  / 1020.0f;
+
+    // int x = 380;
+    // int y = 700;
+    // int w = 1175;
+    // int h = 300;
+    if (nk_begin(ctx, "Asset Browser", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
+        NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
 
         typedef enum selected_asset { TEXTURE, MESH, SHADER, MATERIAL, SCRIPT } selected_asset;
@@ -2559,12 +2648,32 @@ void asset_browser_window()
                 if (selected_check[3] == nk_true) { selected = MATERIAL; for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[3] = nk_true; }
                 nk_selectable_label(ctx, "Scripts", NK_TEXT_LEFT, &selected_check[4]);
                 if (selected_check[4] == nk_true) { selected = SCRIPT;   for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[4] = nk_true; }
+                
+                nk_layout_row_static(ctx, 100, 100, 1);
+                nk_label(ctx, "", NK_TEXT_ALIGN_LEFT);
+                nk_layout_row_static(ctx, 30, 100, 1);
+                if (nk_button_label(ctx, "Import Asset"))
+                {
+                    char* path = tinyfd_openFileDialog(
+                        "Import Asset", NULL, 0, // "C:\\Workspace\\C\\BeeEngine\\assets", 0 (2 in the following example)
+                        NULL, // NULL or char const * lFilterPatterns[2]={"*.png","*.jpg"};
+                        NULL, // NULL or "image files"
+                        BEE_FALSE);
+
+                    if (path != NULL)
+                    {
+                        char* name = str_trunc( str_find_last_of(path, "\\"), 1); // isolate name
+                        path = str_trunc(path, (strlen(name) +1) * -1); // remove name from path
+
+                        check_file(name, strlen(name), path); // logs file if it is an asset
+                    }
+                }
                 nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
 
                 // nk_tree_pop(ctx);
                 nk_group_end(ctx);
             }
-            nk_layout_row_push(ctx, 850);
+            nk_layout_row_push(ctx, 855);
             if (nk_group_begin(ctx, "Assets", 0))
             {
                 if (selected == TEXTURE)
@@ -2679,7 +2788,7 @@ void asset_browser_window()
                 // nk_tree_pop(ctx);
                 nk_group_end(ctx);
             }
-            nk_layout_row_push(ctx, 175);
+            nk_layout_row_push(ctx, 190);
             if (nk_group_begin(ctx, "Selected", NK_WINDOW_BORDER))
             {
                 
@@ -2709,7 +2818,8 @@ void asset_browser_window()
                     {
                         //loaded texyture selected
                         // properties of selected asset
-                        nk_layout_row_static(ctx, 145, 145, 1);
+                        float ratio_x = textures[selected_img].size_y / textures[selected_img].size_x;
+                        nk_layout_row_static(ctx, 145 * ratio_x, 145, 1);
                         struct nk_image img = nk_image_id(textures[selected_img].handle);
                         nk_image(ctx, img);
 
@@ -2757,6 +2867,17 @@ void asset_browser_window()
                         nk_label_wrap(ctx, buf);
                         sprintf(buf, "Indices: \"%d\"", meshes[selected_mesh].indices_len);
                         nk_label_wrap(ctx, buf);
+
+                        if (nk_button_label(ctx, "Instance"))
+                        {
+                            vec3 zero = { 0.0f, 0.0f, 0.0f };
+                            vec3 one = { 1.0f, 1.0f, 1.0f };
+                            char* name = NULL;
+                            name = malloc(strlen(meshes[selected_mesh].name) * sizeof(char));
+                            assert(name != NULL);
+                            strcpy(name, meshes[selected_mesh].name);
+                            add_entity(zero, zero, one, &meshes[selected_mesh], get_material("MAT_blank"), NULL, name);
+                        }
                     }
                 }
                 else if (selected == SCRIPT)
@@ -2804,13 +2925,30 @@ void asset_browser_window()
                         img = nk_image_id(materials[selected_material].spec_tex.handle);
                         nk_image(ctx, img);
 
+                        static char name_edit_buffer[64];
+                        nk_layout_row_dynamic(ctx, 30, 1);
+                        nk_label(ctx, "Name: ", NK_TEXT_LEFT);
+                        // nk_label(ctx, prop.ent_name, NK_TEXT_LEFT);
+                        static nk_flags event = NK_EDIT_DEACTIVATED;
+                        if (event == NK_EDIT_DEACTIVATED || event == NK_EDIT_INACTIVE) { strcpy(name_edit_buffer, materials[selected_material].name); }
+                        event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
+                        // set ent name on commit
+                        if (event == NK_EDIT_COMMITED || is_key_pressed(KEY_Enter))
+                        {
+                            // copy name and path as passed name might be deleted
+                            char* name_cpy = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+                            assert(name_cpy != NULL);
+                            strcpy(name_cpy, name_edit_buffer);
+                            materials[selected_material].name = name_cpy;
+                            event = NK_EDIT_INACTIVE;
+                        }
+
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
-                        sprintf(buf, "Name: \"%s\"", materials[selected_material].name);
-                        nk_label_wrap(ctx, buf);
                         sprintf(buf, "Shader: \"%s\"", materials[selected_material].shader.name);
                         nk_label_wrap(ctx, buf);
-                        
+                        sprintf(buf, "Draw Backfaces: \"%s\"", materials[selected_material].draw_backfaces == BEE_TRUE ? "true" : "false");
+                        nk_label_wrap(ctx, buf);
                     }
                 }
                 else if (selected == SHADER)

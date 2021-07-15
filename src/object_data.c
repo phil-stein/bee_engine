@@ -17,15 +17,16 @@
 
 // ---- material ----
 
-material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, const char* name)
+material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, bee_bool draw_backfaces, const char* name)
 {
 	material mat;
-	mat.name = name;
-	mat.shader = s;
-	mat.dif_tex = dif_tex;
-	mat.spec_tex = spec_tex;
+	mat.name		   = name;
+	mat.shader		   = s;
+	mat.dif_tex		   = dif_tex;
+	mat.spec_tex	   = spec_tex;
 	mat.is_transparent = is_transparent;
-	mat.shininess = shininess;
+	mat.shininess	   = shininess;
+	mat.draw_backfaces = draw_backfaces;
 	glm_vec2_copy(tile, mat.tile);
 
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
@@ -33,9 +34,9 @@ material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_
 
 	return mat;
 }
-material make_material_tint(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name)
+material make_material_tint(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name)
 {
-	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, name);
+	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, draw_backfaces, name);
 	glm_vec3_copy(tint, mat.tint);
 
 	return mat;

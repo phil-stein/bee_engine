@@ -3,10 +3,14 @@
 #include "GLAD/glad.h"
 
 #include "window.h"
+#include "framebuffer.h"
 
 // ---- vars ----
 GLFWwindow* window;
 char* window_title;
+
+// framebuffer texture buffer ptr
+u32* tex_buffer = NULL;
 
 // intis glfw & glad, also creates the window
 // returns: <stddef.h> return_code
@@ -106,6 +110,11 @@ char* get_window_title()
 	return window_title;
 }
 
+void set_framebuffer_to_update(u32* texture_buffer)
+{
+	tex_buffer = texture_buffer;
+}
+
 // ---- callbacks ----
 
 // glfw error func
@@ -118,4 +127,8 @@ void error_callback(int error, const char* description)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	if (tex_buffer != NULL)
+	{ 
+		resize_frame_buffer_to_window(tex_buffer);
+	}
 }

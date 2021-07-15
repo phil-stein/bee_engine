@@ -66,6 +66,9 @@
     <ClCompile Include="src\gravity_interface.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\tinyfiledialogs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">

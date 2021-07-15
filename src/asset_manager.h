@@ -17,6 +17,7 @@ void assetm_init();
 
 // taken from: https://codeforwin.org/2018/03/c-program-to-list-all-files-in-a-directory-recursively.html
 void search_dir(const char* dir_path);
+void check_file(char* file_name, int file_name_len, char* dir_path);
 
 void assetm_cleanup();
 
@@ -53,7 +54,7 @@ void create_script(const char* path, const char* name);
 
 int get_material_idx(char* name);
 
-material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, const char* name);
+material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name);
 
 material* get_material(char* name);
 
