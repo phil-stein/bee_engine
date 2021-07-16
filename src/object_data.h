@@ -150,11 +150,16 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 void update_entity(entity* ent);
 // void entity_add_script(entity* ent,const char* path);
 
-void free_material(material* mat);
+// void free_material(material* mat);
 // free the buffer objects of the mesh
 void free_mesh(mesh* _mesh);
+// tell opengl to free the texture
+void free_texture(texture* tex);
+// tell opengl to free the shader
+void free_shader(shader* s);
 // free all attached data
 void free_entity(entity* ent);
+
 
 
 #endif

@@ -5,6 +5,17 @@
 #include "object_data.h"
 #include "global.h"
 
+typedef enum { TEXTURE, MESH, SHADER, MATERIAL, SCRIPT } asset_type;
+
+typedef struct
+{
+	bee_bool handled;
+	float pos[2];
+	asset_type type;
+	int asset_idx;
+
+}asset_drop;
+
 typedef struct
 {
 	char* ent_name;

@@ -1,10 +1,9 @@
 #include "asset_manager.h"
 
 #include <direct.h>
-// #include <sys/types.h>
+#include "dirent/dirent.h"
 
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION defined in renderer.c
-#include "dirent/dirent.h"
 
 #include "file_handler.h"
 #include "shader.h"
@@ -25,7 +24,7 @@ int texture_paths_len = 0;
 
 // array of holding textures
 texture* texture_data = NULL;
-int texure_data_len = 0;
+int texture_data_len = 0;
 
 // array holding the names of all textures not yet loaded
 char** logged_textures = NULL;
@@ -260,22 +259,30 @@ void assetm_cleanup()
 
 
 	// free the allocated memory
+	for (int i = 0; i < texture_data_len; ++i)
+	{
+		free_texture(&texture_data[i]);
+	}
 	shfree(textures);
 	hmfree(texture_paths);
 	arrfree(texture_data);
 
+	
 	// free the allocated memory
+	for (int i = 0; i < mesh_data_len; ++i)
+	{
+		free_mesh(&mesh_data[i]);
+	}
 	shfree(meshes);
 	hmfree(meshes_paths);
 	arrfree(mesh_data);
-	
+
+	// free the allocated memory
 	// free all scripts
 	for (int i = 0; i < scripts_data_len; ++i)
 	{
 		free_script(&scripts_data[i]);
 	}
-
-	// free the allocated memory
 	shfree(scripts);
 	hmfree(scripts_paths);
 	arrfree(scripts_data);
@@ -285,7 +292,15 @@ void assetm_cleanup()
 	arrfree(materials_data);
 
 	// free the allocated memory
+	for (int i = 0; i < shaders_data_len; ++i)
+	{
+		free_shader(&shaders_data[i]);
+	}
 	shfree(shaders);
+	shfree(vert_files);
+	hmfree(vert_files_paths);
+	shfree(frag_files);
+	hmfree(frag_files_paths);
 	arrfree(shaders_data);
 }
 
@@ -301,7 +316,7 @@ int get_texture_idx(char* name)
 
 texture* get_all_textures(int* textures_len)
 {
-	*textures_len = texure_data_len;
+	*textures_len = texture_data_len;
 	return texture_data;
 }
 
@@ -314,7 +329,7 @@ texture get_texture(const char* name)
 	//		  for example make the 0th texture allways be all pink etc.
 
 	// check if the texture hasn't been loaded yet 
-	if (i == 9999 || i > texure_data_len) // 0 == 0
+	if (i == 9999 || i > texture_data_len) // 0 == 0
 	{
 		create_texture(name);
 	}
@@ -390,9 +405,9 @@ void create_texture(const char* name)
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
 	// and put the created texture into the tex array
-	shput(textures, name, texure_data_len);
+	shput(textures, name, texture_data_len);
 	arrput(texture_data, t);
-	texure_data_len++;
+	texture_data_len++;
 
 	// remove texture from the logged_textures array
 	for (int i = 0; i < arrlen(logged_textures); ++i)
@@ -409,7 +424,6 @@ void create_texture(const char* name)
 // 
 // ---- meshes ----
 // 
-
 
 char** get_all_logged_meshes(int* len)
 {
@@ -464,7 +478,7 @@ mesh* get_mesh(const char* name)
 void log_mesh(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name), sizeof(char));
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
@@ -474,7 +488,7 @@ void log_mesh(const char* path, const char* name)
 	meshes_len++;
 
 	// make a persistent copy of the passed path
-	char* path_cpy = calloc(strlen(path), sizeof(char));
+	char* path_cpy = calloc(strlen(path) +1, sizeof(char));
 	assert(path_cpy != NULL);
 	strcpy(path_cpy, path);
 	// printf("texture path copy: \"%s\"\n", path_cpy);
@@ -516,6 +530,7 @@ void create_mesh(const char* name)
 		}
 	}
 }
+
 
 // 
 // ---- scripts ----
@@ -600,7 +615,7 @@ material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_
 	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name);
 	
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name), sizeof(char));
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
@@ -644,14 +659,15 @@ shader add_shader(const char* vert_name, const char* frag_name, const char* name
 	char* vert_path = hmget(vert_files_paths, path_idx);
 	path_idx = shgeti(frag_files, frag_name);
 	char* frag_path = hmget(frag_files_paths, path_idx);
-	shader s = create_shader_from_file(vert_path, frag_path, name);
-	s.vert_name = vert_name;
-	s.frag_name = frag_name;
 
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name), sizeof(char));
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
+
+	shader s = create_shader_from_file(vert_path, frag_path, name_cpy);
+	s.vert_name = vert_name;
+	s.frag_name = frag_name;
 
 	shput(shaders, name_cpy, shaders_data_len);
 	shaders_len++;
@@ -679,7 +695,7 @@ shader* get_all_shaders(int* shaders_len)
 void log_vert_file(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 	// printf("texture name copy: \"%s\"\n", name_cpy);
@@ -690,7 +706,7 @@ void log_vert_file(const char* path, const char* name)
 	vert_files_len++;
 
 	// make a persistent copy of the passed path
-	char* path_cpy = calloc(strlen(path) + 1, sizeof(char));
+	char* path_cpy = calloc(strlen(path) +1, sizeof(char));
 	assert(path_cpy != NULL);
 	strcpy(path_cpy, path);
 
@@ -707,7 +723,7 @@ void log_vert_file(const char* path, const char* name)
 void log_frag_file(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
+	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 	// printf("texture name copy: \"%s\"\n", name_cpy);
@@ -718,7 +734,7 @@ void log_frag_file(const char* path, const char* name)
 	frag_files_len++;
 
 	// make a persistent copy of the passed path
-	char* path_cpy = calloc(strlen(path) + 1, sizeof(char));
+	char* path_cpy = calloc(strlen(path) +1, sizeof(char));
 	assert(path_cpy != NULL);
 	strcpy(path_cpy, path);
 

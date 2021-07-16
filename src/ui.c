@@ -20,6 +20,7 @@
 
 #include "asset_manager.h"
 #include "file_handler.h"
+#include "game_time.h"
 #include "str_util.h"
 #include "renderer.h"
 #include "window.h"
@@ -63,6 +64,8 @@ static int show_app_about = nk_false;
 int selected_entities_len = 100;
 int selected_entities[100];
 
+asset_drop dropped_asset;
+
 // ---- console ----
 char box_buffer[512];
 int box_len;
@@ -80,6 +83,19 @@ static char* source_code;
 
 
 struct nk_image image;
+
+// ---- asset-browser ----
+typedef struct
+{
+    struct nk_image logged_texture;
+    struct nk_image mesh;
+    struct nk_image logged_mesh;
+    struct nk_image shader;
+    struct nk_image material;
+    struct nk_image script;
+
+}icon_collection;
+icon_collection icons;
 
 
 void ui_init()
@@ -109,11 +125,18 @@ void ui_init()
 	// -----------------
 
 
-    bg.r = 0.1f; bg.g = 0.1f; bg.b = 0.1f; bg.a = 1.0f;
-
-
     // set default theme
+    bg.r = 0.1f; bg.g = 0.1f; bg.b = 0.1f; bg.a = 1.0f;
     set_style(ctx, THEME_RED);
+
+    dropped_asset.handled = BEE_TRUE;
+
+    // load icons
+    icons.logged_texture = nk_image_id((get_texture("logged_texture_icon.png")).handle);
+    icons.mesh           = nk_image_id((get_texture("mesh_icon.png")).handle);
+    icons.logged_mesh    = nk_image_id((get_texture("logged_mesh_icon.png")).handle);
+    icons.script         = nk_image_id((get_texture("script_icon.png")).handle);
+    // ...
 }
 
 void ui_update()
@@ -1795,6 +1818,7 @@ void properties_window(int ent_len)
             {
                 nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                 nk_label_colored(ctx, "no entities", NK_TEXT_LEFT, red);
+                ent_right_click_popup = 9999;
             }
             else
             {
@@ -1806,19 +1830,18 @@ void properties_window(int ent_len)
                     nk_layout_row_static(ctx, 18, 150, 1);
                     for (int i = 0; i < ent_len; ++i)
                     {
-                        // entity_properties prop = get_entity_properties(i);
-                        entity* ent = get_entity_ptr(i);
-                        nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[i]);
-
                         struct nk_rect bounds = nk_widget_bounds(ctx);
 
                         if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
                         {
                             submit_txt_console("clicked on entity label");
-                            ent_right_click_popup = i +1; // setting it to the current entity id
+                            ent_right_click_popup = i; // setting it to the current entity id
                             ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 100);
                         }
 
+                        // entity_properties prop = get_entity_properties(i);
+                        entity* ent = get_entity_ptr(i);
+                        nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[i]);
                     }
                     nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
 
@@ -1996,6 +2019,7 @@ void properties_window(int ent_len)
                     nk_label_colored(ctx, "no transform", NK_TEXT_LEFT, red);
                 }
 
+                struct nk_rect mesh_bounds = nk_widget_bounds(ctx);
                 if (ent->has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Mesh", NK_MINIMIZED))
                 {
 
@@ -2037,10 +2061,23 @@ void properties_window(int ent_len)
                     nk_label(ctx, "Indexed: ", NK_TEXT_LEFT);
                     nk_label(ctx, ent->_mesh.indexed == BEE_FALSE ? "false" : "true", NK_TEXT_RIGHT);
             
-            
+                    
+                    mesh_bounds.h += 6 * 25; // six elements 25 high
+                    // check for assets dropped from the asset browser
+                    if (dropped_asset.type == MESH && dropped_asset.handled == BEE_FALSE)
+                    {
+                        // collision 
+                        if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], mesh_bounds.x, mesh_bounds.y, mesh_bounds.w, mesh_bounds.h))
+                        {
+                            printf("dropped asset dropped over mesh\n");
+                            ent->_mesh = meshes[dropped_asset.asset_idx];
+                            dropped_asset.handled = BEE_TRUE;
+                        }
+                    }
                     nk_tree_pop(ctx);
                 }
-            
+
+                struct nk_rect material_bounds = nk_widget_bounds(ctx);
                 if (ent->has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Material", NK_MINIMIZED))
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
@@ -2064,6 +2101,8 @@ void properties_window(int ent_len)
 
                     if (selected_material_old != selected_material) { ent->_material = &materials[selected_material]; }
 
+                    material_bounds.h += 25; // the combobox + label
+
                     nk_label(ctx, "Shader", NK_TEXT_LEFT);
                     shader* shaders = NULL;
                     int shaders_len = 0;
@@ -2083,6 +2122,8 @@ void properties_window(int ent_len)
                     selected_shader = nk_combo(ctx, shaders_names, shaders_len, selected_shader, 25, nk_vec2(200, 200));
 
                     if (selected_shader_old != selected_shader) { ent->_material->shader = shaders[selected_shader]; }
+                    
+                    material_bounds.h += 25; // the combobox + label
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_checkbox_label(ctx, " draw backfaces", &ent->_material->draw_backfaces);
@@ -2090,6 +2131,8 @@ void properties_window(int ent_len)
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_property_float(ctx, "Tile X", 0.0f, &ent->_material->tile[0], 100.0f, 0.1f, 0.1f);         
                     nk_property_float(ctx, "Tile Y", 0.0f, &ent->_material->tile[1], 100.0f, 0.1f, 0.1f);
+                    
+                    material_bounds.h += 3 * 25; // the 3 elements
 
                     // tint-color
                     nk_layout_row_dynamic(ctx, 25, 1);
@@ -2128,10 +2171,12 @@ void properties_window(int ent_len)
                         ent->_material->tint[1] = tint.g;
                         ent->_material->tint[2] = tint.b;
                     }
+                    material_bounds.h += 25; // the label
 
                     // spacing
                     nk_layout_row_static(ctx, 5, 10, 1);
-                    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+                    nk_spacing(ctx, 1);
+                    material_bounds.h += 10; // spacing
 
                     nk_layout_row_dynamic(ctx, 25, 2);
                     if (nk_button_label(ctx, "Vert Source Code"))
@@ -2144,11 +2189,14 @@ void properties_window(int ent_len)
                         char* src = "\n\r\tNot Implemented lol\n...\r";
                         set_source_code_window(src);
                     }
+                    material_bounds.h += 25; // buttons
 
                     // spacing
                     nk_layout_row_static(ctx, 5, 10, 1);
-                    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+                    nk_spacing(ctx, 1);
+                    material_bounds.h += 10; // spacing
 
+                    // not including this in the bounds for drag and dropping materials and shaders
                     if (nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
                     {
                         nk_layout_row_dynamic(ctx, 25, 2);
@@ -2181,9 +2229,10 @@ void properties_window(int ent_len)
 
                         if (selected_dif_old != selected_dif) { ent->_material->dif_tex = textures[selected_dif]; }
 
-                        float ratio_x = ent->_material->dif_tex.size_y / ent->_material->dif_tex.size_x;
+                        float ratio_x = (float)ent->_material->dif_tex.size_y / (float)ent->_material->dif_tex.size_x;
                         struct nk_image img = nk_image_id(ent->_material->dif_tex.handle);
                         nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                        struct nk_rect img_bounds_dif = nk_widget_bounds(ctx);
                         nk_image(ctx, img);
 
                         nk_layout_row_dynamic(ctx, 25, 2);
@@ -2193,15 +2242,54 @@ void properties_window(int ent_len)
 
                         if (selected_spec_old != selected_spec) { ent->_material->spec_tex = textures[selected_spec]; }
 
-                        ratio_x = ent->_material->spec_tex.size_y / ent->_material->spec_tex.size_x;
+                        ratio_x = (float)ent->_material->spec_tex.size_y / (float)ent->_material->spec_tex.size_x;
                         img = nk_image_id(ent->_material->spec_tex.handle);
                         nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                        struct nk_rect img_bounds_spec = nk_widget_bounds(ctx);
                         nk_image(ctx, img);
+
+                        // check for assets dropped from the asset browser
+                        if (dropped_asset.type == TEXTURE && dropped_asset.handled == BEE_FALSE)
+                        {
+                            // collision 
+                            if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], img_bounds_dif.x, img_bounds_dif.y, img_bounds_dif.w, img_bounds_dif.h))
+                            {
+                                printf("dropped asset dropped over dif_tex\n");
+                                ent->_material->dif_tex = textures[dropped_asset.asset_idx];
+                                dropped_asset.handled = BEE_TRUE;
+                            }
+                            if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], img_bounds_spec.x, img_bounds_spec.y, img_bounds_spec.w, img_bounds_spec.h))
+                            {
+                                printf("dropped asset dropped over spec_tex\n");
+                                ent->_material->spec_tex = textures[dropped_asset.asset_idx];
+                                dropped_asset.handled = BEE_TRUE;
+                            }
+                        }
 
                         free(texture_names);
 
                         nk_tree_pop(ctx);
-                    }            
+                    }    
+
+                    // check for assets dropped from the asset browser
+                    if ((dropped_asset.type == MATERIAL || dropped_asset.type == SHADER ) && dropped_asset.handled == BEE_FALSE)
+                    {
+                        // collision 
+                        if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], material_bounds.x, material_bounds.y, material_bounds.w, material_bounds.h))
+                        {
+                            if (dropped_asset.type == MATERIAL)
+                            {
+                                printf("dropped asset dropped over material\n");
+                                ent->_material = &materials[dropped_asset.asset_idx];
+                            }
+                            else if (dropped_asset.type == SHADER)
+                            {
+                                printf("dropped asset dropped over material\n");
+                                ent->_material->shader = shaders[dropped_asset.asset_idx];
+                            }
+                            dropped_asset.handled = BEE_TRUE;
+                        }
+                    }
             
                     nk_tree_pop(ctx);
                 }
@@ -2384,8 +2472,23 @@ void properties_window(int ent_len)
 
                 // scritps always the last element
                 sprintf(buffer, "Scripts - %d", ent->scripts_len);
+                struct nk_rect scripts_bounds = nk_widget_bounds(ctx);
                 if (ent->scripts_len > 0 && nk_tree_push(ctx, NK_TREE_TAB, ent->scripts_len == 1 ? "Script" : buffer , NK_MINIMIZED))
                 {
+                    gravity_script* scripts = NULL;
+                    int scripts_len = 0;
+                    scripts = get_all_scripts(&scripts_len);
+                    static int selected_script = 0;
+                    int selected_script_old = selected_script;
+                    char** scripts_names = malloc(scripts_len * sizeof(char*));
+                    assert(scripts_names != NULL);
+
+                    for (int i = 0; i < scripts_len; ++i)
+                    {
+                        scripts_names[i] = malloc((strlen(scripts[i].name) + 1) * sizeof(char));
+                        strcpy(scripts_names[i], scripts[i].name);
+                    }
+
                     for (int i = 0; i < ent->scripts_len; ++i)
                     {
                         static int popup_active;
@@ -2401,25 +2504,12 @@ void properties_window(int ent_len)
                             nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
                         }
 
-                        gravity_script* scripts = NULL;
-                        int scripts_len = 0;
-                        scripts = get_all_scripts(&scripts_len);
-                        static int selected_script = 0;
                         selected_script = get_script_idx(ent->scripts[i]->name);
-                        int selected_script_old = selected_script;
-                        char** scripts_names = malloc(scripts_len * sizeof(char*));
-                        assert(scripts_names != NULL);
-
-                        for (int i = 0; i < scripts_len; ++i)
-                        {
-                            scripts_names[i] = malloc((strlen(scripts[i].name) + 1) * sizeof(char));
-                            strcpy(scripts_names[i], scripts[i].name);
-                        }
-
                         selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
 
                         // doesnt work because the script holds the entity index
                         if (selected_script_old != selected_script) { ent->scripts[i] = &scripts[selected_script]; }
+                        scripts_bounds.h += 25; // combo
 
 
                         if (ent->scripts[i]->path_valid == BEE_TRUE)
@@ -2430,6 +2520,7 @@ void properties_window(int ent_len)
                                 char* src = read_text_file(ent->scripts[i]->path);
                                 set_source_code_window(src);
                             }
+                            scripts_bounds.h += 25; // button
                         }
 
                         if (ent->scripts[i]->path_valid == BEE_TRUE && ent->scripts[i]->has_error == BEE_FALSE)
@@ -2439,6 +2530,7 @@ void properties_window(int ent_len)
                             {
                                 ent->scripts[i]->active = !ent->scripts[i]->active;
                             }
+                            scripts_bounds.h += 25; // button
                         }
 
                         nk_layout_row_dynamic(ctx, 25, 1);
@@ -2446,8 +2538,26 @@ void properties_window(int ent_len)
                         {
                             entity_remove_script(selected_entity, i);
                         }
+                        scripts_bounds.h += 25; // button
 
                     }
+
+                    if (NK_INBOX(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y, scripts_bounds.x, scripts_bounds.y, scripts_bounds.w, scripts_bounds.h))
+                    {
+                        printf("over scripts bounds\n");
+                    }
+                    // check for assets dropped from the asset browser
+                    if (dropped_asset.type == SCRIPT && dropped_asset.handled == BEE_FALSE)
+                    {
+                        // collision 
+                        if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], scripts_bounds.x, scripts_bounds.y, scripts_bounds.w, scripts_bounds.h))
+                        {
+                            printf("dropped asset dropped over scripts\n");
+                            entity_add_script(selected_entity, scripts[dropped_asset.asset_idx].name);
+                            dropped_asset.handled = BEE_TRUE;
+                        }
+                    }
+
                     nk_tree_pop(ctx);
                     
                 }
@@ -2588,8 +2698,7 @@ void asset_browser_window()
         NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
 
-        typedef enum selected_asset { TEXTURE, MESH, SHADER, MATERIAL, SCRIPT } selected_asset;
-        selected_asset selected = TEXTURE;
+        static asset_type selected = TEXTURE;
         static int selected_check[5]; 
         static int init = nk_true; 
         if(init == nk_true) 
@@ -2604,7 +2713,7 @@ void asset_browser_window()
         static char* selected_logged = NULL;
         if (selected_logged == NULL) 
         {
-            selected_logged = malloc(strlen("") * sizeof(char));
+            selected_logged = malloc((strlen("") +1) * sizeof(char));
             assert(selected_logged != NULL);
             strcpy(selected_logged, "");
         }
@@ -2634,23 +2743,50 @@ void asset_browser_window()
         nk_layout_row_begin(ctx, NK_STATIC, 250, 3);
         {
 
+            static int            asset_drag_popup_act = 9999;
+            static asset_type     asset_drag_type = TEXTURE;
+            static struct nk_rect asset_drag_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
+            static float          asset_drag_timer = 0.0f;
+
             nk_layout_row_push(ctx, 125);
             if (nk_group_begin(ctx, "Select", NK_WINDOW_NO_SCROLLBAR)) // NK_WINDOW_BORDER |
             {
+                asset_type selected_old = selected;
                 nk_layout_row_static(ctx, 18, 100, 1);
-                nk_selectable_label(ctx, "Textures", NK_TEXT_LEFT, &selected_check[0]);
+                nk_selectable_label(ctx, "Textures", NK_TEXT_LEFT,  &selected_check[0]);
                 if (selected_check[0] == nk_true) { selected = TEXTURE;  for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
-                nk_selectable_label(ctx, "Meshes", NK_TEXT_LEFT, &selected_check[1]);
+                nk_selectable_label(ctx, "Meshes", NK_TEXT_LEFT,    &selected_check[1]);
                 if (selected_check[1] == nk_true) { selected = MESH;     for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[1] = nk_true; }
-                nk_selectable_label(ctx, "Shaders", NK_TEXT_LEFT, &selected_check[2]);
+                nk_selectable_label(ctx, "Shaders", NK_TEXT_LEFT,   &selected_check[2]);
                 if (selected_check[2] == nk_true) { selected = SHADER;   for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[2] = nk_true; }
                 nk_selectable_label(ctx, "Materials", NK_TEXT_LEFT, &selected_check[3]);
                 if (selected_check[3] == nk_true) { selected = MATERIAL; for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[3] = nk_true; }
-                nk_selectable_label(ctx, "Scripts", NK_TEXT_LEFT, &selected_check[4]);
+                nk_selectable_label(ctx, "Scripts", NK_TEXT_LEFT,   &selected_check[4]);
                 if (selected_check[4] == nk_true) { selected = SCRIPT;   for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[4] = nk_true; }
                 
-                nk_layout_row_static(ctx, 100, 100, 1);
-                nk_label(ctx, "", NK_TEXT_ALIGN_LEFT);
+                if (selected_old != selected && selected_logged != NULL)
+                {
+                    selected_logged[0] = '\0'; // reset selected_logged to ""
+                }
+                if (selected == MATERIAL)
+                {
+                    nk_layout_row_static(ctx, 70, 100, 1);
+                    nk_label(ctx, "", NK_TEXT_LEFT);
+
+                    nk_layout_row_static(ctx, 30, 100, 1);
+                    if (nk_button_label(ctx, "Add Material"))
+                    {
+                        vec2 tile = { 1.0f, 1.0f };
+                        vec3 tint = { 1.0f, 1.0f, 1.0f };
+                        add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material");
+                    }
+                }
+                else 
+                {
+                    nk_layout_row_static(ctx, 100, 100, 1);
+                    //nk_spacing(ctx, 1);
+                    nk_label(ctx, "", NK_TEXT_LEFT);
+                }
                 nk_layout_row_static(ctx, 30, 100, 1);
                 if (nk_button_label(ctx, "Import Asset"))
                 {
@@ -2676,31 +2812,63 @@ void asset_browser_window()
             nk_layout_row_push(ctx, 855);
             if (nk_group_begin(ctx, "Assets", 0))
             {
+                struct nk_style_button button;
+                button = ctx->style.button;
+
                 if (selected == TEXTURE)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 8);
+                    nk_layout_row_static(ctx, 120, 100, 8);
+                    
 
                     for (int i = 0; i < textures_len; ++i)
                     {
-                        struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_image_label(ctx, img, textures[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_LEFT)) 
+                        struct nk_rect bounds = nk_widget_bounds(ctx);
+
+                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
                         {
-                            if (selected_img == i) { selected_img = 9999; }
-                            selected_img = i;
-                            // reset selected_logged_img to not have two selected assets at once
-                            if (strcmp(selected_logged, "")) 
-                            { 
-                                selected_logged = realloc(selected_logged, (strlen("") +1) * sizeof(char));
-                                strcpy(selected_logged, ""); 
+                            asset_drag_popup_act = i;
+                            asset_drag_type = TEXTURE;
+                        }
+
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (selected_img == i)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        struct nk_image img = nk_image_id(textures[i].handle);
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            if (nk_button_image(ctx, img)) 
+                            {
+                                if (selected_img == i) { selected_img = 9999; }
+                                selected_img = i;
+                                // reset selected_logged_img to not have two selected assets at once
+                                if (strcmp(selected_logged, "")) 
+                                { 
+                                    selected_logged[0] = '\0'; // reset selected_logged to ""
+                                }
+                           
                             }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, textures[i].name, NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r, button.normal.data.color.g, button.normal.data.color.b));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r, button.hover.data.color.g, button.hover.data.color.b));
+                            act = BEE_FALSE;
                         }
                     }
                     int logged_tex_names_len = 0;
                     char** logged_tex_names = get_all_logged_textures(&logged_tex_names_len);
 
                     // logged assets marked by color
-                    struct nk_style_button button;
-                    button = ctx->style.button;
                     ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 0.75f, button.normal.data.color.g * 0.75f, button.normal.data.color.b * 0.75f));
                     ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 0.75f, button.hover.data.color.g * 0.75f, button.hover.data.color.b * 0.75f));
                     ctx->style.button.active = nk_style_item_color(nk_rgb(button.active.data.color.r * 0.75f, button.active.data.color.g * 0.75f, button.active.data.color.b * 0.75f));
@@ -2715,17 +2883,26 @@ void asset_browser_window()
                             ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
                             act = BEE_TRUE;
                         }
-                        if (nk_button_label(ctx, logged_tex_names[i])) // test
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
                         {
-                            selected_logged = realloc(selected_logged, (strlen(logged_tex_names[i]) +1) * sizeof(char));
-                            assert(selected_logged != NULL);
-                            strcpy(selected_logged, logged_tex_names[i]);
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            if (nk_button_image(ctx, icons.logged_texture)) // test
+                            {
+                                selected_logged = realloc(selected_logged, (strlen(logged_tex_names[i]) +1) * sizeof(char));
+                                assert(selected_logged != NULL);
+                                strcpy(selected_logged, logged_tex_names[i]);
+                                selected_img = 9999;
+                            }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, logged_tex_names[i], NK_TEXT_LEFT);
+                            nk_group_end(ctx);
                         }
                         // reset color
                         if (act)
                         {
                             ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 0.75f, button.normal.data.color.g * 0.75f, button.normal.data.color.b * 0.75f));
                             ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 0.75f, button.hover.data.color.g * 0.75f, button.hover.data.color.b * 0.75f));
+                            act = BEE_FALSE;
                         }
                     }
                     // reset to normal style
@@ -2734,21 +2911,50 @@ void asset_browser_window()
                 }
                 else if (selected == MESH)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 8);
+                    nk_layout_row_static(ctx, 120, 100, 8);
 
                     for (int i = 0; i < meshes_len; ++i)
                     {
-                        // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_label(ctx, meshes[i].name))
+                        struct nk_rect bounds = nk_widget_bounds(ctx);
+
+                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
                         {
-                            if (selected_mesh == i) { selected_mesh = 9999; }
-                            selected_mesh = i;
-                            // reset selected_logged to not have two selected assets at once
-                            if (strcmp(selected_logged, ""))
+                            asset_drag_popup_act = i;
+                            asset_drag_type = MESH;
+                        }
+
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (selected_mesh == i)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            // struct nk_image img = nk_image_id(textures[i].handle);
+                            if (nk_button_image(ctx, icons.mesh))
                             {
-                                selected_logged = realloc(selected_logged, (strlen("") + 1) * sizeof(char));
-                                strcpy(selected_logged, "");
+                                if (selected_mesh == i) { selected_mesh = 9999; }
+                                selected_mesh = i;
+                                // reset selected_logged to not have two selected assets at once
+                                if (strcmp(selected_logged, ""))
+                                {
+                                    selected_logged[0] = '\0'; // reset selected_logged to ""
+                                }
                             }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, meshes[i].name, NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r, button.normal.data.color.g, button.normal.data.color.b));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r, button.hover.data.color.g, button.hover.data.color.b));
+                            act = BEE_FALSE;
                         }
                     }
                     int logged_meshes_names_len = 0;
@@ -2763,11 +2969,34 @@ void asset_browser_window()
 
                     for (int i = 0; i < logged_meshes_names_len; ++i)
                     {
-                        if (nk_button_label(ctx, logged_meshes_names[i]))
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (!strcmp(selected_logged, logged_meshes_names[i]))
                         {
-                            selected_logged = realloc(selected_logged, (strlen(logged_meshes_names[i]) + 1) * sizeof(char));
-                            assert(selected_logged != NULL);
-                            strcpy(selected_logged, logged_meshes_names[i]);
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(ctx->style.button.normal.data.color.r * 1.25f, ctx->style.button.normal.data.color.g * 1.25f, ctx->style.button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(ctx->style.button.hover.data.color.r * 1.25f, ctx->style.button.hover.data.color.g * 1.25f, ctx->style.button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            if (nk_button_image(ctx, icons.logged_mesh))
+                            {
+                                selected_logged = realloc(selected_logged, (strlen(logged_meshes_names[i]) + 1) * sizeof(char));
+                                assert(selected_logged != NULL);
+                                strcpy(selected_logged, logged_meshes_names[i]);
+                                selected_mesh = 9999;
+                            }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, logged_meshes_names[i], NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 0.75f, button.normal.data.color.g * 0.75f, button.normal.data.color.b * 0.75f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 0.75f, button.hover.data.color.g * 0.75f, button.hover.data.color.b * 0.75f));
+                            act = BEE_FALSE;
                         }
                     }
                     // reset to normal style
@@ -2775,44 +3004,134 @@ void asset_browser_window()
                 }
                 else if (selected == SCRIPT)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 8);
+                    nk_layout_row_static(ctx, 120, 100, 8);
 
                     for (int i = 0; i < scripts_len; ++i)
                     {
+                        struct nk_rect bounds = nk_widget_bounds(ctx);
 
-                        // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_label(ctx, scripts[i].name))
+                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
                         {
-                            if (selected_script == i) { selected_script = 9999; }
-                            selected_script = i;
+                            asset_drag_popup_act = i;
+                            asset_drag_type = SCRIPT;
+                        }
+
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (selected_script == i)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            // struct nk_image img = nk_image_id(textures[i].handle);
+                            if (nk_button_image(ctx, icons.script))
+                            {
+
+                                if (selected_script == i) { selected_script = 9999; }
+                                selected_script = i;
+                            }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, scripts[i].name, NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r, button.normal.data.color.g, button.normal.data.color.b));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r, button.hover.data.color.g, button.hover.data.color.b));
+                            act = BEE_FALSE;
                         }
                     }
                 }
                 else if (selected == MATERIAL)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 8);
+                    nk_layout_row_static(ctx, 120, 100, 8);
 
                     for (int i = 0; i < materials_len; ++i)
                     {
-                        // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_image_label(ctx, nk_image_id(materials[i].dif_tex.handle), materials[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED ))
+                        struct nk_rect bounds = nk_widget_bounds(ctx);
+
+                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
                         {
-                            if (selected_material == i) { selected_material = 9999; }
-                            selected_material = i;
+                            asset_drag_popup_act = i;
+                            asset_drag_type = MATERIAL;
+                        }
+
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (selected_material == i)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            // struct nk_image img = nk_image_id(textures[i].handle);
+                            if (nk_button_image(ctx, nk_image_id(materials[i].dif_tex.handle)))
+                            {
+                                if (selected_material == i) { selected_material = 9999; }
+                                selected_material = i;
+                            }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, materials[i].name, NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r, button.normal.data.color.g, button.normal.data.color.b));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r, button.hover.data.color.g, button.hover.data.color.b));
+                            act = BEE_FALSE;
                         }
                     }
                 }
                 else if (selected == SHADER)
                 {
-                    nk_layout_row_static(ctx, 100, 100, 8);
+                    nk_layout_row_static(ctx, 120, 100, 8);
 
                     for (int i = 0; i < shaders_len; ++i)
                     {
-                        // struct nk_image img = nk_image_id(textures[i].handle);
-                        if (nk_button_label(ctx, shaders[i].name, NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_CENTERED))
+                        struct nk_rect bounds = nk_widget_bounds(ctx);
+
+                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
                         {
-                            if (selected_shader == i) { selected_shader = 9999; }
-                            selected_shader = i;
+                            asset_drag_popup_act = i;
+                            asset_drag_type = SHADER;
+                        }
+
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (selected_shader == i)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            // struct nk_image img = nk_image_id(textures[i].handle);
+                            if (nk_button_image(ctx, icons.logged_texture))
+                            {
+                                if (selected_shader == i) { selected_shader = 9999; }
+                                selected_shader = i;
+                            }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, shaders[i].name, NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r, button.normal.data.color.g, button.normal.data.color.b));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r, button.hover.data.color.g, button.hover.data.color.b));
+                            act = BEE_FALSE;
                         }
                     }
                 }
@@ -2844,18 +3163,20 @@ void asset_browser_window()
                         if (nk_button_label(ctx, "Load Texture"))
                         {
                             get_texture(selected_logged);
+                            selected_logged[0] = '\0'; // reset selected_logged to ""
                         }
                         if (nk_button_label(ctx, "Remove Texture"))
                         {
                             remove_logged_texture(selected_logged);
+                            selected_logged[0] = '\0'; // reset selected_logged to ""
                         }
                     }
                     else
                     {
                         //loaded texyture selected
                         // properties of selected asset
-                        float ratio_x = textures[selected_img].size_y / textures[selected_img].size_x;
-                        nk_layout_row_static(ctx, 145 * ratio_x, 145, 1);
+                        float ratio_x = (float)textures[selected_img].size_y / (float)textures[selected_img].size_x;
+                        nk_layout_row_static(ctx, (145 * ratio_x), 145, 1);
                         struct nk_image img = nk_image_id(textures[selected_img].handle);
                         nk_image(ctx, img);
 
@@ -2890,10 +3211,12 @@ void asset_browser_window()
                         if (nk_button_label(ctx, "Load Mesh"))
                         {
                             get_mesh(selected_logged);
+                            selected_logged[0] = '\0'; // reset selected_logged to ""
                         }
                         if (nk_button_label(ctx, "Remove Mesh"))
                         {
                             remove_logged_mesh(selected_logged);
+                            selected_logged[0] = '\0'; // reset selected_logged to ""
                         }
                     }
                     else
@@ -2913,7 +3236,7 @@ void asset_browser_window()
                             vec3 zero = { 0.0f, 0.0f, 0.0f };
                             vec3 one = { 1.0f, 1.0f, 1.0f };
                             char* name = NULL;
-                            name = malloc(strlen(meshes[selected_mesh].name) * sizeof(char));
+                            name = malloc(strlen((meshes[selected_mesh].name) +1) * sizeof(char));
                             assert(name != NULL);
                             strcpy(name, meshes[selected_mesh].name);
                             add_entity(zero, zero, one, &meshes[selected_mesh], get_material("MAT_blank"), NULL, name);
@@ -3018,6 +3341,58 @@ void asset_browser_window()
 
                 nk_group_end(ctx);
             }
+            // asset drag popup
+            if (asset_drag_popup_act != 9999)
+            {
+                asset_drag_timer += get_delta_time();
+                asset_drag_popup_bounds = nk_rect(ctx->input.mouse.pos.x - 375, ctx->input.mouse.pos.y - 725, 110, 120);
+
+                if (!nk_input_is_mouse_down(&ctx->input, NK_BUTTON_LEFT))
+                {
+
+                    // give dropped info to properties window
+                    dropped_asset.handled = BEE_FALSE;
+                    dropped_asset.pos[0] = ctx->input.mouse.pos.x;
+                    dropped_asset.pos[1] = ctx->input.mouse.pos.y;
+                    dropped_asset.type = asset_drag_type;
+                    dropped_asset.asset_idx = asset_drag_popup_act;
+
+                    // close popup
+                    asset_drag_popup_act = 9999; asset_drag_timer = 0.0f;
+                }
+                if (asset_drag_timer > 0.25f && 
+                    nk_popup_begin(ctx, NK_POPUP_DYNAMIC, textures[asset_drag_popup_act].name, NK_WINDOW_NO_SCROLLBAR, asset_drag_popup_bounds))
+                {
+                    if (asset_drag_type == TEXTURE)
+                    {
+                        nk_layout_row_static(ctx, 100, 100, 1);
+                        struct nk_image img = nk_image_id(textures[asset_drag_popup_act].handle);
+                        nk_image(ctx, img);
+                    }
+                    else if (asset_drag_type == MESH)
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, meshes[asset_drag_popup_act].name, NK_TEXT_LEFT);
+                    }
+                    else if (asset_drag_type == SCRIPT)
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, scripts[asset_drag_popup_act].name, NK_TEXT_LEFT);
+                    }
+                    else if (asset_drag_type == MATERIAL)
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, materials[asset_drag_popup_act].name, NK_TEXT_LEFT);
+                    }
+                    else if (asset_drag_type == SHADER)
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, shaders[asset_drag_popup_act].name, NK_TEXT_LEFT);
+                    }
+                    nk_popup_end(ctx);
+                }
+            }
+            else { asset_drag_timer = 0.0f; }
         }
         nk_layout_row_end(ctx);
     }
@@ -3114,11 +3489,6 @@ void source_code_window()
             // src = realloc(src, 0);
             // free(src);
         }
-
-        nk_layout_row_dynamic(ctx, 50, 1);
-        // must be keep the fllow code between nk_begin... and nk_end...
-        nk_flags event = nk_edit_string_zero_terminated(ctx, NK_EDIT_BOX | NK_EDIT_AUTO_SELECT, //fcous will auto select all text (NK_EDIT_BOX not sure)
-        edit_buffer, sizeof(edit_buffer), nk_filter_ascii);//nk_filter_ascii Text Edit accepts text types.
 
         nk_layout_row_dynamic(ctx, 25, 1);
         if ( nk_button_label(ctx, "Close") )

@@ -42,15 +42,6 @@ material make_material_tint(shader s, texture dif_tex, texture spec_tex, bee_boo
 	return mat;
 }
 
-void free_material(material* mat)
-{
-	glDeleteProgram(mat->shader.handle);
-
-	// @UNCLEAR: do i need to tell opengl to unload the texture off the gpu
-	glDeleteTextures(1, &mat->dif_tex.handle);
-	glDeleteTextures(1, &mat->spec_tex.handle);
-}
-
 // ---- mesh ----
 
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name) // , u32* indices[]
@@ -279,17 +270,6 @@ mesh make_grid_mesh(int x_verts, int z_verts)
 	return m;
 }
 
-void free_mesh(mesh* _mesh)
-{
-	glDeleteVertexArrays(1, &_mesh->vao);
-	glDeleteBuffers(1, &_mesh->vbo);
-	
-	if (_mesh->indexed == BEE_TRUE)
-	{
-		glDeleteBuffers(1, &_mesh->ebo);
-	}
-}
-
 // ---- light ----
 
 light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, f32 linear, f32 quadratic)
@@ -414,8 +394,8 @@ void free_entity(entity* ent)
 {
 	if (ent->has_model)
 	{
-		free_mesh(&ent->_mesh);
-		free_material(&ent->_material);
+		// free_mesh(&ent->_mesh);
+		// free_material(&ent->_material);
 	}
 
 	if (ent->scripts_len > 0)
@@ -424,4 +404,23 @@ void free_entity(entity* ent)
 		// scripts get freed in asset-manager as the same script might be on multiple entites
 		arrfree(ent->scripts);
 	}
+}
+void free_mesh(mesh* _mesh)
+{
+	glDeleteVertexArrays(1, &_mesh->vao);
+	glDeleteBuffers(1, &_mesh->vbo);
+
+	if (_mesh->indexed == BEE_TRUE)
+	{
+		glDeleteBuffers(1, &_mesh->ebo);
+	}
+}
+void free_texture(texture* tex)
+{
+
+	glDeleteTextures(1, &tex->handle);
+}
+void free_shader(shader* s)
+{
+	glDeleteProgram(&s->handle);
 }
