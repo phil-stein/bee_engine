@@ -15,6 +15,7 @@ void assetm_init();
 // taken from: https://codeforwin.org/2018/03/c-program-to-list-all-files-in-a-directory-recursively.html
 void search_dir(const char* dir_path);
 void check_file(char* file_name, int file_name_len, char* dir_path);
+void load_internal_assets();
 
 void assetm_cleanup();
 
@@ -60,10 +61,12 @@ material* get_material(char* name);
 
 material* get_all_materials(int* materials_len);
 
+void change_material_name(char* old_name, char* new_name);
+
 
 int get_shader_idx(char* name);
 
-shader add_shader(const char* vert_path, const char* frag_path, const char* name);
+shader add_shader(const char* vert_name, const char* frag_name, const char* name);
 
 shader get_shader(char* name);
 
@@ -72,4 +75,6 @@ shader* get_all_shaders(int* shaders_len);
 void log_vert_file(const char* path, const char* name);
 void log_frag_file(const char* path, const char* name);
 
+char** get_all_vert_file_names(int* vert_files_len);
+char** get_all_frag_file_names(int* frag_files_len);
 #endif

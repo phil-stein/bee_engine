@@ -48,65 +48,45 @@ int fps_ticks_counter;
 
 void init()
 {
-	// all the boilerplate setup stuff
-	if (create_window(1920, 1080, "bee engine", BEE_TRUE) == BEE_ERROR)
-	{
-		fprintf(stderr, "Initializing GLFW, GLAD or opening a window failed.\n exiting ... \n");
-		assert(BEE_FALSE);
-	}
-
 	window = get_window();
 
 	glfwSetCursorPosCallback(window, mouse_callback);
 
-	
-	// u32 shader = create_shader_from_file("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-	// 									 "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag");
-	/*
-	shader shader_default = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-									   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\blinn_phong.frag", "SHADER_default");
+	// ---- populate scene ----
 
-	shader shader_unlit	  = add_shader("C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert",
-									   "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\unlit.frag", "SHADER_unlit");
-	*/
 	shader shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
 	shader shader_unlit = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
 	
-	// load texture
-	texture crate_dif_tex   = get_texture("crate01_dif.png");
-	texture crate_spec_tex  = get_texture("crate01_spec.png");
 
 	vec2 tile = { 1.0f, 1.0f };
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
-	// material mat_crate = make_material(shader, crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_crate");
+	
+	texture blank_tex = get_texture("blank.png");
+	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank");
+	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit");
+	
+	// load texture
+	texture crate_dif_tex   = get_texture("crate01_dif.png");
+	texture crate_spec_tex  = get_texture("crate01_spec.png");
 	material* mat_crate = add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_crate");
 
 	texture grass_dif_tex  = get_texture("grass01_dif.png");
 	texture grass_spec_tex  = get_texture("grass01_spec.png");
-	// material mat_grass	   = make_material(shader, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_grass");
 	material* mat_grass	   = add_material(shader_default, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_grass");
 	
 	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
 	texture barrel_spec_tex = get_texture("barrel01_spec.png");
-	// material mat_barrel		= make_material(shader, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_barrel");
 	material* mat_barrel		= add_material(shader_default, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_barrel");
 	
 	texture robot_dif_tex  = get_texture("robot01_dif.png");
 	texture robot_spec_tex = get_texture("robot01_spec.png");
-	// material mat_robot	   = make_material(shader, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, "MAT_robot");
 	material* mat_robot	   = add_material(shader_default, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_robot");
 
 	mesh m_cube = make_cube_mesh();
 
-	texture blank_tex = get_texture("blank.png");
-	// material mat_blank		 = make_material(shader, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_blank");
-	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank");
-	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit");
-	
 
 	texture glass_dif_tex = get_texture("window.png");
-	// material mat_glass = make_material(shader, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, "MAT_glass");
 	material* mat_glass = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass");
 	
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
@@ -323,14 +303,15 @@ void process_input(GLFWwindow* window)
 		// 	NULL); // NULL or "text files"
 		// printf("path from save_file_window: \"%s\"", path);
 
-		char* path = tinyfd_openFileDialog(
-			"window title", "C:\\Workspace\\C\\BeeEngine\\assets", 0, // 0 (2 in the following example)
-			NULL, // NULL or char const * lFilterPatterns[2]={"*.png","*.jpg"};
-			NULL, // NULL or "image files"
-			BEE_FALSE); // 0
-		printf("path from open_file_window: \"%s\"", path);
+		// char* path = tinyfd_openFileDialog(
+		// 	"window title", "C:\\Workspace\\C\\BeeEngine\\assets", 0, // 0 (2 in the following example)
+		// 	NULL, // NULL or char const * lFilterPatterns[2]={"*.png","*.jpg"};
+		// 	NULL, // NULL or "image files"
+		// 	BEE_FALSE); // 0
+		// printf("path from open_file_window: \"%s\"", path);
 		
-
+		material* mat = get_material("MAT_rename");
+		printf("material 'MAT_rename' name: %s\n", mat->name);
 	}
 
 	// exit on esc

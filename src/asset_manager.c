@@ -88,6 +88,8 @@ int vert_files_len = 0;
 struct { int   key;	 char* value; }*vert_files_paths = NULL;
 int vert_files_paths_len = 0;
 
+char** logged_vert_files = NULL;
+
 // ---- frag-files 
 struct { char* key;  int   value; }*frag_files = NULL;
 int frag_files_len = 0;
@@ -95,6 +97,22 @@ int frag_files_len = 0;
 // value: path to frag_file, key: frag_file-index in 'frag_files'
 struct { int   key;	 char* value; }*frag_files_paths = NULL; 
 int frag_files_paths_len = 0;
+
+char** logged_frag_files = NULL;
+
+
+
+// ---- internal assets ----
+char* internal_assets_names[] = {
+								    // texture with index 0 in texture_data array 
+									// this means this texture shows up when requested texture isnt found
+									"missing_texture.png",
+									// same for this mesh 
+									"cube.obj" 
+};
+int internal_assets_names_len = 2;
+// bee_bool all_internal_assets_found = BEE_FALSE;
+
 
 
 void assetm_init()
@@ -107,9 +125,8 @@ void assetm_init()
 	// couldnt concat cwd
 	assert(dir_path != NULL);
 
-	// @TODO: add primitives & pink texture for missing texture & white material for added entities
-
-	search_dir(dir_path);
+	printf("dir path: \"%s\"\n", dir_path);
+	search_dir(dir_path, BEE_FALSE);
 
 }
 
@@ -128,7 +145,8 @@ void search_dir(const char* dir_path)
 		if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
 		{
 			// printf("%s, \t[-1]%c, [-2]%c, [-3]%c, [-4]%c\n", dp->d_name, dp->d_name[dp->d_namlen - 1], dp->d_name[dp->d_namlen - 2], dp->d_name[dp->d_namlen - 3], dp->d_name[dp->d_namlen - 4]);
-
+			
+			// printf("-> %s\n", dp->d_name);
 			check_file(dp->d_name, strlen(dp->d_name), dir_path);
 
 			// construct new path from our base path
@@ -144,6 +162,29 @@ void search_dir(const char* dir_path)
 	closedir(dir);
 }
 
+void load_internal_assets()
+{
+	for (int i = 0; i < internal_assets_names_len; ++i)
+	{
+		int	name_len = strlen(internal_assets_names[i]);
+
+		if (internal_assets_names[i][name_len - 4] == '.' &&
+			internal_assets_names[i][name_len - 3] == 'p' &&
+			internal_assets_names[i][name_len - 2] == 'n' &&
+			internal_assets_names[i][name_len - 1] == 'g')
+		{
+			get_texture(internal_assets_names[i]);
+		}
+		else if (
+			internal_assets_names[i][name_len - 4] == '.' &&
+			internal_assets_names[i][name_len - 3] == 'o' &&
+			internal_assets_names[i][name_len - 2] == 'b' &&
+			internal_assets_names[i][name_len - 1] == 'j')
+		{
+			get_mesh(internal_assets_names[i]);
+		}
+	}
+}
 void check_file(char* file_name, int file_name_len, char* dir_path)
 {
 	// check file extensions
@@ -266,6 +307,7 @@ void assetm_cleanup()
 	shfree(textures);
 	hmfree(texture_paths);
 	arrfree(texture_data);
+	arrfree(logged_textures);
 
 	
 	// free the allocated memory
@@ -276,6 +318,7 @@ void assetm_cleanup()
 	shfree(meshes);
 	hmfree(meshes_paths);
 	arrfree(mesh_data);
+	arrfree(logged_meshes);
 
 	// free the allocated memory
 	// free all scripts
@@ -299,8 +342,10 @@ void assetm_cleanup()
 	shfree(shaders);
 	shfree(vert_files);
 	hmfree(vert_files_paths);
+	arrfree(logged_vert_files);
 	shfree(frag_files);
 	hmfree(frag_files_paths);
+	arrfree(logged_frag_files);
 	arrfree(shaders_data);
 }
 
@@ -405,7 +450,7 @@ void create_texture(const char* name)
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
 	// and put the created texture into the tex array
-	shput(textures, name, texture_data_len);
+	shput(textures, name_cpy, texture_data_len);
 	arrput(texture_data, t);
 	texture_data_len++;
 
@@ -612,19 +657,19 @@ int get_material_idx(char* name)
 
 material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name)
 {
-	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name);
-	
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
+	char* name_cpy = malloc((strlen(name) +1) * sizeof(char)); 
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
+
+	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name_cpy);
 
 	shput(materials, name_cpy, materials_data_len);
 	materials_len++;
 	arrput(materials_data, mat);
 	materials_data_len++;
 
-	return &materials_data[shget(materials, name)];
+	return &materials_data[shget(materials, name_cpy)];
 }
 
 material* get_material(char* name)
@@ -640,6 +685,23 @@ material* get_all_materials(int* materials_len)
 {
 	*materials_len = materials_data_len;
 	return materials_data;
+}
+
+// @TODO: doesnt work yet
+void change_material_name(char* old_name, char* new_name)
+{
+	// materials[selected_material].name = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+	(get_material(old_name))->name = calloc(strlen(new_name) + 1, sizeof(char));
+	assert((get_material(old_name))->name != NULL);
+	// copy name so its persistent
+	char* name_cpy = malloc((strlen(new_name) +1) * sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, new_name);
+	strcpy((get_material(old_name))->name, name_cpy);
+
+	int idx = get_material_idx(old_name);
+	shput(materials, name_cpy, idx);
+	shdel(materials, old_name);
 }
 
 
@@ -692,6 +754,18 @@ shader* get_all_shaders(int* shaders_len)
 	return shaders_data;
 }
 
+char** get_all_vert_file_names(int* vert_files_len)
+{
+	*vert_files_len = arrlen(logged_vert_files);
+	return logged_vert_files;
+}
+
+char** get_all_frag_file_names(int* frag_files_len)
+{
+	*frag_files_len = arrlen(logged_frag_files);
+	return logged_frag_files;
+}
+
 void log_vert_file(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
@@ -716,6 +790,9 @@ void log_vert_file(const char* path, const char* name)
 	int i = shgeti(vert_files, name);
 	hmput(vert_files_paths, i, path_cpy);
 	vert_files_paths_len++;
+
+	// "remember" the name
+	arrput(logged_vert_files, name_cpy);
 
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
@@ -742,6 +819,9 @@ void log_frag_file(const char* path, const char* name)
 	int i = shgeti(frag_files, name);
 	hmput(frag_files_paths, i, path_cpy);
 	frag_files_paths_len++;
+
+	// "remember" the name
+	arrput(logged_frag_files, name_cpy);
 
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }

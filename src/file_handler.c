@@ -277,6 +277,8 @@ mesh load_mesh(char* file_path)
 
     // struct aiMesh* mesh = scene->mMeshes[scene->mRootNode->mChildren[0]->mMeshes[0]]; // hard-coded the first mesh
     // return process_mesh(mesh, scene); // meshes.push_back()
+    printf("mesh num_meshes: %d\n", scene->mRootNode->mNumMeshes);
+    // assert(scene->mRootNode->mNumMeshes > 0);
     mesh m;
     process_node(scene->mRootNode, scene, &m, name);
     aiReleaseImport(scene);

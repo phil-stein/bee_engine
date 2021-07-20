@@ -29,9 +29,21 @@ f32 last_frame = 0.0f;	// Time of last frame
 // ---- entry func ----
 int main(void)
 {
-
 	assetm_init();
 	printf(" -> assetm_init() finished\n");
+	
+
+	// all the boilerplate setup stuff
+	if (create_window(1920, 1080, "bee engine", BEE_TRUE) == BEE_ERROR)
+	{
+		fprintf(stderr, "Initializing GLFW, GLAD or opening a window failed.\n exiting ... \n");
+		assert(BEE_FALSE);
+	}
+
+	// add primitives & pink texture for missing texture & white material for added entities
+	load_internal_assets();
+	printf(" -> assetm load_internal_assets() finished\n");
+
 	// initialize the application
 	init(); // @TODO: this should be last
 	printf(" -> init() finished\n");

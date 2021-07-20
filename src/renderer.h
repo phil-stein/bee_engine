@@ -35,6 +35,7 @@ void entity_switch_light_type(int entity_id, light_type new_type);
 void entity_add_script(int entity_index, const char* name);
 void entity_remove_script(int entity_index, int script_index);
 void set_all_scripts(bee_bool act);
+void set_all_light_meshes(bee_bool act);
 
 void entity_remove(int entity_idx);
 

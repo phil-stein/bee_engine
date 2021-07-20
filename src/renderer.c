@@ -640,6 +640,30 @@ void set_all_scripts(bee_bool act)
 		}
 	}
 }
+void set_all_light_meshes(bee_bool act)
+{
+	for (int i = 0; i < point_lights_len; ++i)
+	{
+		if (entities[point_lights[i]].has_model)
+		{
+			entities[point_lights[i]]._mesh.visible = act;
+		}
+	}
+	for (int i = 0; i < dir_lights_len; ++i)
+	{
+		if (entities[dir_lights[i]].has_model)
+		{
+			entities[dir_lights[i]]._mesh.visible = act;
+		}
+	}
+	for (int i = 0; i < spot_lights_len; ++i)
+	{
+		if (entities[spot_lights[i]].has_model)
+		{
+			entities[spot_lights[i]]._mesh.visible = act;
+		}
+	}
+}
 
 
 // doesnt work yet

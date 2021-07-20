@@ -129,6 +129,8 @@ void set_error_popup(char* msg);
 
 void source_code_window();
 
+void add_shader_window();
+
 void set_source_code_window(char* src);
 
 // themes

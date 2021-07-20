@@ -74,6 +74,9 @@ const float console_ratio[] = { 120, 150 };
 char text[9][64];
 int text_len[9];
 
+// ---- add shader ----
+bee_bool shader_add_popup_act = BEE_FALSE;
+
 // ---- gravity error ----
 static int error_popup_act = nk_false;
 static char* error_msg;
@@ -91,7 +94,7 @@ typedef struct
     struct nk_image mesh;
     struct nk_image logged_mesh;
     struct nk_image shader;
-    struct nk_image material;
+    struct nk_image material; // ???
     struct nk_image script;
 
 }icon_collection;
@@ -136,7 +139,7 @@ void ui_init()
     icons.mesh           = nk_image_id((get_texture("mesh_icon.png")).handle);
     icons.logged_mesh    = nk_image_id((get_texture("logged_mesh_icon.png")).handle);
     icons.script         = nk_image_id((get_texture("script_icon.png")).handle);
-    // ...
+    icons.shader         = nk_image_id((get_texture("shader_icon.png")).handle);
 }
 
 void ui_update()
@@ -171,6 +174,10 @@ void ui_update()
     if (source_code_window_act == nk_true)
     {
         source_code_window();
+    }
+    if (shader_add_popup_act)
+    {
+        add_shader_window();
     }
 
     nk_glfw3_render(&glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
@@ -1415,7 +1422,6 @@ void properties_window(int ent_len)
 
         static char name_edit_buffer[64];
 
-
         // ---- theme menu ----
         
         nk_menubar_begin(ctx);
@@ -1456,6 +1462,7 @@ void properties_window(int ent_len)
             if (nk_menu_item_label(ctx, "Shader", NK_TEXT_LEFT))
             {
                 // @TODO: add selection of vert and frag shaders to use for shader
+                shader_add_popup_act = BEE_TRUE;
             }
             nk_menu_end(ctx);
         }
@@ -1495,6 +1502,7 @@ void properties_window(int ent_len)
             
             set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
             scripts_act = scripts_act == 0 ? 1 : 0;
+            set_all_light_meshes(scripts_act == 0 ? BEE_TRUE : BEE_FALSE); 
         }
         
         // spacing
@@ -1827,18 +1835,27 @@ void properties_window(int ent_len)
 
                 if (nk_group_begin(ctx, "entites", NK_WINDOW_NO_SCROLLBAR)) 
                 { 
-                    nk_layout_row_static(ctx, 18, 150, 1);
+                    // nk_layout_row_static(ctx, 18, 150, 1);
                     for (int i = 0; i < ent_len; ++i)
                     {
-                        struct nk_rect bounds = nk_widget_bounds(ctx);
+                        // struct nk_rect bounds = nk_widget_bounds(ctx);
+                        // 
+                        // if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
+                        // {
+                        //     submit_txt_console("clicked on entity label");
+                        //     ent_right_click_popup = i; // setting it to the current entity id
+                        //     ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 100);
+                        // }
 
-                        if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
+                        if (i == 4)
                         {
-                            submit_txt_console("clicked on entity label");
-                            ent_right_click_popup = i; // setting it to the current entity id
-                            ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 100);
+                            nk_layout_row_dynamic(ctx, 18, 2);
+                            nk_label(ctx, "", NK_TEXT_LEFT);
                         }
-
+                        else
+                        {
+                            nk_layout_row_static(ctx, 18, 150, 1);
+                        }
                         // entity_properties prop = get_entity_properties(i);
                         entity* ent = get_entity_ptr(i);
                         nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[i]);
@@ -2781,6 +2798,17 @@ void asset_browser_window()
                         add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material");
                     }
                 }
+                else if (selected == SHADER)
+                {
+                    nk_layout_row_static(ctx, 70, 100, 1);
+                    nk_label(ctx, "", NK_TEXT_LEFT);
+
+                    nk_layout_row_static(ctx, 30, 100, 1);
+                    if (nk_button_label(ctx, "Add Shader"))
+                    {
+                        shader_add_popup_act = BEE_TRUE;
+                    }
+                }
                 else 
                 {
                     nk_layout_row_static(ctx, 100, 100, 1);
@@ -3117,7 +3145,7 @@ void asset_browser_window()
                         {
                             nk_layout_row_static(ctx, 90, 90, 1);
                             // struct nk_image img = nk_image_id(textures[i].handle);
-                            if (nk_button_image(ctx, icons.logged_texture))
+                            if (nk_button_image(ctx, icons.shader))
                             {
                                 if (selected_shader == i) { selected_shader = 9999; }
                                 selected_shader = i;
@@ -3299,10 +3327,16 @@ void asset_browser_window()
                         if (event == NK_EDIT_COMMITED || is_key_pressed(KEY_Enter))
                         {
                             // copy name and path as passed name might be deleted
-                            char* name_cpy = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
-                            assert(name_cpy != NULL);
-                            strcpy(name_cpy, name_edit_buffer);
-                            materials[selected_material].name = name_cpy;
+                            // char* name_cpy = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+                            // assert(name_cpy != NULL);
+                            // strcpy(name_cpy, name_edit_buffer);
+                            // materials[selected_material].name = name_cpy;
+                            
+                            // materials[selected_material].name = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+                            // assert(materials[selected_material].name != NULL);
+                            // strcpy(materials[selected_material].name, name_edit_buffer);
+                            
+                            change_material_name(materials[selected_material].name, name_edit_buffer);
                             event = NK_EDIT_INACTIVE;
                         }
 
@@ -3345,7 +3379,7 @@ void asset_browser_window()
             if (asset_drag_popup_act != 9999)
             {
                 asset_drag_timer += get_delta_time();
-                asset_drag_popup_bounds = nk_rect(ctx->input.mouse.pos.x - 375, ctx->input.mouse.pos.y - 725, 110, 120);
+                asset_drag_popup_bounds = nk_rect(ctx->input.mouse.pos.x - 375, ctx->input.mouse.pos.y - 725, 110, 145);
 
                 if (!nk_input_is_mouse_down(&ctx->input, NK_BUTTON_LEFT))
                 {
@@ -3368,24 +3402,35 @@ void asset_browser_window()
                         nk_layout_row_static(ctx, 100, 100, 1);
                         struct nk_image img = nk_image_id(textures[asset_drag_popup_act].handle);
                         nk_image(ctx, img);
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, textures[asset_drag_popup_act].name, NK_TEXT_LEFT);
                     }
                     else if (asset_drag_type == MESH)
                     {
+                        nk_layout_row_static(ctx, 100, 100, 1);
+                        nk_image(ctx, icons.mesh);
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, meshes[asset_drag_popup_act].name, NK_TEXT_LEFT);
                     }
                     else if (asset_drag_type == SCRIPT)
                     {
+                        nk_layout_row_static(ctx, 100, 100, 1);
+                        nk_image(ctx, icons.script);
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, scripts[asset_drag_popup_act].name, NK_TEXT_LEFT);
                     }
                     else if (asset_drag_type == MATERIAL)
                     {
+                        nk_layout_row_static(ctx, 100, 100, 1);
+                        struct nk_image img = nk_image_id(materials[asset_drag_popup_act].dif_tex.handle);
+                        nk_image(ctx, img);
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, materials[asset_drag_popup_act].name, NK_TEXT_LEFT);
                     }
                     else if (asset_drag_type == SHADER)
                     {
+                        nk_layout_row_static(ctx, 100, 100, 1);
+                        nk_image(ctx, icons.shader);
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, shaders[asset_drag_popup_act].name, NK_TEXT_LEFT);
                     }
@@ -3425,11 +3470,19 @@ void error_popup_window()
 void source_code_window()
 {
     static char edit_buffer[256]; // strcpy(edit_buffer, "editable text");
-    int x = 400;
-    int y = 10;
-    int w = 600;
-    int h = 950;
-    if (nk_begin(ctx, "Source Code", nk_rect(x, y, w, h),
+    // int x = 400;
+    // int y = 10;
+    // int w = 600;
+    // int h = 950;
+    int w, h;
+    get_window_size(&w, &h);
+
+    // less height because the window bar on top and below
+    const float w_ratio = 600.0f  / 1920.0f;
+    const float h_ratio = 1000.0f / 1020.0f;
+    const float x_ratio = 380.0f  / 1920.0f;
+    const float y_ratio = 10.0f   / 1020.0f;
+    if (nk_begin(ctx, "Source Code", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
     {
@@ -3499,6 +3552,78 @@ void source_code_window()
 
     }
     nk_end(ctx);
+}
+
+void add_shader_window()
+{
+    int w, h;
+    get_window_size(&w, &h);
+
+    // less height because the window bar on top and below
+    const float w_ratio = 400.0f / 1920.0f;
+    const float h_ratio = 245.0f / 1020.0f;
+    const float x_ratio = 710.0f / 1920.0f;
+    const float y_ratio = 10.0f  / 1020.0f;
+
+    if (nk_begin(ctx, "Add Shader", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), 
+        NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_TITLE))
+    {
+        static char buffer[64] = "SHADER_new";
+
+        nk_layout_row_dynamic(ctx, 30, 2);
+
+        nk_label(ctx, "Name", NK_TEXT_LEFT);
+        static nk_flags event = NK_EDIT_DEACTIVATED;
+        event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, buffer, sizeof(buffer), nk_filter_ascii);
+
+        nk_layout_row_dynamic(ctx, 10, 1);
+        nk_spacing(ctx, 1);
+
+        nk_layout_row_dynamic(ctx, 30, 2);
+
+        nk_label(ctx, "Vertex Shader", NK_TEXT_LEFT);
+
+        char** vert_names = NULL;
+        int vert_name_len = 0;
+        vert_names = get_all_vert_file_names(&vert_name_len);
+        static int selected_vert_file = 0;
+        int selected_vert_file_old = selected_vert_file;
+
+        selected_vert_file = nk_combo(ctx, vert_names, vert_name_len, selected_vert_file, 25, nk_vec2(200, 200));
+
+        nk_label(ctx, "Fragment Shader", NK_TEXT_LEFT);
+
+        char** frag_names = NULL;
+        int frag_name_len = 0;
+        frag_names = get_all_frag_file_names(&frag_name_len);
+        static int selected_frag_file = 0;
+        int selected_frag_file_old = selected_frag_file;
+
+        selected_frag_file = nk_combo(ctx, frag_names, frag_name_len, selected_frag_file, 25, nk_vec2(200, 200));
+
+
+        nk_layout_row_dynamic(ctx, 10, 1);
+        nk_spacing(ctx, 1);
+
+        nk_layout_row_dynamic(ctx, 30, 2);
+
+        if (nk_button_label(ctx, "Compile"))
+        {
+            // copy name and path as passed name might be deleted
+            char* name_cpy = calloc(strlen(buffer) + 1, sizeof(char));
+            assert(name_cpy != NULL);
+            strcpy(name_cpy, buffer);
+
+            add_shader(vert_names[selected_vert_file], frag_names[selected_vert_file], name_cpy);
+
+            shader_add_popup_act = BEE_FALSE;
+        }
+        if (nk_button_label(ctx, "Cancel"))
+        {
+            shader_add_popup_act = BEE_FALSE;
+        }
+        nk_end(ctx);
+    }
 }
 
 
