@@ -7,7 +7,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 ## current capabilities
 
-<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot08.png" alt="logo" width="1000">
+<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot09.png" alt="logo" width="1000">
 
 
 
