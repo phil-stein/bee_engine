@@ -22,22 +22,14 @@ void report_error(gravity_vm* vm, error_type_t error_type, const char* message, 
     char buf[128];
     
     gravity_script* cur_script = get_cur_script();
-    char* name = str_find_last_of(cur_script->path, "\\");
-    if (name == NULL)
-    {
-        name = str_find_last_of(cur_script->path, "/");
-    }
-    assert(name != NULL);
-    name = str_trunc(name, 1); // cut off the last "\"
-    assert(name != NULL);
 
-    printf("GRAVITY_ERROR: %s, file: %s, line: %d, column: %d\n", message, name, error_desc.lineno, error_desc.colno);
-    sprintf(buf, "GRAVITY_ERROR: %s, file: %s, line: %d, column: %d\n", message, name, error_desc.lineno, error_desc.colno);
+    // printf("GRAVITY_ERROR: %s, file: %s, line: %d, column: %d\n", message, cur_script->name, error_desc.lineno, error_desc.colno);
+    sprintf(buf, "GRAVITY_ERROR: %s, file: %s, line: %d, column: %d\n", message, cur_script->name, error_desc.lineno, error_desc.colno);
     throw_error(buf); // assert(0 == 1); // exit(1);
 }
 void throw_error(char* msg)
 {
-    printf("GRAVITY_API_ERROR: %s\n", msg);
+    printf("GRAVITY_ERROR: %s\n", msg);
     set_error_popup(msg);
     // disable current script
     cur_script_error      = BEE_TRUE;
@@ -153,7 +145,15 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
 
     // compile Gravity source code into bytecode
     script->closure = gravity_compiler_run(compiler, src, strlen(src), 0, false, true);
-
+    // assert(script->closure != NULL);
+    if (script->closure == NULL)
+    {
+        char buffer[80];
+        sprintf(buffer, "GRAVITY_ERROR: failed to compile \"%s\"______", script->name);
+        throw_error(buffer);
+        // cur_script_error = BEE_FALSE;
+        return BEE_ERROR;
+    }
     if (cur_script_error == BEE_TRUE)
     {
         cur_script_error = BEE_FALSE;
@@ -162,6 +162,14 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
 
     // allocate a new Gravity VM
     script->vm = gravity_vm_new(&delegate);
+    if (script->vm == NULL)
+    {
+        char buffer[80];
+        sprintf(buffer, "GRAVITY_ERROR: failed create vm for \"%s\"", script->name);
+        throw_error(buffer);
+        // cur_script_error = BEE_FALSE;
+        return BEE_ERROR;
+    }
     setup_entity_class(script->vm);
     setup_game_class(script->vm);
     setup_input_class(script->vm);

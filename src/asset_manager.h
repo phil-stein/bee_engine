@@ -5,7 +5,7 @@
 #include "global.h"
 
 
-typedef enum asset_type { TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET } asset_type;
+typedef enum asset_type { TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET, MATERIAL_ASSET, SHADER_ASSET, VERT_SHADER_ASSET, FRAG_SHADER_ASSET, INTERNAL_ASSET } asset_type;
 
 
 
@@ -20,10 +20,14 @@ void load_internal_assets();
 void assetm_cleanup();
 
 
-int get_texture_idx(char* name);
+char** get_all_internals(int* internals_len);
+asset_type get_asset_type(char* file_name);
+bee_bool check_asset_loaded(char* name);
 
+int get_texture_idx(char* name);
 texture* get_all_textures(int* textures_len);
 texture get_texture(const char* name);
+char* get_texture_path(const char* name);
 char** get_all_logged_textures(int* len);
 char* get_logged_texture(int idx);
 void remove_logged_texture(char* name);

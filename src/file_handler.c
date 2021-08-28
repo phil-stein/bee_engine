@@ -15,9 +15,10 @@
 // #define FAST_OBJ_IMPLEMENTATION // only define in one ".c" file
 // #include "fastobj\fast_obj.h"
 
+#include "asset_manager.h"
 #include "file_handler.h"
-#include "global.h"
 #include "str_util.h"
+#include "global.h"
 
 
 bee_bool file_exists_check(const char* file_path)
@@ -188,29 +189,19 @@ texture texture_create_from_path(const char* file_path, const char* name, bee_bo
     return tex;
 }
 
-
-u32 load_cubemap()
+u32 load_cubemap(char* right, char* left, char* bottom, char* top, char* front, char* back)
 {
     u32 cube_map;
     glGenTextures(1, &cube_map);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cube_map);
 
-    char* cube_map_paths[] = {
-    "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\right.jpg",
-    "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\left.jpg",
-    "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\bottom.jpg",
-    "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\top.jpg",
-    "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\front.jpg",
-    "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\back.jpg" 
-    };
-    // char* cube_map_paths[] = {
-    // "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\back.jpg",
-    // "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\front.jpg",
-    // "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\bottom.jpg",
-    // "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\top.jpg",
-    // "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\left.jpg",
-    // "C:\\Workspace\\C\\BeeEngine\\assets\\textures\\skybox\\right.jpg"
-    // };
+    char* cube_map_paths[6];
+    cube_map_paths[0] = get_texture_path(right);
+    cube_map_paths[1] = get_texture_path(left);
+    cube_map_paths[2] = get_texture_path(bottom);
+    cube_map_paths[3] = get_texture_path(top);
+    cube_map_paths[4] = get_texture_path(front);
+    cube_map_paths[5] = get_texture_path(back);
 
 
     int width, height, nrChannels;
@@ -277,8 +268,7 @@ mesh load_mesh(char* file_path)
 
     // struct aiMesh* mesh = scene->mMeshes[scene->mRootNode->mChildren[0]->mMeshes[0]]; // hard-coded the first mesh
     // return process_mesh(mesh, scene); // meshes.push_back()
-    printf("mesh num_meshes: %d\n", scene->mRootNode->mNumMeshes);
-    // assert(scene->mRootNode->mNumMeshes > 0);
+
     mesh m;
     process_node(scene->mRootNode, scene, &m, name);
     aiReleaseImport(scene);

@@ -9,8 +9,8 @@ Todo
   - [x] editor [show source code] cuts off the last line 
   - [ ] solid objects don't get rendered in build_mode
   - [ ] ~5-10 fps in build_mode *(prop. something being called that's unnecessary without the editor)*
-  - [ ] add entity >> cube doesn't get rendered
-  - [ ] attach script doesn't work anymore 
+  - [x] add entity >> cube doesn't get rendered
+  - [x] attach script doesn't work anymore 
 - graphics
   - [ ] geometry shader normal direction
   - [ ] anti-aliasing
@@ -18,12 +18,12 @@ Todo
   - [ ] gamma correction
   - [ ] shadows
 - editor
-  - [ ] **!!! asset manager !!!**
-    - [ ] register all assets
+  - [x] asset manager
+    - [x] register all assets
     - [x] load & store on demand
   - [ ] !!! editor cam v. game cam (camera entity)
-  - [ ] add entity
-  - [ ] deselect entities
+  - [x] add entity
+  - [x] deselect entities
   - [ ] visualize normal-direction
   - [ ] show shader source
   - [ ] gizmos
@@ -53,9 +53,9 @@ Todo
   - [x] viewability
   - [ ] syntax highlighting
   - [ ] edit source ???
-- [ ] play-mode
+- [x] play-mode
   - [x] make it not be clear-color
-  - [ ] pause / start scripts
+  - [x] pause / start scripts
   - [x] ui
 - [ ] physics-system
 

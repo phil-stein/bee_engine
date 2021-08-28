@@ -58,6 +58,8 @@ void init()
 
 	shader shader_unlit = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
 	
+	shader shader_noise = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
+	
 
 	vec2 tile = { 1.0f, 1.0f };
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
@@ -65,6 +67,7 @@ void init()
 	texture blank_tex = get_texture("blank.png");
 	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank");
 	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit");
+	material* mat_noise		  = add_material(shader_noise, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_noise");
 	
 	// load texture
 	texture crate_dif_tex   = get_texture("crate01_dif.png");
@@ -83,7 +86,7 @@ void init()
 	texture robot_spec_tex = get_texture("robot01_spec.png");
 	material* mat_robot	   = add_material(shader_default, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_robot");
 
-	mesh m_cube = make_cube_mesh();
+	// mesh m_cube = make_cube_mesh();
 
 
 	texture glass_dif_tex = get_texture("window.png");
@@ -129,16 +132,19 @@ void init()
 	vec3 scale01;
 	glm_vec3_scale(scale, 5.0f, scale01);
 	add_entity(pos01, rot01, scale01, &m_plane, get_material("MAT_grass"), NULL, "ground");  // mat_grass
-	add_entity(pos02, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_01"); // mat_glass
-	add_entity(pos03, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_02"); // mat_glass
-	add_entity(pos04, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_03"); // mat_glass
+	int ent_win01 = add_entity(pos02, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_01"); // mat_glass
+	int ent_win02 = add_entity(pos03, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_02"); // mat_glass
+	int ent_win03 = add_entity(pos04, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, "window_03"); // mat_glass
+	entity_set_parent(ent_win03, ent_win02);
+	entity_set_parent(ent_win02, ent_win01);
 
-	// assimp
 	mesh* m_crate = get_mesh("crate01.obj");
 	vec3 pos05 = { 1.0f, 0.0f, 1.0f };
 	vec3 scale02;
 	glm_vec3_scale(scale, 0.5f, scale02);
 	int ent_crate = add_entity(pos05, rot01, scale02, m_crate, get_material("MAT_crate"), NULL, "crate"); // mat_crate
+	entity* crate_ptr = get_entity(ent_crate);
+	crate_ptr->_mesh.visible = BEE_FALSE;
 	
 	mesh* m_robot = get_mesh("robot01_LD.obj");
 	vec3 pos08 = { 0.0f, -0.5f, 0.0f };
@@ -159,6 +165,12 @@ void init()
 	int ent_barrel = add_entity(pos07, rot01, scale03, m_barrel, get_material("MAT_barrel"), NULL, "barrel"); // mat_barrel
 	entity_add_script(ent_barrel, "sinewave_x.gravity");
 		
+	entity_set_parent(ent_crate, ent_bunny);
+	// entity_set_parent(ent_bunny, ent_crate);
+	// entity_set_parent(ent_robot, ent_crate);
+	
+	// cube for testing noise shader
+	add_entity(scale, rot01, scale, get_mesh("cube.obj"), get_material("MAT_noise"), NULL, "noise_cube"); // mat_barrel
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");

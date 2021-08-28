@@ -66,8 +66,7 @@ void renderer_init()
 	// framebuffer ----------------------------------------------------------------------------------
 	// m = make_plane_mesh();
 	// create_shader_from_file used before
-	screen_shader = add_shader("screen.vert", // C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.vert"
-							   "screen.frag", "SHADER_framebuffer"); // C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\screen.frag"
+	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer");
 
 	create_framebuffer(&tex_col_buffer);
 	set_framebuffer_to_update(&tex_col_buffer); // updates framebuffer on window resize
@@ -97,10 +96,9 @@ void renderer_init()
 	// cube map -------------------------------------------------------------------------------------
 
 	// create_shader_from_file used before
-	skybox_shader = add_shader("cube_map.vert", // "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.vert"
-							   "cube_map.frag", "SHADER_skybox"); // "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\cube_map.frag"
+	skybox_shader = add_shader("cube_map.vert", "cube_map.frag", "SHADER_skybox");
 
-	cube_map = load_cubemap();
+	cube_map = load_cubemap("right.jpg", "left.jpg", "bottom.jpg", "top.jpg", "front.jpg", "back.jpg");
 
 	float skybox_verts[] = {
 		// positions          
@@ -159,8 +157,7 @@ void renderer_init()
 
 #ifdef EDITOR_ACT
 	// create_shader_from_file used before
-	modes_shader = add_shader("basic.vert", //"C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\basic.vert"
-							  "modes.frag", "SHADER_modes"); // "C:\\Workspace\\C\\BeeEngine\\assets\\shaders\\modes.frag"
+	modes_shader = add_shader("basic.vert", "modes.frag", "SHADER_modes");
 #endif
 #ifndef EDITOR_ACT
 	// set opengl state, only once in build mode as we dont use nuklear
@@ -218,7 +215,11 @@ void renderer_update()
 
 		if (entities[i].has_model)
 		{
-			draw_mesh(&entities[i]._mesh, entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+			vec3 pos   = { 0.0f, 0.0f, 0.0f };
+			vec3 rot   = { 0.0f, 0.0f, 0.0f };
+			vec3 scale = { 0.0f, 0.0f, 0.0f };
+			get_entity_global_transform(i, pos, rot, scale);
+			draw_mesh(&entities[i]._mesh, entities[i]._material, pos, rot, scale, entities[i].rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 	}
 
@@ -299,7 +300,11 @@ void renderer_update()
 		int i = transparent_ents[n];
 		if (entities[i].has_model)
 		{
-			draw_mesh(&entities[i]._mesh, entities[i]._material, entities[i].pos, entities[i].rot, entities[i].scale, entities[i].rotate_global);
+			vec3 pos = { 0.0f, 0.0f, 0.0f };
+			vec3 rot = { 0.0f, 0.0f, 0.0f };
+			vec3 scale = { 0.0f, 0.0f, 0.0f };
+			get_entity_global_transform(i, pos, rot, scale);
+			draw_mesh(&entities[i]._mesh, entities[i]._material, pos, rot, scale, entities[i].rotate_global);
 		}
 	}
 	// ------------------------------------------------------------------------
@@ -525,6 +530,42 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	}
 }
 
+void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale)
+{
+	entity* ent = get_entity(idx);
+	if (ent->has_trans && ent->parent != 9999 && (get_entity(ent->parent))->has_trans)
+	{
+		vec3 parent_pos   = { 0.0f, 0.0f, 0.0f };
+		vec3 parent_rot   = { 0.0f, 0.0f, 0.0f };
+		vec3 parent_scale = { 0.0f, 0.0f, 0.0f };
+		get_entity_global_transform(ent->parent, parent_pos, parent_rot, parent_scale);
+
+		glm_vec3_add(parent_pos, ent->pos, *pos);
+
+		// need to rotate the object around its parents position by the parents rotation
+		// glm_vec3_copy(ent->rot, *rot); // ??? lol
+		glm_vec3_add(parent_rot, ent->rot, *rot); // ??? lol
+		
+		glm_vec3_mul(parent_scale, ent->scale, *scale);
+	}
+	else if (ent->has_trans)
+	{
+		// just use the entities transform
+		glm_vec3_copy(ent->pos, *pos);
+		glm_vec3_copy(ent->rot, *rot);
+		glm_vec3_copy(ent->scale, *scale);
+	}
+	else 
+	{
+		// just use a default transform
+		vec3 zero = { 0.0f, 0.0f, 0.0f };
+		vec3 one  = { 1.0f, 1.0f, 1.0f };
+		glm_vec3_copy(zero, *pos);
+		glm_vec3_copy(zero, *rot);
+		glm_vec3_copy(one,  *scale);
+	}
+}
+
 
 void renderer_cleanup()
 {
@@ -665,6 +706,68 @@ void set_all_light_meshes(bee_bool act)
 	}
 }
 
+void entity_set_parent(int child, int parent)
+{
+	if (child == parent) { return; }
+
+	entity* parent_ent = get_entity(parent);
+	entity* child_ent  = get_entity(child);
+	if (!parent_ent->has_trans || !child_ent->has_trans)
+	{
+		printf("assign child: \"%s\" to entity: \"%s\" failed\n", child_ent->name, parent_ent->name);
+		return;
+	}
+
+
+	int* parent_ptr = &child_ent->parent;
+	if (child_ent->parent != 9999)
+	{
+		entity_remove_child(child_ent->parent, child);
+	}
+
+	// keep the relative transform before being a child
+	vec3 pos = { 0.0f, 0.0f, 0.0f };
+	vec3 rot = { 0.0f, 0.0f, 0.0f };
+	vec3 scale = { 0.0f, 0.0f, 0.0f };
+	get_entity_global_transform(parent, pos, rot, scale);
+	glm_vec3_sub(child_ent->pos, parent_ent->pos, child_ent->pos);
+	// rotation
+	glm_vec3_div(child_ent->scale, parent_ent->scale, child_ent->scale);
+
+	child_ent->parent = parent;
+
+	arrput(parent_ent->children, child);
+	parent_ent->children_len++;
+}
+void entity_remove_child(int parent, int child)
+{
+	if (child == parent) { return; }
+
+
+	vec3 pos = { 0.0f, 0.0f, 0.0f };
+	vec3 rot = { 0.0f, 0.0f, 0.0f };
+	vec3 scale = { 0.0f, 0.0f, 0.0f };
+	get_entity_global_transform(child, pos, rot, scale);
+	entity* child_ent = (get_entity(child));
+	printf("removed child: \"%s\" of parent: \"%s\"\n", child_ent->name, (get_entity(parent))->name);
+	child_ent->parent = 9999;
+	// set the childs transform to be the one it was while it still was a child
+	glm_vec3_copy(pos,   child_ent->pos);
+	glm_vec3_copy(rot,   child_ent->rot);
+	glm_vec3_copy(scale, child_ent->scale);
+	
+
+	// remove child from children array
+	for (int i = 0; i < (get_entity(parent))->children_len; ++i)
+	{
+		if ((get_entity(parent))->children[i] == child)
+		{
+			arrdel((get_entity(parent))->children, i);
+			(get_entity(parent))->children_len--;
+			return;
+		}
+	}
+}
 
 // doesnt work yet
 void entity_remove(int entity_idx)
@@ -721,9 +824,9 @@ entity* get_entites()
 {
 	return entities;
 }
-entity* get_entity(int i)
+entity* get_entity(int idx)
 {
-	return &entities[i];
+	return &entities[idx];
 }
 int get_entity_id_by_name(char* name)
 {
@@ -737,102 +840,7 @@ int get_entity_id_by_name(char* name)
 	assert(0 == 1);
 	return 9999;
 }
-entity* get_entity_ptr(int idx)
-{
-	return &entities[idx];
-}
-// entity_properties was the old way to pass data to the front-end
-/*
-entity_properties get_entity_properties(int index)
-{
-	entity_properties prop;
 
-	prop.ent_name		= entities[index].name;
-	prop.rotate_global	= &entities[index].rotate_global;
-	prop.has_model		= &entities[index].has_model;
-	prop.has_light		= &entities[index].has_light;
-	prop.has_trans		= &entities[index].has_trans;
-
-	prop.pos_x = &entities[index].pos[0];
-	prop.pos_y = &entities[index].pos[1];
-	prop.pos_z = &entities[index].pos[2];
-
-	prop.rot_x = &entities[index].rot[0];
-	prop.rot_y = &entities[index].rot[1];
-	prop.rot_z = &entities[index].rot[2];
-
-	prop.scale_x = &entities[index].scale[0];
-	prop.scale_y = &entities[index].scale[1];
-	prop.scale_z = &entities[index].scale[2];
-
-	if (entities[index].has_model == BEE_TRUE)
-	{
-		// mesh
-		prop.mesh		  = &entities[index]._mesh;
-		prop.mesh_name	  =  entities[index]._mesh.name;
-		prop.verts_len    = &entities[index]._mesh.vertices_len;
-		prop.indices_len  = &entities[index]._mesh.indices_len;
-		prop.mesh_indexed = &entities[index]._mesh.indexed;
-		prop.mesh_visible = &entities[index]._mesh.visible;
-
-		// material
-		prop.mat			 = &entities[index]._material;
-		prop.material_name	 =  entities[index]._material.name;
-		prop.shininess		 = &entities[index]._material.shininess;
-		prop.tile_x			 = &entities[index]._material.tile[0];
-		prop.tile_y			 = &entities[index]._material.tile[1];
-		prop.tint_r			 = &entities[index]._material.tint[0];
-		prop.tint_g			 = &entities[index]._material.tint[1];
-		prop.tint_b			 = &entities[index]._material.tint[2];
-		prop.dif_tex_name	 =  entities[index]._material.dif_tex.name;
-		prop.spec_tex_name	 =  entities[index]._material.spec_tex.name;
-		prop.is_transparent  = &entities[index]._material.is_transparent;
-		prop.dif_tex_handle  = &entities[index]._material.dif_tex.handle;
-		prop.spec_tex_handle = &entities[index]._material.spec_tex.handle;
-
-	}
-	if (entities[index].has_light == BEE_TRUE)
-	{
-		prop._light_type = &entities[index]._light.type;
-
-		prop.ambient_r = &entities[index]._light.ambient[0];
-		prop.ambient_g = &entities[index]._light.ambient[1];
-		prop.ambient_b = &entities[index]._light.ambient[2];
-		
-		prop.diffuse_r = &entities[index]._light.diffuse[0];
-		prop.diffuse_g = &entities[index]._light.diffuse[1];
-		prop.diffuse_b = &entities[index]._light.diffuse[2];
-		
-		prop.specular_r = &entities[index]._light.specular[0];
-		prop.specular_g = &entities[index]._light.specular[1];
-		prop.specular_b = &entities[index]._light.specular[2];
-		
-		if (entities[index]._light.type == DIR_LIGHT || entities[index]._light.type == SPOT_LIGHT)
-		{
-			prop.direction_x = &entities[index]._light.direction[0];
-			prop.direction_y = &entities[index]._light.direction[1];
-			prop.direction_z = &entities[index]._light.direction[2];
-		}
-		if (entities[index]._light.type == POINT_LIGHT || entities[index]._light.type == SPOT_LIGHT)
-		{
-			prop.constant	= &entities[index]._light.constant;
-			prop.linear		= &entities[index]._light.linear;
-			prop.quadratic	= &entities[index]._light.quadratic;
-		}
-		if (entities[index]._light.type == SPOT_LIGHT)
-		{
-			prop.cut_off		= &entities[index]._light.cut_off;
-			prop.outer_cut_off	= &entities[index]._light.outer_cut_off;
-		}
-	}
-
-
-	prop.scripts_len = &entities[index].scripts_len;
-	prop.scripts     =  entities[index].scripts;
-
-	return prop;
-}
-*/
 
 renderer_properties get_renderer_properties()
 {

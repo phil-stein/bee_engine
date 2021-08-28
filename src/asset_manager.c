@@ -107,10 +107,15 @@ char* internal_assets_names[] = {
 								    // texture with index 0 in texture_data array 
 									// this means this texture shows up when requested texture isnt found
 									"missing_texture.png",
-									// same for this mesh 
+									
+									// needed for blank material, unlit material, etc.
+									"blank.png",
+
+								    // texture with index 0 in texture_data array 
+									// this means this texture shows up when requested texture isnt found
 									"cube.obj" 
 };
-int internal_assets_names_len = 2;
+int internal_assets_names_len = 3;
 // bee_bool all_internal_assets_found = BEE_FALSE;
 
 
@@ -187,23 +192,11 @@ void load_internal_assets()
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
 {
+	asset_type type = get_asset_type(file_name);
+
 	// check file extensions
 	// ---- textures ----
-	if (// PNG
-		file_name[file_name_len - 4] == '.' &&
-		file_name[file_name_len - 3] == 'p' &&
-		file_name[file_name_len - 2] == 'n' &&
-		file_name[file_name_len - 1] == 'g' ||
-		// JPEG
-		file_name[file_name_len - 4] == '.' &&
-		file_name[file_name_len - 3] == 'j' &&
-		file_name[file_name_len - 2] == 'p' &&
-		file_name[file_name_len - 1] == 'g' ||
-		// BMP
-		file_name[file_name_len - 4] == '.' &&
-		file_name[file_name_len - 3] == 'b' &&
-		file_name[file_name_len - 2] == 'm' &&
-		file_name[file_name_len - 1] == 'p')
+	if (type == TEXTURE_ASSET)
 	{
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
@@ -214,21 +207,7 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		log_texture(t_path, file_name);
 	}
 	// ---- models ----
-	else if (// Wavefront .obj
-			 file_name[file_name_len - 4] == '.' &&
-			 file_name[file_name_len - 3] == 'o' &&
-			 file_name[file_name_len - 2] == 'b' &&
-			 file_name[file_name_len - 1] == 'j' ||
-			 // GLTF .glb 
-			 file_name[file_name_len - 4] == '.' &&
-			 file_name[file_name_len - 3] == 'g' &&
-			 file_name[file_name_len - 2] == 'l' &&
-			 file_name[file_name_len - 1] == 'b' ||
-			 // FBX .fbx
-			 file_name[file_name_len - 4] == '.' &&
-			 file_name[file_name_len - 3] == 'f' &&
-			 file_name[file_name_len - 2] == 'b' &&
-			 file_name[file_name_len - 1] == 'x')
+	else if (type == MESH_ASSET)
 	{
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
@@ -239,14 +218,7 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		log_mesh(t_path, file_name);
 	}
 	// ---- gravity ----
-	else if (file_name[file_name_len - 8] == '.' &&
-			 file_name[file_name_len - 7] == 'g' &&
-			 file_name[file_name_len - 6] == 'r' &&
-			 file_name[file_name_len - 5] == 'a' &&
-			 file_name[file_name_len - 4] == 'v' &&
-			 file_name[file_name_len - 3] == 'i' &&
-			 file_name[file_name_len - 2] == 't' &&
-			 file_name[file_name_len - 1] == 'y')
+	else if (type == SCRIPT_ASSET)
 	{
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
@@ -258,11 +230,7 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		create_script(t_path, file_name);
 	}
 	// ---- vert-file ----
-	else if (file_name[file_name_len - 5] == '.' &&
-			 file_name[file_name_len - 4] == 'v' &&
-			 file_name[file_name_len - 3] == 'e' &&
-			 file_name[file_name_len - 2] == 'r' &&
-			 file_name[file_name_len - 1] == 't')
+	else if (type == VERT_SHADER_ASSET)
 	{
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
@@ -273,11 +241,7 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		log_vert_file(t_path, file_name);
 	}
 	// ---- frag-file ----
-	else if (file_name[file_name_len - 5] == '.' &&
-			 file_name[file_name_len - 4] == 'f' &&
-			 file_name[file_name_len - 3] == 'r' &&
-			 file_name[file_name_len - 2] == 'a' &&
-			 file_name[file_name_len - 1] == 'g')
+	else if (type == FRAG_SHADER_ASSET)
 	{
 		char dir_path_cpy[250];
 		strcpy(dir_path_cpy, dir_path);
@@ -349,6 +313,126 @@ void assetm_cleanup()
 	arrfree(shaders_data);
 }
 
+//
+// ---- misc ----
+//
+char** get_all_internals(int* internals_len)
+{
+	*internals_len = internal_assets_names_len;
+	return internal_assets_names;
+}
+
+asset_type get_asset_type(char* file_name)
+{
+	int file_name_len = strlen(file_name);
+	// check file extensions
+	// ---- textures ----
+	if (// PNG
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'p' &&
+		file_name[file_name_len - 2] == 'n' &&
+		file_name[file_name_len - 1] == 'g' ||
+		// JPEG
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'j' &&
+		file_name[file_name_len - 2] == 'p' &&
+		file_name[file_name_len - 1] == 'g' ||
+		// BMP
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'b' &&
+		file_name[file_name_len - 2] == 'm' &&
+		file_name[file_name_len - 1] == 'p')
+	{
+		return TEXTURE_ASSET;
+	}
+	// ---- models ----
+	else if (// Wavefront .obj
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'o' &&
+		file_name[file_name_len - 2] == 'b' &&
+		file_name[file_name_len - 1] == 'j' ||
+		// GLTF .glb 
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'g' &&
+		file_name[file_name_len - 2] == 'l' &&
+		file_name[file_name_len - 1] == 'b' ||
+		// FBX .fbx
+		file_name[file_name_len - 4] == '.' &&
+		file_name[file_name_len - 3] == 'f' &&
+		file_name[file_name_len - 2] == 'b' &&
+		file_name[file_name_len - 1] == 'x')
+	{
+		return MESH_ASSET;
+	}
+	// ---- gravity ----
+	else if (file_name[file_name_len - 8] == '.' &&
+		file_name[file_name_len - 7] == 'g' &&
+		file_name[file_name_len - 6] == 'r' &&
+		file_name[file_name_len - 5] == 'a' &&
+		file_name[file_name_len - 4] == 'v' &&
+		file_name[file_name_len - 3] == 'i' &&
+		file_name[file_name_len - 2] == 't' &&
+		file_name[file_name_len - 1] == 'y')
+	{
+		return SCRIPT_ASSET;
+	}
+	// ---- vert-file ----
+	else if (file_name[file_name_len - 5] == '.' &&
+		file_name[file_name_len - 4] == 'v' &&
+		file_name[file_name_len - 3] == 'e' &&
+		file_name[file_name_len - 2] == 'r' &&
+		file_name[file_name_len - 1] == 't')
+	{
+		return VERT_SHADER_ASSET;
+	}
+	// ---- frag-file ----
+	else if (file_name[file_name_len - 5] == '.' &&
+		file_name[file_name_len - 4] == 'f' &&
+		file_name[file_name_len - 3] == 'r' &&
+		file_name[file_name_len - 2] == 'a' &&
+		file_name[file_name_len - 1] == 'g')
+	{
+		return FRAG_SHADER_ASSET;
+	}
+}
+
+bee_bool check_asset_loaded(char* name)
+{
+	asset_type type = get_asset_type(name);
+	int i = 9999;
+	switch (type)
+	{
+		case TEXTURE_ASSET:
+			i = shget(textures, name);
+			break;
+		case MESH_ASSET:
+			i = shget(meshes, name);
+			break;
+		case SCRIPT_ASSET:
+			i = shget(scripts, name);
+			break;
+		case MATERIAL_ASSET:
+			i = shget(materials, name);
+			break;
+		case SHADER_ASSET:
+			i = shget(shaders, name);
+			break;
+		case VERT_SHADER_ASSET:
+			i = shget(vert_files, name);
+			break;
+		case FRAG_SHADER_ASSET:
+			i = shget(frag_files, name);
+			break;
+	}
+	// get the index to the asset array from the hashmap
+
+	// @TODO: add security check that the texture doesn't exist at all
+	//		  for example make the 0th texture allways be all pink etc.
+
+	// check if the asset hasn't been loaded yet 
+	return i == 9999 ? BEE_FALSE : BEE_TRUE;
+}
+
 
 //
 // ---- textures ----
@@ -383,6 +467,14 @@ texture get_texture(const char* name)
 	return texture_data[shget(textures, name)];
 }
 
+char* get_texture_path(const char* name)
+{
+	// key for the path is the index of the texture in the hashmap
+	int path_idx = shgeti(textures, name);
+	char* path = hmget(texture_paths, path_idx);
+	return path;
+}
+
 char** get_all_logged_textures(int* len)
 {
 	*len = arrlen(logged_textures);
@@ -407,7 +499,7 @@ void remove_logged_texture(char* name)
 void log_texture(const char* path, const char* name)
 {
 	// make a persistent copy of the passed name
-	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
+	char* name_cpy = malloc( (strlen(name) +1) * sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 	// printf("texture name copy: \"%s\"\n", name_cpy);
@@ -418,7 +510,7 @@ void log_texture(const char* path, const char* name)
 	textures_len++;
 	
 	// make a persistent copy of the passed path
-	char* path_cpy = calloc(strlen(path) +1, sizeof(char));
+	char* path_cpy = malloc( (strlen(path) +1) * sizeof(char));
 	assert(path_cpy != NULL);
 	strcpy(path_cpy, path);
 	// printf("texture path copy: \"%s\"\n", path_cpy);
@@ -443,7 +535,7 @@ void create_texture(const char* name)
 	// printf("-> create texture path: \"%s\"; path index: %d\n", path, path_idx);
 	
 	// copy name and path as passed name might be deleted
-	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
+	char* name_cpy = malloc( (strlen(name) +1) * sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 	texture t = texture_create_from_path(path, name_cpy, BEE_FALSE);
@@ -455,15 +547,7 @@ void create_texture(const char* name)
 	texture_data_len++;
 
 	// remove texture from the logged_textures array
-	for (int i = 0; i < arrlen(logged_textures); ++i)
-	{
-		if (!strcmp(logged_textures[i], name))
-		{
-			char* ptr = logged_textures[i];
-			arrdel(logged_textures, i);
-			break;
-		}
-	}
+	remove_logged_texture(name);
 }
 
 // 

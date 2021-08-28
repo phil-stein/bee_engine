@@ -30,7 +30,8 @@ void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t*
 u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int channel_num);
 texture texture_create_from_path(const char* file_path, const char* name, bee_bool flip_vertical);
 
-u32 load_cubemap();
+// u32 load_cubemap();
+u32 load_cubemap(char* right, char* left, char* bottom, char* top, char* front, char* back);
 
 
 // load a mesh from an ".obj" file

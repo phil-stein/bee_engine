@@ -2,10 +2,9 @@
 #ifndef UI_H
 #define UI_H
 
+#include "asset_manager.h"
 #include "object_data.h"
 #include "global.h"
-
-typedef enum { TEXTURE, MESH, SHADER, MATERIAL, SCRIPT } asset_type;
 
 typedef struct
 {
@@ -15,6 +14,16 @@ typedef struct
 	int asset_idx;
 
 }asset_drop;
+
+typedef struct
+{
+	bee_bool handled;
+	bee_bool assigned;
+	float pos[2];
+	int child_idx;
+	int parent_idx;
+
+}entity_drop;
 
 typedef struct
 {
@@ -115,6 +124,7 @@ void demo_window();
 void overview_window();
 
 void properties_window(int ent_len);
+void draw_entity_hierachy_entity(int idx, int offset);
 
 void console_window();
 

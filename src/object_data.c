@@ -349,7 +349,11 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 	}
 
 	ent.scripts_len = 0;
-	ent.scripts = NULL; // needs to be null-pointer for stb_ds
+	ent.scripts		= NULL; // needs to be null-pointer for stb_ds
+
+	ent.parent		 = 9999;
+	ent.children	 = NULL; // needs to be null-pointer for stb_ds
+	ent.children_len = 0;
 
 	return ent;
 }
@@ -357,14 +361,6 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 // for script, collider, etc. components
 void update_entity(entity* ent)
 {
-	#ifdef EDITOR_ACT
-	// if both light and model make the models color the lights diffuse color
-	// doesnt work as the material attached to the lights is likely on multiple lights
-	if (ent->has_light && ent->has_model)
-	{
-		// glm_vec3_copy(ent->_light.diffuse, ent->_material->tint);
-	}
-	#endif
 
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)
@@ -389,6 +385,9 @@ void update_entity(entity* ent)
 		}
 	}
 }
+
+
+// ---- free ----
 
 void free_entity(entity* ent)
 {

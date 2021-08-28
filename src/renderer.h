@@ -26,30 +26,36 @@ void renderer_update();
 
 void renderer_cleanup();
 
-
+// renderes a single mesh, amounting in one draw-call
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
 
-// return the index to the entity
+// the transform of the entity with the parents transforms, calculated recursively 
+void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
+
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name);
 void entity_switch_light_type(int entity_id, light_type new_type);
 void entity_add_script(int entity_index, const char* name);
 void entity_remove_script(int entity_index, int script_index);
 void set_all_scripts(bee_bool act);
 void set_all_light_meshes(bee_bool act);
-
+void entity_set_parent(int child, int parent);
+void entity_remove_child(int parent, int child);
 void entity_remove(int entity_idx);
 
 void add_entity_cube();
 
-entity* get_entity_ptr(int idx);
 // entity_properties get_entity_properties(int index);
 
 renderer_properties get_renderer_properties();
 
+// amount of entities at the moment
 void get_entity_len(int* _entities_len);
 
+// pointer to all entities
 entity* get_entites();
-entity* get_entity(int i);
+// get an entity by its index
+entity* get_entity(int idx);
+// returns the index to the entity
 int get_entity_id_by_name(char* name);
 
 

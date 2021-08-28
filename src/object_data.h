@@ -11,7 +11,7 @@
 // ---- assets ----
 //
 
-typedef struct
+typedef struct shader
 {
 	u32 handle;
 	char* frag_name;
@@ -20,7 +20,7 @@ typedef struct
 
 }shader;
 
-typedef struct
+typedef struct texture
 {
 	u32 handle;
 	int size_x;
@@ -29,7 +29,7 @@ typedef struct
 	char* name;
 }texture;
 
-typedef struct
+typedef struct material
 {
 	shader shader;
 
@@ -47,7 +47,7 @@ typedef struct
 	char* name;
 }material;
 
-typedef struct
+typedef struct mesh
 {
 	u32 vertices_len;
 	u32 indices_len;
@@ -62,7 +62,7 @@ typedef struct
 
 enum light_type { POINT_LIGHT, DIR_LIGHT, SPOT_LIGHT };
 typedef enum light_type light_type;
-typedef struct
+typedef struct light
 {
 	// ---- general ----
 
@@ -88,7 +88,7 @@ typedef struct
 
 // ---- entity ----
 
-typedef struct
+typedef struct entity
 {
 	char* name;
 
@@ -111,8 +111,13 @@ typedef struct
 
 	// --------------------
 
-	int scripts_len;
 	gravity_script** scripts;
+	int scripts_len;
+
+	
+	int  parent;
+	int* children;
+	int  children_len;
 
 
 }entity;
@@ -146,6 +151,7 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 // void draw_mesh(mesh* _mesh, material* _material, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
 // render the models meshes
 // void draw_model(model* _model, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
+
 // updates all attached components
 void update_entity(entity* ent);
 // void entity_add_script(entity* ent,const char* path);
