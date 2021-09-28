@@ -50,7 +50,9 @@ typedef struct material
 typedef struct mesh
 {
 	u32 vertices_len;
+	u32 vertices_elems;
 	u32 indices_len;
+	u32 indices_elems;
 
 	u32 vao, vbo, ebo;
 

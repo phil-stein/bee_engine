@@ -6,6 +6,14 @@
 # vs-files
 Browse.VC.opendb
 
+# asset-folder
+#**/assets/#internal
+#**/assets/fonts
+#**/assets/gravity
+**/assets/models
+#**/assets/shaders
+**/assets/textures
+
 # vim-files
 *~
 *.swp

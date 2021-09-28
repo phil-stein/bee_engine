@@ -1490,7 +1490,6 @@ void properties_window(int ent_len)
             }
             if (nk_menu_item_label(ctx, "Shader", NK_TEXT_LEFT))
             {
-                // @TODO: add selection of vert and frag shaders to use for shader
                 shader_add_popup_act = BEE_TRUE;
             }
             nk_menu_end(ctx);
@@ -2210,11 +2209,11 @@ void properties_window(int ent_len)
 
                     nk_layout_row_dynamic(ctx, 25, 2);
                 
-                    sprintf(buffer, "%d", ent->_mesh.vertices_len);
+                    sprintf(buffer, "%d", ent->_mesh.vertices_elems);
                     nk_label(ctx, "Vertices: ", NK_TEXT_LEFT);
                     nk_label(ctx, buffer, NK_TEXT_RIGHT);
             
-                    sprintf(buffer, "%d", ent->_mesh.indices_len);
+                    sprintf(buffer, "%d", ent->_mesh.indices_elems);
                     nk_label(ctx, "Indices: ", NK_TEXT_LEFT);
                     nk_label(ctx, buffer, NK_TEXT_RIGHT);
             
@@ -3544,9 +3543,9 @@ void asset_browser_window()
                         sprintf(buf, "Name: \"%s\"", meshes[selected_mesh].name);
                         nk_label_wrap(ctx, buf);
                         nk_layout_row_dynamic(ctx, 30, 1);
-                        sprintf(buf, "Vertices: \"%d\"", meshes[selected_mesh].vertices_len);
+                        sprintf(buf, "Vertices: \"%d\"", meshes[selected_mesh].vertices_elems);
                         nk_label_wrap(ctx, buf);
-                        sprintf(buf, "Indices: \"%d\"", meshes[selected_mesh].indices_len);
+                        sprintf(buf, "Indices: \"%d\"", meshes[selected_mesh].indices_elems);
                         nk_label_wrap(ctx, buf);
 
                         if (nk_button_label(ctx, "Instance"))

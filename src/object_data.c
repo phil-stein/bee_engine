@@ -50,15 +50,17 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 	m.name = name;
 	m.visible = BEE_TRUE;
 	// m.vertices = NULL;
-	m.vertices_len = vertices_len;
+	m.vertices_len   = vertices_len;
+	m.vertices_elems = vertices_len / 8;
 	// m.indices = NULL;
-	m.indices_len = indices_len;
+	m.indices_len   = indices_len;	
+	m.indices_elems = indices_len / 3;	
 	m.vao = 0;
 	m.vbo = 0;
 	m.ebo = 0;
 
 	m.indexed = BEE_FALSE;
-	if (indices == NULL || indices_len == 0)
+	if (indices_len == 0)
 	{
 		glGenVertexArrays(1, &m.vao);
 		glGenBuffers(1, &m.vbo);
@@ -111,7 +113,6 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 
 		// remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
 		// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 	}
 
 	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
