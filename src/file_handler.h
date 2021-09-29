@@ -18,6 +18,9 @@ bee_bool file_exists_check(const char* file_path);
 // !!! free() the returned char* as it gets allocated
 char* read_text_file(const char* file_path);
 
+// create copy of file at 'filepath_src' and copy it to 'filepath_cpy'
+rtn_code copy_file(char* filepath_src, char* filepath_cpy);
+
 // loads an image from file and loads it onto the gpu, 
 // render by calling: glBindTexture(GL_TEXTURE_2D, u32);
 // returns: u32 handle for the opengl texture

@@ -11,11 +11,11 @@
 #define NULL ((void *)0)
 #endif
 
-// define custom return checks
-enum return_code {
+enum rtn_code {
 	BEE_ERROR	= 0,
 	BEE_OK		= 1
 };
+// define custom return checks
 // not for use when programming, just for verbosity
 typedef enum rtn_code rtn_code;
 

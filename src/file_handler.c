@@ -111,6 +111,45 @@ char* read_text_file(const char* file_path, int* size)
 }
 */
 
+rtn_code copy_file(char* filepath_src, char* filepath_cpy)
+{
+    FILE* ptr_src, * ptr_cpy;
+    errno_t err_src = 0, err_cpy = 0;
+    int  a;
+
+    // open files
+    err_src  = fopen_s(&ptr_src, filepath_src, "rb");
+    err_cpy  = fopen_s(&ptr_cpy, filepath_cpy, "wb"); // opens / creates file
+
+    // check for errors opening the files
+    if (err_src != 0)
+    { return  BEE_ERROR; }
+    if (err_cpy != 0)
+    {
+        fclose(ptr_src);
+        return  BEE_ERROR;
+    }
+
+    // copy bytes from src to copy
+    while (1)
+    {
+        a = fgetc(ptr_src);
+
+        if (!feof(ptr_src))
+            fputc(a, ptr_cpy);
+        else
+            break;
+    }
+
+    fclose(ptr_cpy);
+    fclose(ptr_src);
+    return  BEE_OK;
+}
+
+
+
+// textures -------------------------------------------------------------------------
+
 void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t* height_out, int* channel_num, bee_bool flip_vertical) 
 {
     int width, height;
@@ -182,6 +221,8 @@ texture texture_create_from_path(const char* file_path, const char* name, bee_bo
     tex.size_x = width;
     tex.size_y = height;
     tex.name = name;
+    // tex.name = malloc(strlen(name) * sizeof(char));
+    // strcpy(tex.name, name);
     tex.path = file_path;
 
     // printf("loaded texture: '%s' from '%s', handle: '%d'\n", name, file_path, handle);

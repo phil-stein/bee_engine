@@ -5,16 +5,18 @@
 #include "global.h"
 
 
-typedef enum asset_type { TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET, MATERIAL_ASSET, SHADER_ASSET, VERT_SHADER_ASSET, FRAG_SHADER_ASSET, INTERNAL_ASSET } asset_type;
+typedef enum asset_type { NOT_ASSET, TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET, MATERIAL_ASSET, SHADER_ASSET, VERT_SHADER_ASSET, FRAG_SHADER_ASSET, INTERNAL_ASSET } asset_type;
 
 
 
 
 void assetm_init();
 
+char* get_asset_dir();
 // taken from: https://codeforwin.org/2018/03/c-program-to-list-all-files-in-a-directory-recursively.html
 void search_dir(const char* dir_path);
 void check_file(char* file_name, int file_name_len, char* dir_path);
+void add_file_to_project(char* file_path);
 void load_internal_assets();
 
 void assetm_cleanup();
@@ -26,7 +28,8 @@ bee_bool check_asset_loaded(char* name);
 
 int get_texture_idx(char* name);
 texture* get_all_textures(int* textures_len);
-texture get_texture(const char* name);
+texture  get_texture(const char* name);
+texture* get_texture_by_idx(int idx);
 char* get_texture_path(const char* name);
 char** get_all_logged_textures(int* len);
 char* get_logged_texture(int idx);

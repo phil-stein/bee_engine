@@ -6,7 +6,9 @@
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION defined in renderer.c
 
 #include "file_handler.h"
+#include "str_util.h"
 #include "shader.h"
+#include "ui.h"
 
 
 // ---- vars ----
@@ -122,6 +124,15 @@ int internal_assets_names_len = 3;
 
 void assetm_init()
 {
+	char* dir_path = get_asset_dir();
+
+	printf("dir path: \"%s\"\n", dir_path);
+	search_dir(dir_path, BEE_FALSE);
+
+}
+
+char* get_asset_dir()
+{
 	// load all assets in "proj\assets\"
 	char* cwd = _getcwd(NULL, 0);
 	// couldnt retrieve current working dir
@@ -130,9 +141,7 @@ void assetm_init()
 	// couldnt concat cwd
 	assert(dir_path != NULL);
 
-	printf("dir path: \"%s\"\n", dir_path);
-	search_dir(dir_path, BEE_FALSE);
-
+	return dir_path;
 }
 
 void search_dir(const char* dir_path)
@@ -192,9 +201,11 @@ void load_internal_assets()
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
 {
+	// check file extensions
 	asset_type type = get_asset_type(file_name);
 
-	// check file extensions
+	if (type == NOT_ASSET)
+	{ return; }
 	// ---- textures ----
 	if (type == TEXTURE_ASSET)
 	{
@@ -251,6 +262,30 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		// log the mesh with the created path and the file name 
 		log_frag_file(t_path, file_name);
 	}
+}
+void add_file_to_project(char* file_path)
+{
+	if (!file_exists_check(file_path))
+	{ return; }
+
+	// char path_cpy[124];
+	char* name = str_trunc(str_find_last_of(file_path, "\\"), 1); // isolate name
+	if (get_asset_type(name) == NOT_ASSET)
+	{
+		sprintf(stderr,    "[Error] File added to Project isn't an Asset.");
+		submit_txt_console("[Error] File added to Project isn't an Asset.");
+		return;
+	}
+	char* path_cpy = get_asset_dir();
+	strcat(path_cpy, "\\");
+	strcat(path_cpy, name);
+
+	copy_file(file_path, path_cpy);
+	printf("copied to: %s\n", path_cpy);
+
+	char* path_cpy_no_name = str_trunc(path_cpy, (strlen(name) + 1) * -1); // remove name from path
+
+	check_file(name, strlen(name), path_cpy_no_name); // logs file if it is an asset
 }
 
 void assetm_cleanup()
@@ -394,6 +429,10 @@ asset_type get_asset_type(char* file_name)
 	{
 		return FRAG_SHADER_ASSET;
 	}
+	else
+	{
+		return NOT_ASSET;
+	}
 }
 
 bee_bool check_asset_loaded(char* name)
@@ -454,9 +493,6 @@ texture get_texture(const char* name)
 	// get the index to the tex array from the hashmap
 	int i = shget(textures, name);
 
-	// @TODO: add security check that the texture doesn't exist at all
-	//		  for example make the 0th texture allways be all pink etc.
-
 	// check if the texture hasn't been loaded yet 
 	if (i == 9999 || i > texture_data_len) // 0 == 0
 	{
@@ -465,6 +501,11 @@ texture get_texture(const char* name)
 
 	// retrieve texture from tex array
 	return texture_data[shget(textures, name)];
+}
+
+texture* get_texture_by_idx(int idx)
+{
+	return &texture_data[idx];
 }
 
 char* get_texture_path(const char* name)

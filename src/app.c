@@ -322,8 +322,10 @@ void process_input(GLFWwindow* window)
 		// 	BEE_FALSE); // 0
 		// printf("path from open_file_window: \"%s\"", path);
 		
-		material* mat = get_material("MAT_rename");
-		printf("material 'MAT_rename' name: %s\n", mat->name);
+		// material* mat = get_material("MAT_rename");
+		// printf("material 'MAT_rename' name: %s\n", mat->name);
+
+		submit_txt_console("pressed F10");
 	}
 
 	// exit on esc

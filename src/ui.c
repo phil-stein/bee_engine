@@ -80,9 +80,11 @@ int box_len;
 int box_lines;
 
 #define CONSOLE_LINES 12
+#define MAX_CHARS_IN_LINE 38
 char* console_lines[CONSOLE_LINES];
 int console_lines_nr = 0;
 int console_lines_offset = 0;
+int console_msgs_nr = 0;
 
 const float console_ratio[] = { 120, 150 };
 char text[9][64];
@@ -3036,10 +3038,12 @@ void asset_browser_window()
 
                     if (path != NULL)
                     {
-                        char* name = str_trunc( str_find_last_of(path, "\\"), 1); // isolate name
-                        path = str_trunc(path, (strlen(name) +1) * -1); // remove name from path
+                        // char* name = str_trunc( str_find_last_of(path, "\\"), 1); // isolate name
+                        // path = str_trunc(path, (strlen(name) +1) * -1); // remove name from path
+                        // 
+                        // check_file(name, strlen(name), path); // logs file if it is an asset
 
-                        check_file(name, strlen(name), path); // logs file if it is an asset
+                        add_file_to_project(path);
                     }
                 }
                 nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
@@ -3094,7 +3098,7 @@ void asset_browser_window()
                             nk_layout_row_dynamic(ctx, 20, 1);
                             if (textures[i].name != NULL)
                             {
-                                nk_label(ctx, textures[i].name, NK_TEXT_LEFT);
+                                nk_label(ctx, textures[i].name, NK_TEXT_LEFT); // textures[i].name
                             }
                             else
                             {
@@ -3949,39 +3953,44 @@ void add_shader_window()
 
 void submit_txt_console(char* txt)
 {
-    // printf("\nmsg: \"%s\"\n", txt);
-    // printf("msg-len: %d\n", strlen(txt));
-    // box_lines++;
-    // #define BUFFER_SIZE 248
-    // char buffer[BUFFER_SIZE];
-    // assert(BUFFER_SIZE > strlen(txt) + 8);
-    // // if (strlen(txt) > BUFFER_SIZE - 8) { txt = str_trunc(txt, (BUFFER_SIZE - 8) - strlen(txt)); }
-    // sprintf(buffer, "%d | %s\n", box_lines, txt);
-    // memcpy(&box_buffer[box_len], buffer, (size_t)strlen(buffer));
-    // box_len += strlen(buffer); 
+    int new_lines = 1;
+    // check if message extends over console-window bounds
+    if (strlen(txt) > MAX_CHARS_IN_LINE)
+    {
+        new_lines = (strlen(txt) / MAX_CHARS_IN_LINE) + 1; // amount of new lines we need
+    }
 
     // move lines up by one to make room for the new message
     if (console_lines_nr >= CONSOLE_LINES)
     {
-        for (int i = 0; i < CONSOLE_LINES -1; ++i)
+        for (int n = 0; n < new_lines; ++n)
         {
-            // copy the next line into this line
-            console_lines[i] = realloc(console_lines[i], (strlen(console_lines[i +1]) +1));
-            assert(console_lines[i] != NULL);
-            strcpy(console_lines[i], console_lines[i +1]);
+            for (int i = 0; i < CONSOLE_LINES -1; ++i)
+            {
+                // copy the next line into this line
+                console_lines[i] = realloc(console_lines[i], (strlen(console_lines[i + 1]) + 1));
+                assert(console_lines[i] != NULL);
+                strcpy(console_lines[i], console_lines[i + 1]);
+            }
         }
     }
 
     // copy new message into the console
-    char buffer[248];
-    sprintf(buffer, "%d | %s", console_lines_nr, txt);
-    // strcat(buffer, txt);
-    int idx = console_lines_nr >= CONSOLE_LINES ? CONSOLE_LINES - 1 : console_lines_nr;
-    console_lines[idx] = realloc(console_lines[idx], (strlen(buffer) +1) * sizeof(char));
-    assert(console_lines[idx] != NULL);
-    strcpy(console_lines[idx], buffer);
+    for (int i = 0; i < new_lines; ++i)
+    {
+        char buffer[248];
+        char msg[MAX_CHARS_IN_LINE +1];
+        strncpy(msg, txt + (MAX_CHARS_IN_LINE * i), MAX_CHARS_IN_LINE);
+        sprintf(buffer, "%d | %s", console_msgs_nr, msg);
+        // strcat(buffer, txt);
+        int idx = console_lines_nr >= CONSOLE_LINES ? CONSOLE_LINES - (new_lines - i) : console_lines_nr;
+        console_lines[idx] = realloc(console_lines[idx], (strlen(buffer) +1) * sizeof(char));
+        assert(console_lines[idx] != NULL);
+        strcpy(console_lines[idx], buffer);
 
-    console_lines_nr++;
+        console_lines_nr++;
+    }
+    console_msgs_nr++;
 }
 void set_error_popup(char* msg)
 {

@@ -41,4 +41,7 @@ void error_callback(int error, const char* description);
 // resizes the "glViewport" according to the resized window
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
+// files dropped onto window callback
+void file_drop_callback(GLFWwindow* window, int path_count, const char* paths[]);
+
 #endif

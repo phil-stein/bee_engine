@@ -2,8 +2,9 @@
 
 #include "GLAD/glad.h"
 
-#include "window.h"
+#include "asset_manager.h"
 #include "framebuffer.h"
+#include "window.h"
 
 // ---- vars ----
 GLFWwindow* window;
@@ -65,6 +66,9 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	set_window_maximized(maximized);
+
+	// callback for files dropped onto window
+	glfwSetDropCallback(window, file_drop_callback);
 
 	return BEE_OK; // all good :)
 }
@@ -130,5 +134,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	if (tex_buffer != NULL)
 	{ 
 		resize_frame_buffer_to_window(tex_buffer);
+	}
+}
+
+void file_drop_callback(GLFWwindow* window, int path_count, const char* paths[])
+{
+	for (int i = 0; i < path_count; ++i)
+	{
+		add_file_to_project(paths[i]);
 	}
 }
