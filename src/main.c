@@ -47,8 +47,10 @@ int main(void)
 	// initialize the application
 	init(); // @TODO: this should be last
 	printf(" -> init() finished\n");
+#ifdef EDITOR_ACT
 	ui_init();
 	printf(" -> ui_init() finished\n");
+#endif
 	input_init();
 	printf(" -> input_init() finished\n");
 	renderer_init();

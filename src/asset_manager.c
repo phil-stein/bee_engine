@@ -106,18 +106,41 @@ char** logged_frag_files = NULL;
 
 // ---- internal assets ----
 char* internal_assets_names[] = {
+									// ---- 0th element assets ----
 								    // texture with index 0 in texture_data array 
 									// this means this texture shows up when requested texture isnt found
 									"missing_texture.png",
 									
+								    // mesh with index 0 in meshes_data array 
+									// this means this mesh shows up when requested mesh isnt found
+									"cube.obj", 
+
+									// ---- misc ----
 									// needed for blank material, unlit material, etc.
 									"blank.png",
 
-								    // texture with index 0 in texture_data array 
-									// this means this texture shows up when requested texture isnt found
-									"cube.obj" 
+									// ---- ui ----
+									"mesh_icon.png",
+									"script_icon.png",
+									"shader_icon.png",
+									"logged_mesh_icon.png",
+									"logged_texture_icon.png",
+
+									// ---- skybox ----
+									"top.jpg",
+									"left.jpg",
+									"back.jpg",
+									"right.jpg",
+									"front.jpg",
+									"bottom.jpg",
+
+									// ---- gizmos ----
+									"camera.obj",
+									"lightbulb.obj",
+									"arrow_down.obj",
+									"flashlight.obj",
 };
-int internal_assets_names_len = 3;
+int internal_assets_names_len = 17;
 // bee_bool all_internal_assets_found = BEE_FALSE;
 
 
@@ -180,12 +203,29 @@ void load_internal_assets()
 {
 	for (int i = 0; i < internal_assets_names_len; ++i)
 	{
+		asset_type type = get_asset_type(internal_assets_names[i]);
 		int	name_len = strlen(internal_assets_names[i]);
 
+		if (type == TEXTURE_ASSET)
+		{
+			get_texture(internal_assets_names[i]);
+		}
+		else if (type == MESH_ASSET)
+		{
+			get_mesh(internal_assets_names[i]);
+		}
+		/*
 		if (internal_assets_names[i][name_len - 4] == '.' &&
 			internal_assets_names[i][name_len - 3] == 'p' &&
 			internal_assets_names[i][name_len - 2] == 'n' &&
 			internal_assets_names[i][name_len - 1] == 'g')
+		{
+			get_texture(internal_assets_names[i]);
+		}
+		else if (internal_assets_names[i][name_len - 4] == '.' &&
+				 internal_assets_names[i][name_len - 3] == 'j' &&
+				 internal_assets_names[i][name_len - 2] == 'p' &&
+				 internal_assets_names[i][name_len - 1] == 'g')
 		{
 			get_texture(internal_assets_names[i]);
 		}
@@ -197,6 +237,7 @@ void load_internal_assets()
 		{
 			get_mesh(internal_assets_names[i]);
 		}
+		*/
 	}
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
@@ -470,6 +511,19 @@ bee_bool check_asset_loaded(char* name)
 
 	// check if the asset hasn't been loaded yet 
 	return i == 9999 ? BEE_FALSE : BEE_TRUE;
+}
+
+bee_bool check_asset_internal(char* name)
+{
+	for (int i = 0; i < internal_assets_names_len; ++i)
+	{
+		if (!strcmp(internal_assets_names[i], name))
+		{
+			return BEE_TRUE;
+			printf("internal asset: %s\n", name);
+		}
+	}
+	return BEE_FALSE;
 }
 
 

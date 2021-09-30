@@ -25,6 +25,7 @@ void assetm_cleanup();
 char** get_all_internals(int* internals_len);
 asset_type get_asset_type(char* file_name);
 bee_bool check_asset_loaded(char* name);
+bee_bool check_asset_internal(char* name);
 
 int get_texture_idx(char* name);
 texture* get_all_textures(int* textures_len);

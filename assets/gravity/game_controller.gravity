@@ -1,8 +1,10 @@
-extern var Entity;
-extern var Game;
-extern var Input;
-extern var Camera;
-extern var World;
+#include "bee_engine.gravity"
+
+// extern var Entity;
+// extern var Game;
+// extern var Input;
+// extern var Camera;
+// extern var World;
 
 var crate_ent;
 var is_crate_move:Bool;
@@ -14,6 +16,8 @@ func init()
 	
 	crate_ent = world.get_entity("crate");
 	is_crate_move = true;
+
+	speak_the_truth(); // imported from bee_engine.gravity
 }
 
 func update()

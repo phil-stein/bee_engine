@@ -32,10 +32,12 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 // the transform of the entity with the parents transforms, calculated recursively 
 void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
 
-int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name);
+int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name);
 void entity_switch_light_type(int entity_id, light_type new_type);
 void entity_add_script(int entity_index, const char* name);
 void entity_remove_script(int entity_index, int script_index);
+// set play / pause used for editor
+void set_gamestate(bee_bool play);
 void set_all_scripts(bee_bool act);
 void set_all_light_meshes(bee_bool act);
 void entity_set_parent(int child, int parent);

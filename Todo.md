@@ -7,10 +7,14 @@ Todo
   - [x] loading images is really slow
   - [x] vm corrupts between run_init() and run_update()
   - [x] editor [show source code] cuts off the last line 
-  - [ ] solid objects don't get rendered in build_mode
-  - [ ] ~5-10 fps in build_mode *(prop. something being called that's unnecessary without the editor)*
+  - [x] solid objects don't get rendered in build_mode
+  - [x] ~5-10 fps in build_mode *(prop. something being called that's unnecessary without the editor)*
   - [x] add entity >> cube doesn't get rendered
   - [x] attach script doesn't work anymore 
+  - [ ] name & path of textures get randomly freed [prob. fixed]
+  - [ ] importing assets sometimes crashes the editor
+  - [ ] new camera component sometimes frees values
+  - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
 - graphics
   - [ ] geometry shader normal direction
   - [ ] anti-aliasing
@@ -21,7 +25,15 @@ Todo
   - [x] asset manager
     - [x] register all assets
     - [x] load & store on demand
-  - [ ] !!! editor cam v. game cam (camera entity)
+    - internal assets
+      -  [x] default assets (missing texture, ...)
+      -  [ ] automate the internal asset recognition
+  - [ ] editor cam v. game cam (camera component)
+    - [x] switching between editor / in-game camera
+    - [x] camera gizmo
+    - [ ] getting the view-matrix
+    - [ ] assure always one camera in scene
+    - [ ] integrate in gravity interface
   - [x] add entity
   - [x] deselect entities
   - [ ] visualize normal-direction
@@ -39,8 +51,8 @@ Todo
     - [x] .gravity file has errors
     - [x] wrong argument passed to function
     - [x] wrong argument amount
-  - [ ] this entity interface (`Entity -> this.rot_x()`)
-  - [ ] other entity interface (`World -> world.get_entity("name")`)
+  - [x] this entity interface (`Entity -> this.rot_x()`)
+  - [x] other entity interface (`World -> world.get_entity("name")`)
   - [ ] finish input interface
     - [x] all keys
     - [x] get_key() & get_key_down()

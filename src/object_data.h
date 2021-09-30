@@ -29,6 +29,9 @@ typedef struct texture
 	char* name;
 }texture;
 
+
+// ---- components ----
+
 typedef struct material
 {
 	shader shader;
@@ -46,6 +49,14 @@ typedef struct material
 
 	char* name;
 }material;
+
+typedef struct camera
+{
+	f32 perspective;  // 45.0f;
+	f32 near_plane;  //  0.1f;
+	f32 far_plane;  //   100.0f;
+
+}camera;
 
 typedef struct mesh
 {
@@ -108,6 +119,9 @@ typedef struct entity
 	mesh _mesh;
 	material* _material;
 
+	bee_bool has_cam;
+	camera* _camera;
+
 	bee_bool has_light;
 	light _light;
 
@@ -147,7 +161,7 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction);
 light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction, f32 constant, f32 linear, f32 quadratic, f32 cut_off, f32 outer_cut_off);
 
 // create an entity
-entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, light* _light, char* _name); //model* _model
+entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, camera* cam, light* _light, char* _name); //model* _model
 
 // render the mesh
 // void draw_mesh(mesh* _mesh, material* _material, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);

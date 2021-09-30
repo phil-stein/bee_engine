@@ -32,6 +32,10 @@ typedef struct
 
 // void report_error(gravity_vm* vm, error_type_t error_type, const char* message, error_desc_t error_desc, void* xdata);
 void throw_error(char* msg);
+// for 'System.print()' calls
+void print_callback(gravity_vm* vm, const char* message, void* xdata);
+// for including files
+const char* load_file(const char* file, size_t* size, uint32_t* fileid, void* xdata, int* is_static);
 
 gravity_script make_script(char* path);
 void free_script(gravity_script* script);

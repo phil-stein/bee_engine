@@ -1438,7 +1438,7 @@ void properties_window(int ent_len)
     if (nk_begin(ctx, "Properties", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), window_flags)) 
         // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
-        static int scripts_act = 0;
+        static int gamestate_act = 0;
         static float property_pos_x = 0.0f;
         static float property_pos_y = 0.0f;
         static float property_pos_z = 0.0f;
@@ -1457,19 +1457,19 @@ void properties_window(int ent_len)
             nk_layout_row_dynamic(ctx, 25, 1);
             if (nk_menu_item_label(ctx, "Empty", NK_TEXT_LEFT))
             {
-                add_entity(NULL, NULL, NULL, NULL, NULL, NULL, "empty");
+                add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "empty");
             }
             if (nk_menu_item_label(ctx, "Trans", NK_TEXT_LEFT))
             {
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, NULL, NULL, NULL, "trans");
+                add_entity(zero, zero, one, NULL, NULL, NULL, NULL, "trans");
             }
             if (nk_menu_item_label(ctx, "Mesh", NK_TEXT_LEFT))
             {
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one  = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, "mesh");
+                add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "mesh");
             }
             if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
             {
@@ -1477,7 +1477,7 @@ void properties_window(int ent_len)
                 vec3 one       = { 1.0f, 1.0f, 1.0f };
                 vec3 point_one = { 0.1f, 0.1f, 0.1f };
                 light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
-                add_entity(zero, zero, point_one, get_mesh("lightbulb.obj") , get_material("MAT_blank_unlit"), &point_light, "point_light");	// mat_blank_unlit
+                add_entity(zero, zero, point_one, get_mesh("lightbulb.obj") , get_material("MAT_blank_unlit"), NULL, &point_light, "point_light");	// mat_blank_unlit
             }
             nk_menu_end(ctx);
         }
@@ -1527,12 +1527,14 @@ void properties_window(int ent_len)
         // ---- play / pause ----
         
         nk_layout_row_static(ctx, 25, 80, 1);
-        if (nk_button_label(ctx, scripts_act == 0 ? "Play" : "Pause"))
+        if (nk_button_label(ctx, gamestate_act == 0 ? "Play" : "Pause"))
         {
             
-            set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
-            scripts_act = scripts_act == 0 ? 1 : 0;
-            set_all_light_meshes(scripts_act == 0 ? BEE_TRUE : BEE_FALSE); 
+            // set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
+            // scripts_act = scripts_act == 0 ? 1 : 0;
+            // set_all_light_meshes(scripts_act == 0 ? BEE_TRUE : BEE_FALSE); 
+            gamestate_act = !gamestate_act;
+            set_gamestate(gamestate_act);
         }
         
         // spacing
@@ -2455,6 +2457,18 @@ void properties_window(int ent_len)
                     nk_tree_pop(ctx);
                 }
                 
+                if (ent->has_cam == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
+                {
+                    nk_property_float(ctx, "Perspective:", 1.0f, &ent->_camera->perspective, 200.0f, 0.1f, 0.2f);
+
+                    nk_property_float(ctx, "Near Plane:", 0.0001f, &ent->_camera->near_plane, 10.0f, 0.1f, 0.01f);
+
+                    nk_property_float(ctx, "Far Plane:", 1.0f, &ent->_camera->far_plane, 500.0f, 0.1f, 0.2f);
+
+                    nk_tree_pop(ctx);
+                }
+
+
                 if (ent->has_light == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Light", NK_MINIMIZED))
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
@@ -3064,6 +3078,8 @@ void asset_browser_window()
 
                     for (int i = 0; i < textures_len; ++i)
                     {
+                        if (check_asset_internal(textures[i].name))
+                        { continue; }
                         struct nk_rect bounds = nk_widget_bounds(ctx);
 
                         if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
@@ -3164,6 +3180,10 @@ void asset_browser_window()
 
                     for (int i = 0; i < meshes_len; ++i)
                     {
+                        if (check_asset_internal(meshes[i].name))
+                        {
+                            continue;
+                        }
                         struct nk_rect bounds = nk_widget_bounds(ctx);
 
                         if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
@@ -3257,6 +3277,10 @@ void asset_browser_window()
 
                     for (int i = 0; i < scripts_len; ++i)
                     {
+                        if (check_asset_internal(scripts[i].name))
+                        {
+                            continue;
+                        }
                         struct nk_rect bounds = nk_widget_bounds(ctx);
 
                         if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
@@ -3302,6 +3326,10 @@ void asset_browser_window()
 
                     for (int i = 0; i < materials_len; ++i)
                     {
+                        if (check_asset_internal(materials[i].name))
+                        {
+                            continue;
+                        }
                         struct nk_rect bounds = nk_widget_bounds(ctx);
 
                         if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
@@ -3346,6 +3374,10 @@ void asset_browser_window()
 
                     for (int i = 0; i < shaders_len; ++i)
                     {
+                        if (check_asset_internal(shaders[i].name))
+                        {
+                            continue;
+                        }
                         struct nk_rect bounds = nk_widget_bounds(ctx);
 
                         if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
@@ -3560,7 +3592,7 @@ void asset_browser_window()
                             name = malloc(strlen((meshes[selected_mesh].name) +1) * sizeof(char));
                             assert(name != NULL);
                             strcpy(name, meshes[selected_mesh].name);
-                            add_entity(zero, zero, one, &meshes[selected_mesh], get_material("MAT_blank"), NULL, name);
+                            add_entity(zero, zero, one, &meshes[selected_mesh], get_material("MAT_blank"), NULL, NULL, name);
                         }
                     }
                 }
@@ -3686,6 +3718,12 @@ void asset_browser_window()
                         char* buf[64];
                         sprintf(buf, "Name: \"%s\"", internals[selected_internal]);
                         nk_label_wrap(ctx, buf);
+                        asset_type t = get_asset_type(internals[selected_internal]);
+                        char* type_str = t == NOT_ASSET ? "none" : t == TEXTURE_ASSET ? "Texture" : t == MESH_ASSET ? "Mesh" :
+                                         t == SHADER_ASSET ? "Shader" : SCRIPT_ASSET ? "Script" : "unknown";
+                        sprintf(buf, "Type: %s", type_str);
+                        nk_label_wrap(ctx, buf);
+
                     }
                 }
 
@@ -3960,7 +3998,7 @@ void submit_txt_console(char* txt)
         new_lines = (strlen(txt) / MAX_CHARS_IN_LINE) + 1; // amount of new lines we need
     }
 
-    // move lines up by one to make room for the new message
+    // move lines up to make room for the new message
     if (console_lines_nr >= CONSOLE_LINES)
     {
         for (int n = 0; n < new_lines; ++n)

@@ -18,10 +18,20 @@
 
 // ---- vars ----
 
+#ifdef EDITOR_ACT
+bee_bool gamestate = BEE_FALSE; // start of in editor mode
+#else 
+bee_bool gamestate = BEE_TRUE; // start of in game mode
+#endif
 // camera
 f32 perspective = 45.0f;
 f32 near_plane  = 0.1f;
 f32 far_plane   = 100.0f;
+int camera_ent_idx;
+
+f32 editor_perspective = 45.0f;
+f32 editor_near_plane = 0.1f;
+f32 editor_far_plane = 100.0f;
 
 // entities
 entity* entities;
@@ -179,13 +189,14 @@ void renderer_update()
 	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
-#ifdef EDITOR_ACT
 	// need to restore the opengl state after calling nuklear
-	glEnable(GL_DEPTH_TEST); // enable the z-buffer
-	glEnable(GL_CULL_FACE);
 	glEnable(GL_BLEND); // enable blending of transparent texture
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //set blending function: 1 - source_alpha, e.g. 0.6(60%) transparency -> 1 - 0.6 = 0.4(40%)
 	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+#ifdef EDITOR_ACT
+	// this works when only activated once
+	glEnable(GL_CULL_FACE); 
+	glEnable(GL_DEPTH_TEST); // enable the z-buffer
 #endif
 
 #ifdef EDITOR_ACT
@@ -201,7 +212,7 @@ void renderer_update()
 
 	}
 #endif
-
+ 
 	// draw opaque objects
 	for (int i = 0; i < entities_len; ++i)
 	{
@@ -228,7 +239,8 @@ void renderer_update()
 	for(int rpt = 0; rpt < BLEND_SORT_DEPTH; ++rpt)
 	{
 		// sort by distance
-		for (int i = 0; (i + 1) < transparent_ents_len; ++i)
+		// for (int i = 0; (i + 1) < transparent_ents_len; ++i)
+		for (int i = transparent_ents_len -2; i > 0; --i)
 		{
 			// calc dist for each transparent obj
 			f32 dist01 = glm_vec3_distance(cam_pos, entities[transparent_ents[i]].pos);
@@ -330,6 +342,7 @@ void renderer_update()
 	glBindVertexArray(quad_vao);
 	glDisable(GL_DEPTH_TEST);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glEnable(GL_DEPTH_TEST);
 	// ------------------------------------------------------------------------
 
 	// entities ---------------------------------------------------------------
@@ -386,12 +399,36 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	glm_scale(model, scale);
 
 	mat4 view;
-	get_camera_view_mat(&view[0]);
+	if (gamestate) // in play-mode
+	{
+		// @TODO: use camera-entities view-mat
+		// vec3 center;
+		// glm_vec3_add(entities[camera_ent_idx].pos, , center);
+		// glm_lookat(position, center, up, view);
+		get_camera_view_mat(&view[0]);
+	}
+	else
+	{
+		get_camera_view_mat(&view[0]);
+	}
+	
 
 	mat4 proj;
-	f32 deg_pers = perspective; glm_make_rad(&deg_pers);
+
+	f32 deg_pers = get_entity(camera_ent_idx)->_camera->perspective;
+	f32 near_p = get_entity(camera_ent_idx)->_camera->near_plane;
+	f32 far_p = get_entity(camera_ent_idx)->_camera->far_plane;
+#ifdef EDITOR_ACT
+	if (!gamestate) // play-mode
+	{
+		deg_pers = perspective;
+		near_p = near_plane;
+		far_p = far_plane;
+	}
+#endif
+	glm_make_rad(&deg_pers);
 	int w, h; get_window_size(&w, &h);
-	glm_perspective(deg_pers, ((float)w / (float)h), near_plane, far_plane, proj);
+	glm_perspective(deg_pers, ((float)w / (float)h), near_p, far_p, proj);
 
 #ifdef EDITOR_ACT
 	if (wireframe_mode_enabled == BEE_TRUE || normal_mode_enabled == BEE_TRUE || uv_mode_enabled == BEE_TRUE) 
@@ -425,6 +462,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	}
 	else 
 	{
+
 #endif
 		shader_use(mat->shader);
 
@@ -433,8 +471,15 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 		shader_set_mat4(mat->shader, "view", &view[0]);
 		shader_set_mat4(mat->shader, "proj", &proj[0]);
 
-		vec3 cam_pos; get_camera_pos(cam_pos);
-		shader_set_vec3(mat->shader, "viewPos", cam_pos);
+		if (gamestate) // in play-mode
+		{
+			shader_set_vec3(mat->shader, "viewPos", entities[camera_ent_idx].pos);
+		}
+		else 
+		{
+			vec3 cam_pos; get_camera_pos(cam_pos);
+			shader_set_vec3(mat->shader, "viewPos", cam_pos);
+		}
 
 		// set shader material ------------------------------
 		glActiveTexture(GL_TEXTURE0);
@@ -524,6 +569,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	{
 		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / 8)); // each vertices consist of 8 floats
 	}
+
 	if (mat->draw_backfaces == BEE_TRUE)
 	{
 		glEnable(GL_CULL_FACE);
@@ -582,10 +628,10 @@ void renderer_cleanup()
 }
 
 // add an entity
-int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, light* _light, char* name)
+int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name)
 {
 	entities_len++;
-	arrput(entities, make_entity(pos, rot, scale, _mesh, _material, _light, name));
+	arrput(entities, make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
 
 	if (_material != NULL && _material->is_transparent)
 	{
@@ -609,6 +655,11 @@ int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material,
 		}
 	}
 
+	if (_cam != NULL)
+	{
+		camera_ent_idx = entities_len - 1;
+	}
+
 	return entities_len -1;
 }
 void add_entity_cube()
@@ -617,7 +668,7 @@ void add_entity_cube()
 	vec3 pos = { 0.0f, 0.0f, 0.0f };
 	vec3 rot = { 0.0f, 0.0f, 0.0f };
 	vec3 scale = { 1.0f, 1.0f, 1.0f };
-	add_entity(pos, rot, scale, &m, &entities[0]._material, NULL, "cube");
+	add_entity(pos, rot, scale, &m, &entities[0]._material, NULL, NULL, "cube");
 }
 
 // doesnt work yet
@@ -670,6 +721,36 @@ void entity_remove_script(int entity_index, int script_index)
 	free_script(entities[entity_index].scripts[script_index]);
 	arrdel(entities[entity_index].scripts, script_index);
 	entities[entity_index].scripts_len--;
+}
+
+void set_gamestate(bee_bool play)
+{
+	gamestate = play;
+	set_all_scripts(play);
+	set_all_light_meshes(!play);
+
+	if (play)
+	{
+		// set in-game cam to be act
+		entity* ent_cam = get_entity(camera_ent_idx);
+		if (ent_cam == NULL) 
+		{ 
+			printf("[ERROR] No Camera in Scene.\n");  
+			submit_txt_console("[ERROR] No Camera in Scene."); 
+			return;
+		}
+		perspective = ent_cam->_camera->perspective;
+		near_plane  = ent_cam->_camera->near_plane;
+		far_plane   = ent_cam->_camera->far_plane;
+		printf("game-camera: persp: %f, n_plane: %f, f_plane: %f\n", ent_cam->_camera->perspective, ent_cam->_camera->near_plane, ent_cam->_camera->far_plane);
+	}
+	else
+	{
+		// act editor cam
+		perspective = editor_perspective;
+		near_plane  = editor_near_plane;
+		far_plane   = editor_far_plane;
+	}
 }
 void set_all_scripts(bee_bool act)
 {
@@ -768,6 +849,7 @@ void entity_remove_child(int parent, int child)
 		}
 	}
 }
+
 
 // doesnt work yet
 void entity_remove(int entity_idx)

@@ -13,13 +13,14 @@
 
 
 bee_bool cur_script_error = BEE_FALSE;
+int script_id = 0;
 // gravity_vm* vm;
 // gravity_closure_t* closure;
 
 // a very simple report error callback function
 void report_error(gravity_vm* vm, error_type_t error_type, const char* message, error_desc_t error_desc, void* xdata) 
 {
-    char buf[128];
+    char buf[512];
     
     gravity_script* cur_script = get_cur_script();
 
@@ -38,10 +39,30 @@ void throw_error(char* msg)
     cur_script->has_error = BEE_TRUE;
 }
 
+void print_callback(gravity_vm* vm, const char* message, void* xdata)
+{
+    char* msg = "[GRVTY] ";
+    strcat(msg, message);
+    printf(msg);
+    submit_txt_console(msg);
+}
+
 // for including files
 const char* load_file(const char* file, size_t* size, uint32_t* fileid, void* xdata, int* is_static)
 {
+    // printf("load file: %s\n", file);
+    char* path = get_asset_dir();
+    strcat(path, "\\gravity\\");
+    strcat(path, file);
+    // printf(" -> path: %s\n", path);
+    
+    char* txt = read_text_file(path);
+    // printf("read text:\n %s\n", txt);
 
+    *size = strlen(txt);
+    *fileid = 1;
+    *is_static = BEE_FALSE; // false
+    return txt;
 }
 
 gravity_script make_script(char* path)
@@ -81,70 +102,21 @@ void free_script(gravity_script* script)
     }
 }
 
-rtn_code gravity_run(char* source_code)
-{
-    printf("gravity src: \n%s", source_code);
-
-    // setup a delegate struct (much more options are available)
-    gravity_delegate_t delegate = { .error_callback = report_error };
-
-    // allocate a new compiler
-    gravity_compiler_t* compiler = gravity_compiler_create(&delegate);
-
-    printf("strlen(src): %d\n", (int)strlen(source_code));
-
-    // compile Gravity source code into a closure (bytecode)
-    gravity_closure_t* closure = gravity_compiler_run(compiler, source_code, strlen(source_code), 0, false, true);
-
-    // sanity check on compiled source
-    if (!closure)
-    {
-        // an error occurred while compiling source code and it has already been reported by the report_error callback
-        gravity_compiler_free(compiler);
-        assert(0 == 1);
-        return BEE_ERROR;
-    }
-
-    // allocate a new Gravity VM
-    gravity_vm* vm = gravity_vm_new(&delegate);
-
-    // transfer memory from the compiler (front-end) to the VM (back-end)
-    gravity_compiler_transfer(compiler, vm);
-
-    // once the memory has been transferred, you can get rid of the front-end
-    gravity_compiler_free(compiler);
-
-    // execute main closure
-    if (gravity_vm_runmain(vm, closure)) {
-        // retrieve returned result
-        gravity_value_t result = gravity_vm_result(vm);
-
-        // dump result to a C string and print it to stdout
-        char buffer[512];
-        gravity_value_dump(vm, result, buffer, sizeof(buffer));
-        printf("RESULT: %s\n", buffer);
-    }
-
-    // free VM and core libraries (implicitly allocated by the VM)
-    gravity_vm_free(vm);
-    gravity_core_free();
-
-    return BEE_OK;
-}
-
-
 rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_index)
 {
     set_cur_script(script, entity_index);
 
     // setup a delegate struct
-    gravity_delegate_t delegate = { .error_callback = report_error};
+    gravity_delegate_t delegate = { .error_callback = report_error, 
+                                    .loadfile_callback = load_file, 
+                                    .log_callback = print_callback};
 
     // allocate a new compiler
     gravity_compiler_t* compiler = gravity_compiler_create(&delegate);
+    assert(compiler != NULL);
 
     // compile Gravity source code into bytecode
-    script->closure = gravity_compiler_run(compiler, src, strlen(src), 0, false, true);
+    script->closure = gravity_compiler_run(compiler, src, strlen(src), 0, BEE_FALSE, BEE_TRUE);
     // assert(script->closure != NULL);
     if (script->closure == NULL)
     {

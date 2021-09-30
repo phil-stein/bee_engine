@@ -3,6 +3,7 @@ extern var Game;
 extern var Input;
 extern var Camera;
 
+
 func init()
 {
 }
@@ -20,4 +21,6 @@ func update()
 func cleanup()
 {
 }
+
+
 

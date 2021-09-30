@@ -323,7 +323,7 @@ light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction,
 
 // ---- entity ----
 
-entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, light* _light, char* _name)
+entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, camera* cam, light* _light, char* _name)
 {
 	entity ent;
 	ent.name = _name;
@@ -342,6 +342,11 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, l
 	{
 		ent._mesh	  = *_mesh;
 		ent._material = mat;
+	}
+	ent.has_cam = cam != NULL ? BEE_TRUE : BEE_FALSE;
+	if (ent.has_cam)
+	{
+		ent._camera = cam;
 	}
 	ent.has_light = _light != NULL ? BEE_TRUE : BEE_FALSE;
 	if (_light != NULL)
