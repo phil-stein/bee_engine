@@ -1,7 +1,7 @@
 extern var Entity;
 extern var Game;
 extern var Input;
-extern var Camera;
+// extern var Camera;
 
 
 func init()

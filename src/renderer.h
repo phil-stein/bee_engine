@@ -39,7 +39,7 @@ void entity_remove_script(int entity_index, int script_index);
 // set play / pause used for editor
 void set_gamestate(bee_bool play);
 void set_all_scripts(bee_bool act);
-void set_all_light_meshes(bee_bool act);
+void set_all_gizmo_meshes(bee_bool act);
 void entity_set_parent(int child, int parent);
 void entity_remove_child(int parent, int child);
 void entity_remove(int entity_idx);

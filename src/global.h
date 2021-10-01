@@ -23,7 +23,7 @@ typedef enum rtn_code rtn_code;
 enum bee_bool {
 	BEE_FALSE	= 0,
 	BEE_TRUE	= 1,
-	BEE_SWITCH  = 2  // passed as argument to f.e. set(bee_bool act) passing switch will just switch the state 
+	BEE_SWITCH  = 2  // passed as argument, f.e. set(bee_bool act) passing BEE_SWITCH to switch the state 
 };
 typedef enum bee_bool bee_bool;
 

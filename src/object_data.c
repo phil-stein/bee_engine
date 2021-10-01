@@ -271,6 +271,23 @@ mesh make_grid_mesh(int x_verts, int z_verts)
 	return m;
 }
 
+// ---- camera ----
+
+camera make_camera(f32 perspective, f32 near_plane, f32 far_plane)
+{
+	camera cam;
+	cam.perspective = perspective;
+	cam.near_plane  = near_plane;
+	cam.far_plane   = far_plane;
+	vec3 front  = { 0.0f, 0.0f, -1.0f }; // { 0.0f, -0.5f, -0.85f };
+	vec3 up     = { 0.0f, 1.0f, 0.0f  };
+	vec3 target = { 0.0f, 0.0f, 0.0f  };
+	glm_vec3_copy(front, cam.front);
+	glm_vec3_copy(up, cam.up);
+	glm_vec3_copy(target, cam.target);
+	return cam;
+}
+
 // ---- light ----
 
 light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, f32 linear, f32 quadratic)
@@ -323,7 +340,7 @@ light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction,
 
 // ---- entity ----
 
-entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, camera* cam, light* _light, char* _name)
+entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, camera* _cam, light* _light, char* _name)
 {
 	entity ent;
 	ent.name = _name;
@@ -337,16 +354,17 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, c
 		glm_vec3_copy(scale, ent.scale);
 	}
 
-	ent.has_model = (_mesh != NULL && mat != NULL) ? BEE_TRUE : BEE_FALSE;
+	ent.has_model = (_mesh != NULL && _mat != NULL) ? BEE_TRUE : BEE_FALSE;
 	if (ent.has_model)
 	{
 		ent._mesh	  = *_mesh;
-		ent._material = mat;
+		ent._material = _mat;
 	}
-	ent.has_cam = cam != NULL ? BEE_TRUE : BEE_FALSE;
+	ent.has_cam = _cam != NULL ? BEE_TRUE : BEE_FALSE;
 	if (ent.has_cam)
 	{
-		ent._camera = cam;
+		ent._camera = *_cam;
+		printf("has camera\n");
 	}
 	ent.has_light = _light != NULL ? BEE_TRUE : BEE_FALSE;
 	if (_light != NULL)
@@ -377,11 +395,11 @@ void update_entity(entity* ent)
 		}
 
 		// source not yet read
-		if (ent->scripts[i]->source == NULL)
+		if (ent->scripts[i]->init_closure_assigned == BEE_FALSE) // ent->scripts[i]->source == NULL | && ent->scripts[i]->closure == NULL
 		{
+			printf("[started run_init] for %s\n", ent->scripts[i]->name);
 			ent->scripts[i]->source = read_text_file(ent->scripts[i]->path);
 			assert(ent->scripts[i]->source != NULL);
-
 			gravity_run_init(ent->scripts[i], ent->scripts[i]->source, get_entity_id_by_name(ent->name));
 		}
 		else 

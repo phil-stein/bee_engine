@@ -6,6 +6,12 @@
 #include "object_data.h"
 #include "global.h"
 
+typedef enum error_type
+{
+	GENERAL_ERROR,
+	GRAVITY_ERROR
+}error_type;
+
 typedef struct
 {
 	bee_bool handled;
@@ -135,7 +141,7 @@ void submit_txt_console(char* txt);
 
 void error_popup_window();
 
-void set_error_popup(char* msg);
+void set_error_popup(error_type type, char* msg);
 
 void source_code_window();
 

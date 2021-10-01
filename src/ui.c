@@ -93,12 +93,13 @@ int text_len[9];
 // ---- add shader ----
 bee_bool shader_add_popup_act = BEE_FALSE;
 
-// ---- gravity error ----
-static int error_popup_act = nk_false;
-static char* error_msg;
+// ---- error popup ----
+int error_popup_act = nk_false;
+char* error_msg;
+error_type error_popop_type = GENERAL_ERROR;
 
-static int source_code_window_act = nk_false;
-static char* source_code;
+int source_code_window_act = nk_false;
+char* source_code;
 
 
 struct nk_image image;
@@ -1788,17 +1789,17 @@ void properties_window(int ent_len)
                 {
                     static vec3 old_pos;
                     vec3 pos;
-                    get_camera_pos(pos);
+                    get_editor_camera_pos(pos);
 
-                    nk_property_float(ctx, "Pos X:", -1024.0f, &pos[0], 1024.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Editor Pos X:", -1024.0f, &pos[0], 1024.0f, 0.1f, 0.2f);
 
-                    nk_property_float(ctx, "Pos Y:", -1024.0f, &pos[1], 1024.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Editor Pos Y:", -1024.0f, &pos[1], 1024.0f, 0.1f, 0.2f);
 
-                    nk_property_float(ctx, "Pos Z:", -1024.0f, &pos[2], 1024.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Editor Pos Z:", -1024.0f, &pos[2], 1024.0f, 0.1f, 0.2f);
 
                     if (old_pos != pos)
                     {
-                        set_camera_pos(pos);
+                        set_editor_camera_pos(pos);
                         glm_vec3_copy(pos, old_pos);
                     }
 
@@ -1809,17 +1810,17 @@ void properties_window(int ent_len)
                 {
                     static vec3 old_front;
                     vec3 front;
-                    get_camera_front(front);
+                    get_editor_camera_front(front);
 
-                    nk_property_float(ctx, "Dir X:", -1024.0f, &front[0], 1024.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Editor Dir X:", -1024.0f, &front[0], 1024.0f, 0.1f, 0.2f);
                                             
-                    nk_property_float(ctx, "Dir Y:", -1024.0f, &front[1], 1024.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Editor Dir Y:", -1024.0f, &front[1], 1024.0f, 0.1f, 0.2f);
                                             
-                    nk_property_float(ctx, "Dir Z:", -1024.0f, &front[2], 1024.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Editor Dir Z:", -1024.0f, &front[2], 1024.0f, 0.1f, 0.2f);
 
                     if (old_front != front)
                     {
-                        set_camera_front(front);
+                        set_editor_camera_front(front);
                         glm_vec3_copy(front, old_front);
                     }
 
@@ -1827,11 +1828,11 @@ void properties_window(int ent_len)
                 }
 
 
-                nk_property_float(ctx, "Perspective:", 1.0f, prop.perspective, 200.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Editor Perspective:", 1.0f, prop.perspective, 200.0f, 0.1f, 0.2f);
                 
-                nk_property_float(ctx, "Near Plane:", 0.0001f, prop.near_plane, 10.0f, 0.1f, 0.01f);
+                nk_property_float(ctx, "Editor Near Plane:", 0.0001f, prop.near_plane, 10.0f, 0.1f, 0.01f);
                 
-                nk_property_float(ctx, "Far Plane:", 1.0f, prop.far_plane, 500.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Editor Far Plane:", 1.0f, prop.far_plane, 500.0f, 0.1f, 0.2f);
 
                 nk_tree_pop(ctx);
             }
@@ -1910,7 +1911,8 @@ void properties_window(int ent_len)
                         // nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
                         char type_buffer[64]; strcpy(type_buffer, "empty");
                         // if (*prop.has_trans && !*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "empty"); }
-                        if (ent->has_model && !ent->has_light) { strcpy(type_buffer, "model"); }
+                        if (ent->has_model && !ent->has_light && !ent->has_cam) { strcpy(type_buffer, "model"); }
+                        else if (ent->has_cam)   { strcpy(type_buffer, "camera"); }
                         else if (ent->has_light) { strcpy(type_buffer, "light"); }
                         else if (ent->has_trans) { strcpy(type_buffer, "trans"); }
 
@@ -2459,11 +2461,19 @@ void properties_window(int ent_len)
                 
                 if (ent->has_cam == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
                 {
-                    nk_property_float(ctx, "Perspective:", 1.0f, &ent->_camera->perspective, 200.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Perspective:", 1.0f, &ent->_camera.perspective, 200.0f, 0.1f, 0.2f);
 
-                    nk_property_float(ctx, "Near Plane:", 0.0001f, &ent->_camera->near_plane, 10.0f, 0.1f, 0.01f);
+                    nk_property_float(ctx, "Near Plane:", 0.0001f, &ent->_camera.near_plane, 10.0f, 0.1f, 0.01f);
 
-                    nk_property_float(ctx, "Far Plane:", 1.0f, &ent->_camera->far_plane, 500.0f, 0.1f, 0.2f);
+                    nk_property_float(ctx, "Far Plane:", 1.0f, &ent->_camera.far_plane, 500.0f, 0.1f, 0.2f);
+
+                    nk_spacing(ctx, 1);
+
+                    nk_property_float(ctx, "Dir X:", -1024.0f, &ent->_camera.front[0], 1024.0f, 0.1f, 0.2f);
+
+                    nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_camera.front[1], 1024.0f, 0.1f, 0.2f);
+
+                    nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_camera.front[2], 1024.0f, 0.1f, 0.2f);
 
                     nk_tree_pop(ctx);
                 }
@@ -2613,9 +2623,9 @@ void properties_window(int ent_len)
                             nk_layout_row_dynamic(ctx, 20, 1);
                             nk_property_float(ctx, "Dir X:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
 
-                            nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_light.direction[1], 1024.0f, 0.1f, 0.2f);
 
-                            nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_light.direction[2], 1024.0f, 0.1f, 0.2f);
 
                             nk_tree_pop(ctx);
                         }
@@ -3815,7 +3825,8 @@ void error_popup_window()
     // int y = 200;
     // int w = 300;
     // int h = 300;
-    if (nk_begin(ctx, "Gravity Error", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
+    char* title = error_popop_type == GENERAL_ERROR ? "Error" : error_popop_type == GRAVITY_ERROR ? "Gravity Error" : "Error";
+    if (nk_begin(ctx, title, nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
         window_flags | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))
     {
         nk_layout_row_dynamic(ctx, 150, 1);
@@ -4030,12 +4041,14 @@ void submit_txt_console(char* txt)
     }
     console_msgs_nr++;
 }
-void set_error_popup(char* msg)
+void set_error_popup(error_type type,char* msg)
 {
     error_popup_act = nk_true;
+    error_popop_type = type;
+
     error_msg = calloc(strlen(msg), sizeof(char));
     strcpy(error_msg, msg);
-    error_msg[strlen(msg) - 1] = '\0';
+    error_msg[strlen(msg)] = '\0';
 }
 void set_source_code_window(char* src)
 {

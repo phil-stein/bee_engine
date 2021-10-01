@@ -9,12 +9,13 @@
 	struct Material
 	{
 		vec3 tint;
+		sampler2D diffuse;
 	};
 
 	uniform Material material;	
 
 	void main()
 	{
-		FragColor = vec4(material.tint, 1.0);
-		// FragColor = texture(tex, TexCoord);
+		// FragColor = vec4(material.tint, 1.0);
+		FragColor = texture(material.diffuse, TexCoord);
 	}

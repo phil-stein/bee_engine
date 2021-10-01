@@ -1,10 +1,10 @@
 #include "bee_engine.gravity"
 
-// extern var Entity;
-// extern var Game;
-// extern var Input;
+extern var Entity;
+extern var Game;
+extern var Input;
 // extern var Camera;
-// extern var World;
+extern var World;
 
 var crate_ent;
 var is_crate_move:Bool;

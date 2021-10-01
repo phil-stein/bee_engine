@@ -20,18 +20,22 @@ int script_id = 0;
 // a very simple report error callback function
 void report_error(gravity_vm* vm, error_type_t error_type, const char* message, error_desc_t error_desc, void* xdata) 
 {
-    char buf[512];
+    char buf[248];
     
     gravity_script* cur_script = get_cur_script();
 
     // printf("GRAVITY_ERROR: %s, file: %s, line: %d, column: %d\n", message, cur_script->name, error_desc.lineno, error_desc.colno);
-    sprintf(buf, "GRAVITY_ERROR: %s, file: %s, line: %d, column: %d\n", message, cur_script->name, error_desc.lineno, error_desc.colno);
+    // sprintf(buf, "%s, file: %s, line: %d, column: %d\n", message, cur_script->name, error_desc.lineno, error_desc.colno);
+    sprintf_s(buf, 248, "%s, file: %s, line: %d", message, cur_script->name, error_desc.lineno);
     throw_error(buf); // assert(0 == 1); // exit(1);
 }
 void throw_error(char* msg)
 {
-    printf("GRAVITY_ERROR: %s\n", msg);
-    set_error_popup(msg);
+    char error[248];
+    sprintf_s(error, 248, "[GRAVITY_ERROR] %s", msg);
+    printf(error);
+    set_error_popup(GRAVITY_ERROR, msg);
+    submit_txt_console(error);
     // disable current script
     cur_script_error      = BEE_TRUE;
     gravity_script* cur_script = get_cur_script();
@@ -60,8 +64,8 @@ const char* load_file(const char* file, size_t* size, uint32_t* fileid, void* xd
     // printf("read text:\n %s\n", txt);
 
     *size = strlen(txt);
-    *fileid = 1;
-    *is_static = BEE_FALSE; // false
+    *fileid = 0;
+    *is_static = BEE_TRUE; // false
     return txt;
 }
 
@@ -77,6 +81,7 @@ gravity_script make_script(char* path)
     // script.entity_index = 0;
 
     script.closure = NULL;
+    script.init_closure_assigned   = BEE_FALSE;
     script.update_closure_assigned = BEE_FALSE;
 
     char* name = str_find_last_of(path, "\\");
@@ -107,9 +112,9 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
     set_cur_script(script, entity_index);
 
     // setup a delegate struct
-    gravity_delegate_t delegate = { .error_callback = report_error, 
-                                    .loadfile_callback = load_file, 
-                                    .log_callback = print_callback};
+    gravity_delegate_t delegate = { .error_callback = report_error,
+                                    // .loadfile_callback = load_file,
+                                    .log_callback = print_callback };
 
     // allocate a new compiler
     gravity_compiler_t* compiler = gravity_compiler_create(&delegate);
@@ -117,17 +122,19 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
 
     // compile Gravity source code into bytecode
     script->closure = gravity_compiler_run(compiler, src, strlen(src), 0, BEE_FALSE, BEE_TRUE);
+    script->init_closure_assigned = BEE_TRUE;
+    script->source  = NULL; // gravity_run_compiler corrupts the source string
     // assert(script->closure != NULL);
-    if (script->closure == NULL)
-    {
-        char buffer[80];
-        sprintf(buffer, "GRAVITY_ERROR: failed to compile \"%s\"______", script->name);
-        throw_error(buffer);
-        // cur_script_error = BEE_FALSE;
-        return BEE_ERROR;
-    }
     if (cur_script_error == BEE_TRUE)
     {
+        cur_script_error = BEE_FALSE;
+        return BEE_ERROR;
+    }
+    if (script->closure == NULL)
+    {
+        char buffer[60];
+        sprintf(buffer, "failed to compile \"%s\"", script->name);
+        throw_error(buffer);
         cur_script_error = BEE_FALSE;
         return BEE_ERROR;
     }
@@ -137,7 +144,7 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
     if (script->vm == NULL)
     {
         char buffer[80];
-        sprintf(buffer, "GRAVITY_ERROR: failed create vm for \"%s\"", script->name);
+        sprintf(buffer, "failed create vm for \"%s\"", script->name);
         throw_error(buffer);
         // cur_script_error = BEE_FALSE;
         return BEE_ERROR;
@@ -146,7 +153,7 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
     setup_game_class(script->vm);
     setup_input_class(script->vm);
     setup_world_class(script->vm);
-    setup_camera_class(script->vm);
+    // setup_camera_class(script->vm);
 
     // transfer memory from the compiler (front-end) to the VM (back-end)
     gravity_compiler_transfer(compiler, script->vm);

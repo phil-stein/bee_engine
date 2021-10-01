@@ -11,10 +11,14 @@ Todo
   - [x] ~5-10 fps in build_mode *(prop. something being called that's unnecessary without the editor)*
   - [x] add entity >> cube doesn't get rendered
   - [x] attach script doesn't work anymore 
-  - [ ] name & path of textures get randomly freed [prob. fixed]
+  - [x] name & path of textures get randomly freed [prob. fixed]
+  - [x] new camera component sometimes frees values
   - [ ] importing assets sometimes crashes the editor
-  - [ ] new camera component sometimes frees values
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
+- [ ] scene system
+  - [ ] serialization
+  - [ ] deserialization
+  - [ ] switching
 - graphics
   - [ ] geometry shader normal direction
   - [ ] anti-aliasing
@@ -28,10 +32,11 @@ Todo
     - internal assets
       -  [x] default assets (missing texture, ...)
       -  [ ] automate the internal asset recognition
+    -  [ ] make assets on import be put in the right folder
   - [ ] editor cam v. game cam (camera component)
     - [x] switching between editor / in-game camera
     - [x] camera gizmo
-    - [ ] getting the view-matrix
+    - [x] getting the view-matrix
     - [ ] assure always one camera in scene
     - [ ] integrate in gravity interface
   - [x] add entity
@@ -60,6 +65,8 @@ Todo
     - [ ] controller interface
     - [ ] actions like unity ???
   - [ ] load_file delegate for #import 
+  - [ ] delegate for 'System.print()'
+  - [ ] 'reset' script when pausing game-mode, i.e. rerun the init func each time you press play
 - [ ] in-engine text editor
   - [x] view source
   - [x] viewability
@@ -74,11 +81,6 @@ Todo
   - [ ] aabb v aabb
   - [ ] aabb v sphere
   - [ ] aabb v plane
-- [ ] scene system
-
-  - [ ] serialization
-  - [ ] deserialization
-  - [ ] switching
 - [ ] particle system
   - [ ] object pooling
   - [ ] instancing 

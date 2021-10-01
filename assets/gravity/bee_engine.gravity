@@ -1,8 +1,8 @@
-extern var Entity;
-extern var Game;
-extern var Input;
-extern var Camera;
-extern var World;
+// extern var Entity;
+// extern var Game;
+// extern var Input;
+// extern var Camera;
+// extern var World;
 
 
 func speak_the_truth()

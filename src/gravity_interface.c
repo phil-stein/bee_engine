@@ -384,9 +384,9 @@ static bee_bool move_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
         throw_error("[Camera.move_z(float)] Wrong argument type."); return;
     }
 
-    vec3 pos; get_camera_pos(&pos);
+    vec3 pos; get_editor_camera_pos(&pos);
     pos[0] += VALUE_AS_FLOAT(v1);
-    set_camera_pos(pos);
+    set_editor_camera_pos(pos);
 }
 static bee_bool move_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
@@ -398,9 +398,9 @@ static bee_bool move_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
         throw_error("[Camera.move_z(float)] Wrong argument type."); return;
     }
 
-    vec3 pos; get_camera_pos(&pos);
+    vec3 pos; get_editor_camera_pos(&pos);
     pos[1] += VALUE_AS_FLOAT(v1);
-    set_camera_pos(pos);
+    set_editor_camera_pos(pos);
 }
 static bee_bool move_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
@@ -412,9 +412,9 @@ static bee_bool move_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs
         throw_error("[Camera.move_z(float)] Wrong argument type."); return;
     }
 
-    vec3 pos; get_camera_pos(&pos);
+    vec3 pos; get_editor_camera_pos(&pos);
     pos[2] += VALUE_AS_FLOAT(v1);
-    set_camera_pos(pos);
+    set_editor_camera_pos(pos);
 }
 
 static bee_bool get_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
@@ -422,7 +422,7 @@ static bee_bool get_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
     if (nargs != 1) { throw_error("[Camera.get_x()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
-    vec3 pos; get_camera_pos(&pos);
+    vec3 pos; get_editor_camera_pos(&pos);
 
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(pos[0]), rindex);
@@ -432,7 +432,7 @@ static bee_bool get_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
     if (nargs != 1) { throw_error("[Camera.get_y()] Wrong amount of arguments, 0 arguments are needed."); return;}
 
-    vec3 pos; get_camera_pos(&pos);
+    vec3 pos; get_editor_camera_pos(&pos);
 
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(pos[1]), rindex);
@@ -442,7 +442,7 @@ static bee_bool get_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
     if (nargs != 1) { throw_error("[Camera.get_z()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
-    vec3 pos; get_camera_pos(&pos);
+    vec3 pos; get_editor_camera_pos(&pos);
 
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(pos[2]), rindex);

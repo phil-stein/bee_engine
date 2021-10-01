@@ -55,6 +55,15 @@ typedef struct camera
 	f32 perspective;  // 45.0f;
 	f32 near_plane;  //  0.1f;
 	f32 far_plane;  //   100.0f;
+	
+	//
+	// @UNCLEAR: do this with the front direction like the lights 
+	// or finally try to figure out how to get to the front direction from position and rotation
+	//
+	
+	vec3 front;  // = { 0.0f,  -0.5f, -0.85f };
+	vec3 up;	 // = { 0.0f,  1.0f,   0.0f };
+	vec3 target; // = { 0.0, 0.0, 0.0 };
 
 }camera;
 
@@ -67,8 +76,8 @@ typedef struct mesh
 
 	u32 vao, vbo, ebo;
 
-	enum bee_bool indexed;
-	enum bee_bool visible;
+	bee_bool indexed;
+	bee_bool visible;
 
 	char* name;
 }mesh;
@@ -120,10 +129,12 @@ typedef struct entity
 	material* _material;
 
 	bee_bool has_cam;
-	camera* _camera;
-
 	bee_bool has_light;
-	light _light;
+	union // never going to have a cam with lights and vice versa
+	{
+		camera _camera;
+		light  _light;
+	};
 
 	// --------------------
 
@@ -150,8 +161,8 @@ mesh make_plane_mesh();
 mesh make_cube_mesh();
 mesh make_grid_mesh(int x_verts, int z_verts);
 
-// creates a mesh struct 
-// model make_model(mesh* _mesh, material* _material);
+// create a camera struct
+camera make_camera(f32 perspective, f32 near_plane, f32 far_plane);
 
 // create a point light
 light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, f32 linear, f32 quadratic);

@@ -45,8 +45,6 @@ int fps_ticks_counter;
 
 #pragma endregion
 
-// in-game-camera
-camera cam;
 
 void init()
 {
@@ -58,9 +56,11 @@ void init()
 
 	shader shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
-	shader shader_unlit = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
-	
-	shader shader_noise = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
+	shader shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
+						  
+	shader shader_cel     = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel");
+						  
+	shader shader_noise   = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
 	
 
 	vec2 tile = { 1.0f, 1.0f };
@@ -69,6 +69,7 @@ void init()
 	texture blank_tex = get_texture("blank.png");
 	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank");
 	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit");
+	material* mat_cel		  = add_material(shader_cel, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel");
 	material* mat_noise		  = add_material(shader_noise, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_noise");
 	
 	// load texture
@@ -77,7 +78,7 @@ void init()
 	material* mat_crate = add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_crate");
 
 	texture grass_dif_tex  = get_texture("grass01_dif.png");
-	texture grass_spec_tex  = get_texture("grass01_spec.png");
+	texture grass_spec_tex = get_texture("grass01_spec.png");
 	material* mat_grass	   = add_material(shader_default, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_grass");
 	
 	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
@@ -88,23 +89,27 @@ void init()
 	texture robot_spec_tex = get_texture("robot01_spec.png");
 	material* mat_robot	   = add_material(shader_default, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_robot");
 
+	add_material(shader_default, get_texture("demon_diffuse.png"), get_texture("blank_black.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_demon");
+
 	// mesh m_cube = make_cube_mesh();
 
 
 	texture glass_dif_tex = get_texture("window.png");
 	material* mat_glass = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass");
-	
-	cam.perspective = 30.0f;
-	cam.near_plane  = 0.1f;
-	cam.far_plane   = 100.0f;
+
 	//
-	// @TODO: make the renderer use the right camera & add 3d object to cam like lights
+	// @TODO: make the renderer use the right camera
 	// 
-	vec3 cam_pos   = { 0.0f, 1.0f,  3.0f };
+	// in-game-camera
+	camera cam = make_camera(40.0f, 0.1f, 100.0f);
+	cam.front[0] = 0; 
+	cam.front[1] = -.25f; 
+	cam.front[2] = -1; 
+	vec3 cam_pos   = { 0.0f, 2.0f,  3.5f };
 	vec3 cam_rot   = { 0, 0, 0 };
 	vec3 cam_scale = { 1, 1, 1 };
 	mesh* m_camera = get_mesh("camera.obj");
-	add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_blank"), &cam, NULL, "camera");
+	add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_cel"), &cam, NULL, "camera");
 
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
 	entity_add_script(ent_empty, "game_controller.gravity");
@@ -118,6 +123,7 @@ void init()
 	vec3 diffuse02    = { 0.9f, 0.25f, 0.85f }; //rgb(231, 65, 218)
 	vec3 specular     = { 1.0f, 1.0f, 1.0f };
 	vec3 direction	  = { -0.2f, -1.0f, -0.3f };
+	vec3 direction02  = { -0.2f, -0.8f, -0.5f };
 	light dir_light   = make_dir_light(ambient, diffuse01, specular, direction);
 	light point_light = make_point_light(ambient, diffuse02, specular, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
 	light spot_light  = make_spot_light(ambient, diffuse01, specular, direction, 1.0f, 0.09f, 0.032f, 0.91f, 0.82f);
@@ -129,10 +135,10 @@ void init()
 	vec3 scale_light01 = { 0.1f, 0.1f,  0.1f };
 	vec3 scale_light02 = { 0.5f, 0.5f,  0.5f };
 	glm_vec3_copy(diffuse01, mat_blank->tint);
-	add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_blank_unlit"), NULL, &dir_light,   "dir_light");	// mat_blank_unlit
-	add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_blank_unlit"), NULL, &spot_light,  "spot_light");	// mat_blank_unlit
+	add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_cel"), NULL, &dir_light,   "dir_light");	// mat_blank_unlit
+	add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_cel"), NULL, &spot_light,  "spot_light");	// mat_blank_unlit
 	glm_vec3_copy(diffuse02, mat_blank->tint);
-	add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_blank_unlit"), NULL, &point_light, "point_light");	// mat_blank_unlit
+	add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
 	glm_vec3_copy(specular, mat_blank->tint); // all 1.0f
 
 	// plane
@@ -161,11 +167,21 @@ void init()
 	crate_ptr->_mesh.visible = BEE_FALSE;
 	
 	mesh* m_robot = get_mesh("robot01_LD.obj");
-	vec3 pos08 = { 0.0f, -0.5f, 0.0f };
+	vec3 pos08 = { 2.0f, -0.5f, 0.0f };
 	vec3 scale04;
 	glm_vec3_scale(scale, 0.25f, scale04);
 	int ent_robot = add_entity(pos08, rot01, scale04, m_robot, get_material("MAT_robot"), NULL, NULL, "robot"); // mat_robot
-	entity_add_script(ent_robot, "move_arrows.gravity");
+	// entity_add_script(ent_robot, "move_arrows.gravity");
+
+
+	mesh* m_demon = get_mesh("Eye-Char01.obj");
+	vec3 pos09 = { 0.0f, -1.2f, 0.0f };
+	vec3 rot02 = { 0.0f, 180,   0.0f };
+	// vec3 scale04;
+	// glm_vec3_scale(scale, 0.25f, scale04);
+	int ent_demon = add_entity(pos09, rot02, scale04, m_demon, get_material("MAT_demon"), NULL, NULL, "demon"); // mat_robot
+	entity_add_script(ent_demon, "move_arrows.gravity");
+
 
 	mesh* m_bunny = get_mesh("bunny.obj");
 	vec3 pos06 = { 1.5f, -0.5f, -1.5f };
@@ -258,55 +274,55 @@ void process_input(GLFWwindow* window)
 	const float cam_speed = 2 * get_delta_time();
 	if (is_key_down(KEY_W))
 	{
-		vec3 front; get_camera_front(&front);
+		vec3 front; get_editor_camera_front(&front);
 		glm_vec3_scale(front, cam_speed, front);
 
-		camera_move(front);
+		editor_camera_move(front);
 	}
 	if (is_key_down(KEY_S))
 	{
-		vec3 front; get_camera_front(&front);
+		vec3 front; get_editor_camera_front(&front);
 		glm_vec3_scale(front, -cam_speed, front);
 
-		camera_move(front);
+		editor_camera_move(front);
 	}
 	if (is_key_down(KEY_A))
 	{
-		vec3 up;    get_camera_up(&up);
-		vec3 front; get_camera_front(&front);
+		vec3 up;    get_editor_camera_up(&up);
+		vec3 front; get_editor_camera_front(&front);
 
 		vec3 dist;
 		glm_vec3_cross(front, up, dist);
 		glm_vec3_normalize(dist);
 		glm_vec3_scale(dist, -cam_speed, dist);
 
-		camera_move(dist);
+		editor_camera_move(dist);
 	}
 	if (is_key_down(KEY_D))
 	{
-		vec3 up;    get_camera_up(&up);
-		vec3 front; get_camera_front(&front);
+		vec3 up;    get_editor_camera_up(&up);
+		vec3 front; get_editor_camera_front(&front);
 
 		vec3 dist;
 		glm_vec3_cross(front, up, dist);
 		glm_vec3_normalize(dist);
 		glm_vec3_scale(dist, cam_speed, dist);
 
-		camera_move(dist);
+		editor_camera_move(dist);
 	}
 	if (is_key_down(KEY_Q))
 	{
-		vec3 up;	get_camera_up(&up);
+		vec3 up;	get_editor_camera_up(&up);
 		glm_vec3_scale(up, -cam_speed, up);
 
-		camera_move(up);
+		editor_camera_move(up);
 	}
 	if (is_key_down(KEY_E))
 	{
-		vec3 up; get_camera_up(&up);
+		vec3 up; get_editor_camera_up(&up);
 		glm_vec3_scale(up, cam_speed, up);
 
-		camera_move(up);
+		editor_camera_move(up);
 	}
 #pragma endregion
 
@@ -427,7 +443,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	dir[0] = (f32)cos(yaw_rad) * (f32)cos(pitch_rad);
 	dir[1] = (f32)sin(pitch_rad);
 	dir[2] = (f32)sin(yaw_rad) * (f32)cos(pitch_rad);
-	set_camera_front(dir);
+	set_editor_camera_front(dir);
 }
 
 // puts the cursor in the middle of the window

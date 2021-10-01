@@ -235,7 +235,7 @@ void renderer_update()
 	}
 
 	// sort transparent / translucent objects
-	vec3 cam_pos; get_camera_pos(&cam_pos);
+	vec3 cam_pos; get_editor_camera_pos(&cam_pos);
 	for(int rpt = 0; rpt < BLEND_SORT_DEPTH; ++rpt)
 	{
 		// sort by distance
@@ -272,7 +272,14 @@ void renderer_update()
 		shader_use(skybox_shader);
 
 		mat4 view;
-		get_camera_view_mat(&view[0]);
+		if (gamestate)
+		{
+			get_camera_view_mat(get_entity(camera_ent_idx), &view[0]);
+		}
+		else 
+		{
+			get_editor_camera_view_mat(&view[0]);
+		}
 		mat3 conv;
 		glm_mat4_pick3(view, conv);	// copy to mat3 to remove the position part
 		glm_mat4_zero(view);		// reset view
@@ -362,7 +369,7 @@ void renderer_update()
 #endif
 }
 
-void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global)
+void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global)
 {
 	if (_mesh->visible == BEE_FALSE)
 	{
@@ -399,31 +406,28 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 	glm_scale(model, scale);
 
 	mat4 view;
-	if (gamestate) // in play-mode
+	if (gamestate)
 	{
-		// @TODO: use camera-entities view-mat
-		// vec3 center;
-		// glm_vec3_add(entities[camera_ent_idx].pos, , center);
-		// glm_lookat(position, center, up, view);
-		get_camera_view_mat(&view[0]);
+		get_camera_view_mat(get_entity(camera_ent_idx), &view[0]);
 	}
 	else
 	{
-		get_camera_view_mat(&view[0]);
+		get_editor_camera_view_mat(&view[0]);
 	}
 	
 
 	mat4 proj;
 
-	f32 deg_pers = get_entity(camera_ent_idx)->_camera->perspective;
-	f32 near_p = get_entity(camera_ent_idx)->_camera->near_plane;
-	f32 far_p = get_entity(camera_ent_idx)->_camera->far_plane;
+	entity* cam = get_entity(camera_ent_idx);
+	f32 deg_pers = cam->_camera.perspective;
+	f32 near_p   = cam->_camera.near_plane;
+	f32 far_p    = cam->_camera.far_plane;
 #ifdef EDITOR_ACT
 	if (!gamestate) // play-mode
 	{
 		deg_pers = perspective;
-		near_p = near_plane;
-		far_p = far_plane;
+		near_p   = near_plane;
+		far_p    = far_plane;
 	}
 #endif
 	glm_make_rad(&deg_pers);
@@ -441,7 +445,15 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 		shader_set_mat4(modes_shader, "view", &view[0]);
 		shader_set_mat4(modes_shader, "proj", &proj[0]);
 
-		vec3 cam_pos; get_camera_pos(cam_pos);
+		vec3 cam_pos; 
+		if (gamestate)
+		{
+			glm_vec3_copy(get_entity(camera_ent_idx)->pos, cam_pos);
+		}
+		else
+		{
+			get_editor_camera_pos(cam_pos);
+		}
 		shader_set_vec3(modes_shader, "viewPos", cam_pos);
 
 
@@ -477,7 +489,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum 
 		}
 		else 
 		{
-			vec3 cam_pos; get_camera_pos(cam_pos);
+			vec3 cam_pos; get_editor_camera_pos(cam_pos);
 			shader_set_vec3(mat->shader, "viewPos", cam_pos);
 		}
 
@@ -726,23 +738,22 @@ void entity_remove_script(int entity_index, int script_index)
 void set_gamestate(bee_bool play)
 {
 	gamestate = play;
-	set_all_scripts(play);
-	set_all_light_meshes(!play);
 
 	if (play)
 	{
 		// set in-game cam to be act
 		entity* ent_cam = get_entity(camera_ent_idx);
-		if (ent_cam == NULL) 
+		if (ent_cam == NULL || ent_cam->has_cam == BEE_FALSE) 
 		{ 
 			printf("[ERROR] No Camera in Scene.\n");  
-			submit_txt_console("[ERROR] No Camera in Scene."); 
+			submit_txt_console("[ERROR] No Camera in Scene.");
+			set_error_popup(GENERAL_ERROR, "[ERROR] No Camera in Scene.");
+			gamestate = BEE_FALSE;
 			return;
 		}
-		perspective = ent_cam->_camera->perspective;
-		near_plane  = ent_cam->_camera->near_plane;
-		far_plane   = ent_cam->_camera->far_plane;
-		printf("game-camera: persp: %f, n_plane: %f, f_plane: %f\n", ent_cam->_camera->perspective, ent_cam->_camera->near_plane, ent_cam->_camera->far_plane);
+		// perspective = ent_cam->_camera.perspective;
+		// near_plane  = ent_cam->_camera.near_plane;
+		// far_plane   = ent_cam->_camera.far_plane;
 	}
 	else
 	{
@@ -751,6 +762,9 @@ void set_gamestate(bee_bool play)
 		near_plane  = editor_near_plane;
 		far_plane   = editor_far_plane;
 	}
+
+	set_all_scripts(play);
+	set_all_gizmo_meshes(!play);
 }
 void set_all_scripts(bee_bool act)
 {
@@ -762,7 +776,7 @@ void set_all_scripts(bee_bool act)
 		}
 	}
 }
-void set_all_light_meshes(bee_bool act)
+void set_all_gizmo_meshes(bee_bool act)
 {
 	for (int i = 0; i < point_lights_len; ++i)
 	{
@@ -784,6 +798,11 @@ void set_all_light_meshes(bee_bool act)
 		{
 			entities[spot_lights[i]]._mesh.visible = act;
 		}
+	}
+	entity* cam = get_entity(camera_ent_idx);
+	if (cam != NULL && cam->has_cam && cam->has_model)
+	{
+		cam->_mesh.visible = act;
 	}
 }
 
@@ -927,9 +946,9 @@ int get_entity_id_by_name(char* name)
 renderer_properties get_renderer_properties()
 {
 	renderer_properties prop;
-	prop.perspective = &perspective;
-	prop.near_plane  = &near_plane;
-	prop.far_plane   = &far_plane;
+	prop.perspective = &editor_perspective;
+	prop.near_plane  = &editor_near_plane;
+	prop.far_plane   = &editor_far_plane;
 
 	prop.wireframe_col_r = &wireframe_color[0];
 	prop.wireframe_col_g = &wireframe_color[1];

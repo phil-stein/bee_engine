@@ -23,6 +23,7 @@ typedef struct
 	gravity_vm* vm;
 
 	gravity_closure_t* closure;
+	bee_bool init_closure_assigned;
 	bee_bool update_closure_assigned;
 
 	bee_bool active;
