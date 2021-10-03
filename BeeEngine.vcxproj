@@ -175,6 +175,7 @@
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\object_data.c" />
     <ClCompile Include="src\renderer.c" />
+    <ClCompile Include="src\scene_manager.c" />
     <ClCompile Include="src\serialization.c" />
     <ClCompile Include="src\shader.c" />
     <ClCompile Include="src\str_util.c" />
@@ -196,6 +197,7 @@
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\object_data.h" />
     <ClInclude Include="src\renderer.h" />
+    <ClInclude Include="src\scene_manager.h" />
     <ClInclude Include="src\serialization.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\str_util.h" />

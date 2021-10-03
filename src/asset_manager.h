@@ -5,7 +5,7 @@
 #include "global.h"
 
 
-typedef enum asset_type { NOT_ASSET, TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET, MATERIAL_ASSET, SHADER_ASSET, VERT_SHADER_ASSET, FRAG_SHADER_ASSET, INTERNAL_ASSET } asset_type;
+typedef enum asset_type { NOT_ASSET, TEXTURE_ASSET, MESH_ASSET, SCRIPT_ASSET, MATERIAL_ASSET, SHADER_ASSET, VERT_SHADER_ASSET, FRAG_SHADER_ASSET, INTERNAL_ASSET, SCENE_ASSET } asset_type;
 
 
 
@@ -53,6 +53,7 @@ mesh* get_mesh(const char* name);
 void log_mesh(const char* path, const char* name);
 void create_mesh(const char* name);
 
+void add_mesh(mesh m);
 
 int get_script_idx(char* name);
 
@@ -85,4 +86,11 @@ void log_frag_file(const char* path, const char* name);
 
 char** get_all_vert_file_names(int* vert_files_len);
 char** get_all_frag_file_names(int* frag_files_len);
+
+
+scene* get_all_scenes(int* scenes_len);
+char* get_scene_path(const char* name);
+void log_scene(const char* path, const char* name);
+
+
 #endif

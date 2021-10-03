@@ -5,9 +5,11 @@
 #include "global.h"
 #include "object_data.h"
 
+void test_serialization();
+
 // serialization ------------------------------------------------
 
-void serialize_scene();
+void serialize_scene(char* buffer, int* offset, scene* s);
 void serialize_entity(char* buffer, int* offset, entity* ent);
 void serialize_mesh(char* buffer, int* offset, mesh* m);
 void serialize_material(char* buffer, int* offset, material* m);
@@ -28,11 +30,12 @@ void serialize_vec3(char* buffer, int* offset, vec3 val);
 
 // deserialization ----------------------------------------------
 
-entity deserialize_entity(char* buffer, int* offset);
+scene	  deserialize_scene(char* buffer, int* offset);
+entity	  deserialize_entity(char* buffer, int* offset);
 material* deserialize_material(char* buffer, int* offset);
-mesh* deserialize_mesh(char* buffer, int* offset);
-camera deserialize_camera(char* buffer, int* offset);
-light deserialize_light(char* buffer, int* offset);
+mesh*	  deserialize_mesh(char* buffer, int* offset);
+camera	  deserialize_camera(char* buffer, int* offset);
+light     deserialize_light(char* buffer, int* offset);
 
 shader  deserialize_shader(char* buffer, int* offset);
 texture deserialize_texture(char* buffer, int* offset);

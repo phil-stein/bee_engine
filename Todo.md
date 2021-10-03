@@ -15,22 +15,28 @@ Todo
   - [x] new camera component sometimes frees values
   - [ ] importing assets sometimes crashes the editor
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
-  - [ ] 'upper_hiearachy_ents' sometimes crahes the engine when sorting the hierarchy
+  - [ ] 'upper_hierachy_ents' sometimes crashes the engine when sorting the hierarchy
+  - [ ] saving scenes corrupts the program, probably in write_text_file()
 - unfinished
   - [ ] entity_remove() in renderer.c
   - [ ] entity_switch_light_type() in renderer.c
 - [ ] scene system
-  - [ ] serialization
+  - [x] serialization
     - [x] integer, float, u32, bool
     - [x] string (integer length & char's)
     - [x] texture, shader
     - [x] components
     - [x] entities
-    - [ ] scene
-      - [ ] make scene struct
-      - [ ] @UNCLEAR: header, scene specific settings (i.e. cubemap)
-  - [ ] deserialization
+    - [x] scene
+      - [x] make scene struct
+      - [x] shader & material serialization
+      - [x] entities
+  - [x] saving scenes
+  - [x] loading scenes
   - [ ] switching
+  - [ ] ui
+    - [ ] saving & loading
+    - [ ] add scenes to the asset manager
 - graphics
   - [ ] geometry shader normal direction
   - [ ] anti-aliasing
@@ -49,9 +55,10 @@ Todo
     - [x] switching between editor / in-game camera
     - [x] camera gizmo
     - [x] getting the view-matrix
-    - [ ] assure always one camera in scene
-    - [ ] integrate in gravity interface
+    - [ ] assure always one and only one camera in scene
+    - [x] integrate in gravity interface
   - [ ] make the gizmos be drawn in renderer separately instead of mesh components
+  - [ ] make the scene get serialized before playing and then reset when stopped 
   - [x] add entity
   - [x] deselect entities
   - [ ] visualize normal-direction

@@ -149,6 +149,22 @@ typedef struct entity
 
 }entity;
 
+typedef struct scene
+{
+	// assets
+	// these assets need to be defined, the others just get read from a file
+	// shader* shaders;
+	// int shaders_len;
+	// 
+	// material* materials;
+	// int materials_len;
+
+	// entitities
+	entity* entities;
+	int entities_len;
+
+}scene;
+
 // creates a material struct
 material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, bee_bool draw_backfaces, const char* name);
 // creates a material struct, tints the material

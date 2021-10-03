@@ -50,6 +50,7 @@ int point_lights_len = 0;
 int* spot_lights	 = NULL;
 int spot_lights_len  = 0;
 
+#ifdef EDITOR_ACT
 // different modes
 bee_bool wireframe_mode_enabled = BEE_FALSE;
 bee_bool normal_mode_enabled	 = BEE_FALSE;
@@ -57,6 +58,7 @@ bee_bool uv_mode_enabled		 = BEE_FALSE;
 vec3 wireframe_color = { 0.0f, 0.0f, 0.0f };
 
 shader modes_shader;
+#endif
 
 // framebuffer
 mesh m;
@@ -624,7 +626,6 @@ void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale)
 	}
 }
 
-
 void renderer_cleanup()
 {
 	for (int i = 0; i < entities_len; ++i)
@@ -637,6 +638,44 @@ void renderer_cleanup()
 	arrfree(point_lights);
 	arrfree(spot_lights);
 	arrfree(transparent_ents);
+}
+
+void renderer_clear_scene()
+{
+	for (int i = entities_len -1; i >= 0; --i)
+	{
+		arrdel(entities, i);
+	}
+	entities_len = 0;
+	for (int i = transparent_ents_len - 1; i >= 0; --i)
+	{
+		arrdel(transparent_ents, i);
+	}
+	transparent_ents_len = 0;
+
+	for (int i = dir_lights_len - 1; i >= 0; --i)
+	{
+		arrdel(dir_lights, i);
+	}
+	dir_lights_len = 0;
+
+	for (int i = point_lights_len - 1; i >= 0; --i)
+	{
+		arrdel(point_lights, i);
+	}
+	point_lights_len = 0;
+
+	for (int i = spot_lights_len - 1; i >= 0; --i)
+	{
+		arrdel(spot_lights, i);
+	}
+	spot_lights_len = 0;
+	
+	
+	camera_ent_idx = 0;
+	editor_perspective = 45.0f;
+	editor_near_plane = 0.1f;
+	editor_far_plane = 100.0f;
 }
 
 // add an entity

@@ -18,6 +18,7 @@
 #include "ui.h"
 
 #include "serialization.h"
+#include "scene_manager.h"
 
 // temp
 #include "shader.h"
@@ -69,7 +70,8 @@ int main(void)
 	submit_txt_console("...");
 
 	// ---- tmp ----
-	serialize_scene();
+	// test_serialization();
+	// save_scene();
 	// ---- tmp ----
 
 	// main loop

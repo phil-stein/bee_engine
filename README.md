@@ -7,7 +7,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 ## current capabilities
 
-<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot09.png" alt="logo" width="1000">
+<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot10.png" alt="logo" width="1000">
 
 
 
@@ -26,9 +26,9 @@ tutorial [learnopengl.com](https://learnopengl.com/)
   - [x] asset manager
   - [x] asset browser ui
   - [x] importing assets
+- [x] serialization
+- [x] scene management
 - [ ] parent-child relations
-- [ ] scene management
-- [ ] serialization
 - [ ] audio
 - [ ] first game test
 

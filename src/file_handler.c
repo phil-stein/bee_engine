@@ -30,15 +30,16 @@ bee_bool file_exists_check(const char* file_path)
     return BEE_TRUE;
 }
 
-char* read_text_file(const char* file_path, int* size)
+char* read_text_file(const char* file_path)
 {
     FILE* f;
     char* text;
     long len;
 
     f = fopen(file_path, "rb");
-    if (f == NULL) {
-        fprintf(stderr, "error loading text-file at: %s\n", file_path);
+    if (f == NULL) 
+    {
+        fprintf(stderr, "[ERROR] loading text-file at: %s\n", file_path);
         assert(BEE_FALSE);
     }
 
@@ -57,6 +58,37 @@ char* read_text_file(const char* file_path, int* size)
     assert(strlen(text) > 0);
     fclose(f);
 
+    return text;
+}
+char* read_text_file_len(const char* file_path, int* length)
+{
+    FILE* f;
+    char* text;
+    long len;
+
+    f = fopen(file_path, "rb");
+    if (f == NULL)
+    {
+        fprintf(stderr, "[ERROR] loading text-file at: %s\n", file_path);
+        assert(BEE_FALSE);
+    }
+
+    // get len of file
+    fseek(f, 0, SEEK_END);
+    len = ftell(f);
+    assert(len > 0);
+    fseek(f, 0, SEEK_SET);
+
+    // alloc memory 
+    text = calloc(1, len);
+    assert(text != NULL);
+
+    // fill text buffer
+    fread(text, sizeof(char), len, f);
+    assert(strlen(text) > 0);
+    fclose(f);
+
+    *length = len;
     return text;
 }
 /*
@@ -110,6 +142,22 @@ char* read_text_file(const char* file_path, int* size)
     return buffer;
 }
 */
+
+void write_text_file(const char* file_path, const char* txt, int len)
+{
+    FILE* f;
+
+    f = fopen(file_path, "wb");
+    if (f == NULL) 
+    {
+        fprintf(stderr, "[ERROR] loading text-file at: %s\n", file_path);
+        assert(BEE_FALSE);
+    }
+
+    fwrite(txt, sizeof(char), len, f);
+
+    fclose(f);
+}
 
 rtn_code copy_file(char* filepath_src, char* filepath_cpy)
 {

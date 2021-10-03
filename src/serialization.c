@@ -3,43 +3,28 @@
 #include "stb/stb_ds.h"
 
 #include "renderer.h" // tmp
+#include "scene_manager.h" // tmp
 
-// @TODO: make scene struct
-
-// serialize ------------------------------------------------------------
-void serialize_scene()
+void test_serialization()
 {
-	// struct vars
-	
-	// entity* entities;
-	// int entities_len;
-	// 
-	// char* buffer; // = malloc();
-	// int offset = 0;
-	// 
-	// for (int i = 0; i < entities_len; ++i)
-	// {
-	// 	serialize_entity(buffer, &offset, &entities[i]);
-	// }
-
 	int int_val = -123456789;
 	f32 f32_val = 1234.56789f;
 	u32 u32_val = 123456789;
 	bee_bool bool_val = BEE_TRUE;
-	vec3 vec_val = {0.1f, 11.1f, 1234};
+	vec3 vec_val = { 0.1f, 11.1f, 1234 };
 
 	char buffer[1024];
 	int offset_ser = 0;
 	int offset_des = 0;
-	serialize_int(buffer, &offset_ser, int_val);
+	serialize_int(&buffer, &offset_ser, int_val);
 	deserialize_int(buffer, &offset_des);
 
 	serialize_float(buffer, &offset_ser, f32_val);
 	deserialize_float(buffer, &offset_des);
-	
+
 	serialize_u32(buffer, &offset_ser, u32_val);
 	deserialize_u32(buffer, &offset_des);
-	
+
 	serialize_str(buffer, &offset_ser, "hi, there :)");
 	char* str = deserialize_str(buffer, &offset_des);
 	free(str);
@@ -57,13 +42,45 @@ void serialize_scene()
 	texture result = deserialize_texture(buffer, &offset_des);
 
 	printf("\n------------------------------------\n");
-
 	char buffer_ent[1024];
 	int offset_ent_ser = 0;
 	int offset_ent_des = 0;
 	serialize_entity(buffer_ent, &offset_ent_ser, get_entity(get_entity_id_by_name("robot")));
 	entity e = deserialize_entity(buffer_ent, &offset_ent_des);
 	add_entity_direct(e); // hell yeah :)
+}
+
+// serialize ------------------------------------------------------------
+void serialize_scene(char* buffer, int* offset, scene* s)
+{
+	// serializing assets that arent defined in files
+
+	int shaders_len = 0;
+	shader* shaders = get_all_shaders(&shaders_len);
+
+	serialize_int(buffer, offset, shaders_len);
+
+	for (int i = 0; i < shaders_len; ++i)
+	{
+		serialize_shader(buffer, offset, &shaders[i]);
+	}
+
+	int materials_len = 0;
+	material* materials = get_all_materials(&materials_len);
+	
+	serialize_int(buffer, offset, materials_len);
+
+	for (int i = 0; i < materials_len; ++i)
+	{
+		serialize_material(buffer, offset, &materials[i]);
+	}
+
+	serialize_int(buffer, offset, s->entities_len);
+	for (int i = 0; i < s->entities_len; ++i)
+	{
+		serialize_entity(buffer, offset, &s->entities[i]);
+	}
+	
 }
 
 void serialize_entity(char* buffer, int* offset, entity* ent)
@@ -83,7 +100,8 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 	if (ent->has_model)
 	{
 		serialize_mesh(buffer, offset, &ent->_mesh);
-		serialize_material(buffer, offset, ent->_material);
+		serialize_str(buffer, offset, ent->_material->name);
+		// serialize_material(buffer, offset, ent->_material);
 	}
 
 	serialize_enum(buffer, offset, ent->has_cam);
@@ -100,7 +118,7 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 	serialize_int(buffer, offset, ent->scripts_len);
 	for (int i = 0; i < ent->scripts_len; ++i)
 	{
-		serialize_script(buffer, offset, ent->scripts[i]->name);
+		serialize_script(buffer, offset, ent->scripts[i]);
 	}
 
 	serialize_int(buffer, offset, ent->parent);
@@ -201,16 +219,6 @@ void serialize_script(char* buffer, int* offset, gravity_script* s)
 
 // ---- base types ----
 
-void serialize_float(char* buffer, int* offset, f32 val)
-{
-	// write to buffer
-	printf("serialize f32: %f\n", val);
-	sprintf(buffer + *offset, "%f", val);
-
-	// move the offset to after the newly written data
-	*offset += sizeof(f32);
-}
-
 void serialize_int(char* buffer, int* offset, int val)
 {
 	// write to buffer
@@ -221,10 +229,19 @@ void serialize_int(char* buffer, int* offset, int val)
 	*offset += sizeof(int);
 }
 
+void serialize_float(char* buffer, int* offset, f32 val)
+{
+	// write to buffer
+	printf("serialize f32: %f\n", val);
+	sprintf(buffer + *offset, "%f", val);
+
+	// move the offset to after the newly written data
+	*offset += sizeof(f32);
+}
+
 void serialize_u32(char* buffer, int* offset, u32 val)
 {
 	// write to buffer
-	
 	printf("serialize u32: %d\n", val);
 	sprintf(buffer + *offset, "%d", val);
 	
@@ -274,6 +291,34 @@ void serialize_vec3(char* buffer, int* offset, vec3 val)
 
 // deserialize ----------------------------------------------------------
 
+scene deserialize_scene(char* buffer, int* offset)
+{
+
+	int shaders_len = deserialize_int(buffer, offset);
+
+	for (int i = 0; i < shaders_len; ++i)
+	{
+		deserialize_shader(buffer, offset); // automatically adds to the asset-manager
+	}
+
+	int materials_len = deserialize_int(buffer, offset);
+
+	for (int i = 0; i < materials_len; ++i)
+	{
+		deserialize_material(buffer, offset);  // automatically adds to the asset-manager
+	}
+
+
+	scene s;
+	s.entities = NULL;
+	s.entities_len = deserialize_int(buffer, offset);
+	for (int i = 0; i < s.entities_len; ++i)
+	{
+		arrput(s.entities, deserialize_entity(buffer, offset));
+	}
+	return s;
+}
+
 entity deserialize_entity(char* buffer, int* offset)
 {
 	entity e;
@@ -292,7 +337,7 @@ entity deserialize_entity(char* buffer, int* offset)
 	if (e.has_model)
 	{
 		e._mesh     = *deserialize_mesh(buffer, offset);
-		e._material = deserialize_material(buffer, offset);
+		e._material = get_material(deserialize_str(buffer, offset));
 	}
 
 	e.has_cam   = deserialize_enum(buffer, offset);
@@ -360,6 +405,7 @@ camera deserialize_camera(char* buffer, int* offset)
 	deserialize_vec3(buffer, offset, c.front);
 	deserialize_vec3(buffer, offset, c.up);
 	deserialize_vec3(buffer, offset, c.target);
+	return c;
 }
 
 light deserialize_light(char* buffer, int* offset)
@@ -419,6 +465,7 @@ int deserialize_int(char* buffer, int* offset)
 	char bytes[sizeof(int)];
 	memcpy(bytes, buffer + *offset, sizeof(int));
 	int result = strtol(bytes, NULL, 10);
+	
 	*offset += sizeof(int);
 	printf("deserialized int:  %d\n", result);
 	return result;
@@ -450,6 +497,7 @@ char deserialize_enum(char* buffer, int* offset)
 {
 	char result = buffer[*offset];
 	*offset += sizeof(char); // gets serializes as a char
+	printf("deserialized enum:  %d\n", result);
 	return result;
 }
 
@@ -473,13 +521,17 @@ char* deserialize_str(char* buffer, int* offset)
 
 void deserialize_vec2(char* buffer, int* offset, vec2 out)
 {
+	printf("deserialize vec2 ----\n");
 	out[0] = deserialize_float(buffer, offset);
 	out[1] = deserialize_float(buffer, offset);
+	printf("---------------------\n");
 }
 
 void deserialize_vec3(char* buffer, int* offset, vec3 out)
 {
+	printf("deserialize vec3 ----\n");
 	out[0] = deserialize_float(buffer, offset);
 	out[1] = deserialize_float(buffer, offset);
 	out[2] = deserialize_float(buffer, offset);
+	printf("---------------------\n");
 }

@@ -29,6 +29,8 @@ void renderer_cleanup();
 // renderes a single mesh, amounting in one draw-call
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
 
+void renderer_clear_scene();
+
 // the transform of the entity with the parents transforms, calculated recursively 
 void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
 

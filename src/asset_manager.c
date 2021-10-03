@@ -103,6 +103,23 @@ int frag_files_paths_len = 0;
 char** logged_frag_files = NULL;
 
 
+// ---- scenes ----
+// value: index of texture in 'scene_data', key: name of scene 
+// struct { char* key;  int   value; }*scenes = NULL;
+// int scenes_len = 0;
+
+// value: path to scene-file, key: scene-name
+struct { char*   key;	 char* value; }*scenes_paths = NULL;
+int scenes_paths_len = 0;
+
+// array of holding scenes
+// scene* scene_data = NULL;
+// int texture_data_len = 0;
+
+// array holding the names of all textures not yet loaded
+// char** logged_textures = NULL;
+
+
 
 // ---- internal assets ----
 char* internal_assets_names[] = {
@@ -239,6 +256,9 @@ void load_internal_assets()
 		}
 		*/
 	}
+
+	add_mesh(make_plane_mesh());
+
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
 {
@@ -302,6 +322,17 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 
 		// log the mesh with the created path and the file name 
 		log_frag_file(t_path, file_name);
+	}
+	// ---- scene-file ----
+	else if (type == SCENE_ASSET)
+	{
+		char dir_path_cpy[250];
+		strcpy(dir_path_cpy, dir_path);
+		char* t_path = strcat(dir_path_cpy, "\\"); // add the slash
+		strcat(t_path, file_name); // add the name 
+
+		// log the mesh with the created path and the file name 
+		log_scene(t_path, file_name);
 	}
 }
 void add_file_to_project(char* file_path)
@@ -469,6 +500,16 @@ asset_type get_asset_type(char* file_name)
 		file_name[file_name_len - 1] == 'g')
 	{
 		return FRAG_SHADER_ASSET;
+	}
+	// ---- scene-file ----
+	else if (file_name[file_name_len - 6] == '.' &&
+			 file_name[file_name_len - 5] == 's' &&
+			 file_name[file_name_len - 4] == 'c' &&
+			 file_name[file_name_len - 3] == 'e' &&
+			 file_name[file_name_len - 2] == 'n' &&
+			 file_name[file_name_len - 1] == 'e')
+	{
+		return SCENE_ASSET;
 	}
 	else
 	{
@@ -755,6 +796,12 @@ void create_mesh(const char* name)
 	}
 }
 
+void add_mesh(mesh m)
+{
+	shput(meshes, m.name, mesh_data_len);
+	arrput(mesh_data, m);
+	mesh_data_len++;
+}
 
 // 
 // ---- scripts ----
@@ -1001,6 +1048,38 @@ void log_frag_file(const char* path, const char* name)
 
 	// "remember" the name
 	arrput(logged_frag_files, name_cpy);
+
+	// not freeing name_cpy and path_cpy as they need to be used in the future
+}
+
+
+//
+// ---- scenes ----
+//
+
+scene* get_all_scenes(int* scenes_len)
+{
+	*scenes_len = scenes_paths_len;
+	return scenes_paths;
+}
+
+char* get_scene_path(const char* name)
+{
+	return shget(scenes_paths, name);
+}
+
+void log_scene(const char* path, const char* name)
+{
+	// make a persistent copy of the passed name
+	char* name_cpy = malloc((strlen(name) + 1) * sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
+	char* path_cpy = malloc((strlen(path) + 1) * sizeof(char));
+	assert(path_cpy != NULL);
+	strcpy(path_cpy, path);
+
+	shput(scenes_paths, name_cpy, path_cpy);
+	scenes_paths_len++;
 
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
