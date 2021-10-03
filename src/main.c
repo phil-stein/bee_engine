@@ -17,6 +17,8 @@
 #include "app.h"
 #include "ui.h"
 
+#include "serialization.h"
+
 // temp
 #include "shader.h"
 
@@ -26,9 +28,15 @@
 f32 delta_t = 0.0f;	// Time between current frame and last frame
 f32 last_frame = 0.0f;	// Time of last frame
 
+f32 fps_t;
+f32 cur_fps;
+int fps_ticks_counter;
+
+
 // ---- entry func ----
 int main(void)
 {
+
 	assetm_init();
 	printf(" -> assetm_init() finished\n");
 	
@@ -57,8 +65,12 @@ int main(void)
 	printf(" -> renderer_init() finished\n\n");
 
 	// gui console test 
-	submit_txt_console("console messages working :)");
+	submit_txt_console("bee_engine :)");
 	submit_txt_console("...");
+
+	// ---- tmp ----
+	serialize_scene();
+	// ---- tmp ----
 
 	// main loop
 	while (!glfwWindowShouldClose(get_window()))
@@ -73,6 +85,17 @@ int main(void)
 		last_frame = currentFrame;
 		set_delta_time(delta_t);
 		set_total_secs(currentFrame);
+		// ---- fps -----
+		fps_t += get_delta_time();
+		fps_ticks_counter++;
+		if (fps_t > 1.0f)
+		{
+			cur_fps = (int)floor((double)fps_ticks_counter / (double)fps_t);
+			fps_ticks_counter = 0;
+			fps_t = 0.0f;
+			set_fps(cur_fps);
+		}
+
 
 
 		// call the update function in the apllication

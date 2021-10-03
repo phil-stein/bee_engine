@@ -65,6 +65,8 @@ int selected_entities[100];
 
 asset_drop dropped_asset;
 
+bee_bool hide_ui_on_play = BEE_TRUE;
+
 // ---- right-click ----
 int ent_right_click_popup = 9999; // 9999 = inactive, otherwise entity id
 struct nk_rect ent_right_click_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -176,30 +178,37 @@ void ui_update()
     // demo_window();
     // overview_window();
 
-    int entities_len = 0;
-    get_entity_len(&entities_len);
-    // printf("entities_len: %d\n", entities_len);
+    if (!(get_gamestate() && hide_ui_on_play)) // always when isnt playing && hide ui
+    {
+        int entities_len = 0;
+        get_entity_len(&entities_len);
+        // printf("entities_len: %d\n", entities_len);
 
-    // resize selected
-    assert(entities_len <= selected_entities_len);
+        // resize selected
+        assert(entities_len <= selected_entities_len);
 
-    properties_window(entities_len);
+        properties_window(entities_len);
 
-    console_window();
+        console_window();
 
-    asset_browser_window();
+        asset_browser_window();
 
-    if (error_popup_act == nk_true)
+        if (source_code_window_act)
+        {
+            source_code_window();
+        }
+        if (shader_add_popup_act)
+        {
+            add_shader_window();
+        }
+    }
+    else if (get_gamestate() && hide_ui_on_play) // playing && hide ui
+    {
+        pause_button_window();
+    }
+    if (error_popup_act) // show error popup also when hide ui
     {
         error_popup_window();
-    }
-    if (source_code_window_act == nk_true)
-    {
-        source_code_window();
-    }
-    if (shader_add_popup_act)
-    {
-        add_shader_window();
     }
 
     nk_glfw3_render(&glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
@@ -1472,13 +1481,23 @@ void properties_window(int ent_len)
                 vec3 one  = { 1.0f, 1.0f, 1.0f };
                 add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "mesh");
             }
+            if (nk_menu_item_label(ctx, "Camera", NK_TEXT_LEFT))
+            {
+                camera cam = make_camera(45.0f, 0.1f, 100.0f);
+                cam.front[0] = 0;
+                cam.front[1] = 0;
+                cam.front[2] = -1;
+                vec3 zero = { 0.0f, 0.0f, 0.0f };
+                vec3 one = { 1.0f, 1.0f, 1.0f };
+                add_entity(zero, zero, one, get_mesh("camera.obj"), get_material("MAT_cel"), &cam, NULL, "camera");
+            }
             if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
             {
                 vec3 zero      = { 0.0f, 0.0f, 0.0f };
                 vec3 one       = { 1.0f, 1.0f, 1.0f };
                 vec3 point_one = { 0.1f, 0.1f, 0.1f };
                 light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
-                add_entity(zero, zero, point_one, get_mesh("lightbulb.obj") , get_material("MAT_blank_unlit"), NULL, &point_light, "point_light");	// mat_blank_unlit
+                add_entity(zero, zero, point_one, get_mesh("lightbulb.obj") , get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
             }
             nk_menu_end(ctx);
         }
@@ -1527,16 +1546,21 @@ void properties_window(int ent_len)
 
         // ---- play / pause ----
         
-        nk_layout_row_static(ctx, 25, 80, 1);
-        if (nk_button_label(ctx, gamestate_act == 0 ? "Play" : "Pause"))
+        nk_layout_row_static(ctx, 25, 80, 2);
+        if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
         {
-            
-            // set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
-            // scripts_act = scripts_act == 0 ? 1 : 0;
-            // set_all_light_meshes(scripts_act == 0 ? BEE_TRUE : BEE_FALSE); 
-            gamestate_act = !gamestate_act;
-            set_gamestate(gamestate_act);
+            set_gamestate(BEE_SWITCH);
         }
+        // if (nk_button_label(ctx, gamestate_act == 0 ? "Play" : "Pause"))
+        // {
+        //     
+        //     // set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
+        //     // scripts_act = scripts_act == 0 ? 1 : 0;
+        //     // set_all_light_meshes(scripts_act == 0 ? BEE_TRUE : BEE_FALSE); 
+        //     gamestate_act = !gamestate_act;
+        //     set_gamestate(gamestate_act);
+        // }
+        nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
         
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
@@ -2832,6 +2856,37 @@ void draw_entity_hierachy_entity(int idx, int offset)
 
 }
 
+void pause_button_window()
+{
+    int w, h;
+    get_window_size(&w, &h);
+
+
+    // less height because the window bar on top and below
+    const float w_ratio = 180.0f / 1920.0f;
+    const float h_ratio = 80.0f / 1020.0f;
+    const float x_ratio = 10.0f / 1920.0f;
+    const float y_ratio = 10.0f / 1020.0f;
+
+    // if (nk_begin(ctx, "Console", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
+    //     NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
+    // {
+    //     nk_layout_row_static(ctx, 230, 278, 1);
+    //     nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
+    // }
+    if (nk_begin(ctx, "Pause", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), window_flags | NK_WINDOW_NO_SCROLLBAR))
+        // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
+    {
+        // ---- play / pause ---
+        nk_layout_row_static(ctx, 25, 80, 2);
+        if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
+        {
+            set_gamestate(BEE_SWITCH);
+        }
+        nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
+    }
+    nk_end(ctx);
+}
 // old attach script popup
 /*
                 static int attach_popup_active;
@@ -3726,13 +3781,22 @@ void asset_browser_window()
                         nk_image(ctx, img);
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
-                        sprintf(buf, "Name: \"%s\"", internals[selected_internal]);
-                        nk_label_wrap(ctx, buf);
                         asset_type t = get_asset_type(internals[selected_internal]);
                         char* type_str = t == NOT_ASSET ? "none" : t == TEXTURE_ASSET ? "Texture" : t == MESH_ASSET ? "Mesh" :
                                          t == SHADER_ASSET ? "Shader" : SCRIPT_ASSET ? "Script" : "unknown";
                         sprintf(buf, "Type: %s", type_str);
                         nk_label_wrap(ctx, buf);
+                        sprintf(buf, "Name: \"%s\"", internals[selected_internal]);
+                        nk_label_wrap(ctx, buf);
+                        if (selected_internal_type = TEXTURE_ASSET)
+                        {
+                            texture t = get_texture(internals[selected_internal]);
+                            nk_layout_row_dynamic(ctx, 30, 1);
+                            sprintf(buf, "Size: %dpx x %dpx", t.size_x, t.size_y);
+                            nk_label_wrap(ctx, buf);
+                            sprintf(buf, "Handle: \"%d\"", t.handle);
+                            nk_label_wrap(ctx, buf);
+                        }
 
                     }
                 }

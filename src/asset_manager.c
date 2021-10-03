@@ -113,7 +113,7 @@ char* internal_assets_names[] = {
 									
 								    // mesh with index 0 in meshes_data array 
 									// this means this mesh shows up when requested mesh isnt found
-									"cube.obj", 
+									"missing_mesh.obj", 
 
 									// ---- misc ----
 									// needed for blank material, unlit material, etc.

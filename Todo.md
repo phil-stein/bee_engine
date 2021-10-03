@@ -15,8 +15,20 @@ Todo
   - [x] new camera component sometimes frees values
   - [ ] importing assets sometimes crashes the editor
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
+  - [ ] 'upper_hiearachy_ents' sometimes crahes the engine when sorting the hierarchy
+- unfinished
+  - [ ] entity_remove() in renderer.c
+  - [ ] entity_switch_light_type() in renderer.c
 - [ ] scene system
   - [ ] serialization
+    - [x] integer, float, u32, bool
+    - [x] string (integer length & char's)
+    - [x] texture, shader
+    - [x] components
+    - [x] entities
+    - [ ] scene
+      - [ ] make scene struct
+      - [ ] @UNCLEAR: header, scene specific settings (i.e. cubemap)
   - [ ] deserialization
   - [ ] switching
 - graphics
@@ -39,6 +51,7 @@ Todo
     - [x] getting the view-matrix
     - [ ] assure always one camera in scene
     - [ ] integrate in gravity interface
+  - [ ] make the gizmos be drawn in renderer separately instead of mesh components
   - [x] add entity
   - [x] deselect entities
   - [ ] visualize normal-direction

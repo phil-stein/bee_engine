@@ -39,10 +39,6 @@ f32 last_x = 540;
 f32 last_y = 360;
 f32 yaw, pitch;
 
-f32 fps_t;
-f32 cur_fps;
-int fps_ticks_counter;
-
 #pragma endregion
 
 
@@ -112,7 +108,7 @@ void init()
 	add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_cel"), &cam, NULL, "camera");
 
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
-	entity_add_script(ent_empty, "game_controller.gravity");
+	entity_add_script(ent_empty, "game_controller_tmp.gravity");
 
 	mesh* m_lightbulb = get_mesh("lightbulb.obj");
 	mesh* m_flashlight = get_mesh("flashlight.obj");
@@ -222,17 +218,9 @@ void update()
 	
 	// ---- fps ----
 
-	fps_t += get_delta_time();
-	fps_ticks_counter++;
-	if (fps_t > 1.0f)
-	{
-		cur_fps = (int)floor((double)fps_ticks_counter / (double)fps_t);
-		fps_ticks_counter = 0;
-		fps_t = 0.0f;
-	}
-
+	
 	char fl_buffer[8]; // limits the fps counter to 7 digits (1 byte for null-terminator)
-	int rtn = snprintf(fl_buffer, sizeof(fl_buffer), "%d", (int)cur_fps);
+	int rtn = snprintf(fl_buffer, sizeof(fl_buffer), "%d", (int)get_fps());
 	assert(rtn >= 0);
 
 	char title[19 + sizeof(fl_buffer)] = "bee engine | fps: "; // 19 chars + 8 for float

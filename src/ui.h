@@ -131,6 +131,7 @@ void overview_window();
 
 void properties_window(int ent_len);
 void draw_entity_hierachy_entity(int idx, int offset);
+void pause_button_window();
 
 void console_window();
 

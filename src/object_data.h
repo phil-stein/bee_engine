@@ -14,8 +14,8 @@
 typedef struct shader
 {
 	u32 handle;
-	char* frag_name;
 	char* vert_name;
+	char* frag_name;
 	char* name;
 
 }shader;
@@ -25,8 +25,8 @@ typedef struct texture
 	u32 handle;
 	int size_x;
 	int size_y;
-	char* path;
 	char* name;
+	char* path;
 }texture;
 
 
@@ -50,6 +50,21 @@ typedef struct material
 	char* name;
 }material;
 
+typedef struct mesh
+{
+	u32 vertices_len;
+	u32 vertices_elems;
+	u32 indices_len;
+	u32 indices_elems;
+
+	u32 vao, vbo, ebo;
+
+	bee_bool indexed;
+	bee_bool visible;
+
+	char* name;
+}mesh;
+
 typedef struct camera
 {
 	f32 perspective;  // 45.0f;
@@ -66,21 +81,6 @@ typedef struct camera
 	vec3 target; // = { 0.0, 0.0, 0.0 };
 
 }camera;
-
-typedef struct mesh
-{
-	u32 vertices_len;
-	u32 vertices_elems;
-	u32 indices_len;
-	u32 indices_elems;
-
-	u32 vao, vbo, ebo;
-
-	bee_bool indexed;
-	bee_bool visible;
-
-	char* name;
-}mesh;
 
 enum light_type { POINT_LIGHT, DIR_LIGHT, SPOT_LIGHT };
 typedef enum light_type light_type;

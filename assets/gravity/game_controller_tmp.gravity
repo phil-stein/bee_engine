@@ -1,0 +1,28 @@
+// #include "bee_engine.gravity"
+
+extern var Entity;
+extern var Game;
+extern var Input;
+extern var World;
+
+func init()
+{
+	System.print("called init: game_controller");
+}
+
+func update()
+{
+	var game  = Game();
+	var input = Input();
+	var world = World();
+
+	if (input.get_key_ESCAPE())
+	{
+		game.quit();
+	}
+}
+
+func cleanup()
+{
+}
+

@@ -187,8 +187,12 @@ static bee_bool game_quit(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
     if (nargs != 1) { throw_error("[Game.quit()] Wrong amount of arguments, 0 arguments are needed."); }
 
-
+    // go back to edior in editor-build and quit application in game-build
+#ifdef EDITOR_ACT
+    set_gamestate(BEE_FALSE);
+#else
     close_window();
+#endif
 }
 
 void setup_world_class(gravity_vm* vm)

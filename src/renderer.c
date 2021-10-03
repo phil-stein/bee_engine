@@ -642,37 +642,45 @@ void renderer_cleanup()
 // add an entity
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name)
 {
-	entities_len++;
-	arrput(entities, make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
+	// entities_len++;
+	// arrput(entities, );
+	add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
 
-	if (_material != NULL && _material->is_transparent)
+	return entities_len -1;
+}
+int add_entity_direct(entity e)
+{
+	entities_len++;
+	arrput(entities, e);
+
+	if (e.has_model && e._material != NULL && e._material->is_transparent)
 	{
 		transparent_ents_len++;
-		arrput(transparent_ents, entities_len -1);
+		arrput(transparent_ents, entities_len - 1);
 	}
 
-	if (_light != NULL)
+	if (e.has_light)
 	{
-		switch (_light->type)
+		switch (e._light.type)
 		{
-			case DIR_LIGHT:
-				arrput(dir_lights, entities_len -1);
-				dir_lights_len++;
-			case POINT_LIGHT:
-				arrput(point_lights, entities_len -1);
-				point_lights_len++;
-			case SPOT_LIGHT:
-				arrput(spot_lights, entities_len -1);
-				spot_lights_len++;
+		case DIR_LIGHT:
+			arrput(dir_lights, entities_len - 1);
+			dir_lights_len++;
+		case POINT_LIGHT:
+			arrput(point_lights, entities_len - 1);
+			point_lights_len++;
+		case SPOT_LIGHT:
+			arrput(spot_lights, entities_len - 1);
+			spot_lights_len++;
 		}
 	}
 
-	if (_cam != NULL)
+	if (e.has_cam)
 	{
 		camera_ent_idx = entities_len - 1;
 	}
 
-	return entities_len -1;
+	return entities_len - 1;
 }
 void add_entity_cube()
 {
@@ -737,6 +745,12 @@ void entity_remove_script(int entity_index, int script_index)
 
 void set_gamestate(bee_bool play)
 {
+	if (play == BEE_SWITCH)
+	{
+		set_gamestate(!gamestate);
+		return;
+	}
+
 	gamestate = play;
 
 	if (play)
@@ -765,6 +779,10 @@ void set_gamestate(bee_bool play)
 
 	set_all_scripts(play);
 	set_all_gizmo_meshes(!play);
+}
+bee_bool get_gamestate()
+{
+	return gamestate;
 }
 void set_all_scripts(bee_bool act)
 {
