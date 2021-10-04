@@ -51,7 +51,7 @@ void init()
 
 	// ---- populate scene ----
 
-	/*
+	// /*
 	shader shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
 	shader shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
@@ -200,9 +200,9 @@ void init()
 	// cube for testing noise shader
 	add_entity(scale, rot01, scale, get_mesh("cube.obj"), get_material("MAT_noise"), NULL, NULL, "noise_cube"); // mat_barrel
 
-	*/
+	// */
 
-	load_scene("test.scene");
+	// load_scene("test.scene");
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");

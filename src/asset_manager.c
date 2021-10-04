@@ -1057,15 +1057,20 @@ void log_frag_file(const char* path, const char* name)
 // ---- scenes ----
 //
 
-scene* get_all_scenes(int* scenes_len)
+int get_scenes_len()
 {
-	*scenes_len = scenes_paths_len;
-	return scenes_paths;
+	return scenes_paths_len;
 }
 
 char* get_scene_path(const char* name)
 {
 	return shget(scenes_paths, name);
+}
+
+char* get_scene_by_idx(int idx)
+{
+
+	return scenes_paths[idx].key;
 }
 
 void log_scene(const char* path, const char* name)

@@ -30,7 +30,7 @@ void serialize_vec3(char* buffer, int* offset, vec3 val);
 
 // deserialization ----------------------------------------------
 
-scene	  deserialize_scene(char* buffer, int* offset);
+scene	  deserialize_scene(char* buffer, int* offset, rtn_code* success);
 entity	  deserialize_entity(char* buffer, int* offset);
 material* deserialize_material(char* buffer, int* offset);
 mesh*	  deserialize_mesh(char* buffer, int* offset);

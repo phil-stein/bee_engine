@@ -17,6 +17,7 @@ Todo
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
   - [ ] 'upper_hierachy_ents' sometimes crashes the engine when sorting the hierarchy
   - [ ] saving scenes corrupts the program, probably in write_text_file()
+  - [ ] editor starts in play-mode for some reason
 - unfinished
   - [ ] entity_remove() in renderer.c
   - [ ] entity_switch_light_type() in renderer.c
@@ -33,30 +34,37 @@ Todo
       - [x] entities
   - [x] saving scenes
   - [x] loading scenes
-  - [ ] switching
+  - [x] shaders still get duplicated on deserialization
+  - [x] switching
+  - [ ] make scene deserialization check if material / shader already exists 
   - [ ] ui
     - [ ] saving & loading
-    - [ ] add scenes to the asset manager
+    - [x] add scenes to the asset manager
+  - [ ] gravity interface
 - graphics
+  - [ ] sort geometry of transparent objects
   - [ ] geometry shader normal direction
   - [ ] anti-aliasing
   - [ ] advanced blinn-phong
   - [ ] gamma correction
   - [ ] shadows
 - editor
-  - [x] asset manager
+  - [ ] asset manager
     - [x] register all assets
     - [x] load & store on demand
     - internal assets
       -  [x] default assets (missing texture, ...)
       -  [ ] automate the internal asset recognition
-    -  [ ] make assets on import be put in the right folder
+    - [ ] make assets on import be put in the right folder
+    -  [ ] use shdefault() & hmdefault() to check if the requested asset exists
+    -  [ ] add ui for drag&drop importing
+  -  [ ] use different datastructure for entities, with GUID's  
   - [ ] editor cam v. game cam (camera component)
     - [x] switching between editor / in-game camera
     - [x] camera gizmo
     - [x] getting the view-matrix
     - [ ] assure always one and only one camera in scene
-    - [x] integrate in gravity interface
+    - [ ] integrate in gravity interface
   - [ ] make the gizmos be drawn in renderer separately instead of mesh components
   - [ ] make the scene get serialized before playing and then reset when stopped 
   - [x] add entity
@@ -108,4 +116,4 @@ Todo
   - [ ] billboards (no cam projection) 
 - [ ] optimization
   - [ ] use uniform buffers for matrices and maybe lights
-  - [ ] compress asset key strings into int's or float's 
+  - [ ] use proper sorting algorithm for transparent objects

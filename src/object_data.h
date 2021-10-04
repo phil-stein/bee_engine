@@ -113,6 +113,7 @@ typedef struct light
 typedef struct entity
 {
 	char* name;
+	int   id;
 
 	bee_bool has_trans;
 	vec3 pos;

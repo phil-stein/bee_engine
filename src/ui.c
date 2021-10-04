@@ -18,6 +18,7 @@
 #include "stb/stb_ds.h"
 #include "tinyfd/tinyfiledialogs.h"
 
+#include "scene_manager.h"
 #include "file_handler.h"
 #include "game_time.h"
 #include "str_util.h"
@@ -100,8 +101,12 @@ int error_popup_act = nk_false;
 char* error_msg;
 error_type error_popop_type = GENERAL_ERROR;
 
+// ---- source-code window ----
 int source_code_window_act = nk_false;
 char* source_code;
+
+// ---- scene context window ----
+bee_bool scene_context_act = BEE_FALSE;
 
 
 struct nk_image image;
@@ -118,6 +123,7 @@ typedef struct
     struct nk_image shader;
     struct nk_image material; // ???
     struct nk_image script;
+    struct nk_image scene;
 
 }icon_collection;
 icon_collection icons;
@@ -164,6 +170,7 @@ void ui_init()
     icons.logged_mesh    = nk_image_id((get_texture("logged_mesh_icon.png")).handle);
     icons.script         = nk_image_id((get_texture("script_icon.png")).handle);
     icons.shader         = nk_image_id((get_texture("shader_icon.png")).handle);
+    icons.scene          = nk_image_id((get_texture("scene_icon.png")).handle);
 }
 
 void ui_update()
@@ -209,6 +216,10 @@ void ui_update()
     if (error_popup_act) // show error popup also when hide ui
     {
         error_popup_window();
+    }
+    if (scene_context_act)
+    {
+        scene_context_window();
     }
 
     nk_glfw3_render(&glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
@@ -1460,8 +1471,23 @@ void properties_window(int ent_len)
         // ---- theme menu ----
         
         nk_menubar_begin(ctx);
-        nk_layout_row_begin(ctx, NK_STATIC, 35, 3);
-        nk_layout_row_push(ctx, 85);
+        nk_layout_row_begin(ctx, NK_STATIC, 35, 4);
+        nk_layout_row_push(ctx, 45);
+        if (nk_menu_begin_label(ctx, "Scene", NK_TEXT_LEFT, nk_vec2(80, 200)))
+        {
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if (nk_menu_item_label(ctx, "Save", NK_TEXT_LEFT))
+            {
+                scene_context_act = BEE_TRUE;
+            }
+            if (nk_menu_item_label(ctx, "Save As", NK_TEXT_LEFT))
+            {
+                printf("need to make a popup for this\n");
+                assert(0);
+            }
+            nk_menu_end(ctx);
+        }
+        nk_layout_row_push(ctx, 80);
         if (nk_menu_begin_label(ctx, "Add Entity", NK_TEXT_LEFT, nk_vec2(80, 200)))
         {
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -1501,9 +1527,15 @@ void properties_window(int ent_len)
             }
             nk_menu_end(ctx);
         }
+        nk_layout_row_push(ctx, 80);
         if (nk_menu_begin_label(ctx, "Add Asset", NK_TEXT_LEFT, nk_vec2(80, 200)))
         {
             nk_layout_row_dynamic(ctx, 25, 1);
+            if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
+            {
+                printf("not yet implemented\n");
+                assert(0);
+            }
             if (nk_menu_item_label(ctx, "Material", NK_TEXT_LEFT))
             {
                 vec2 tile = { 1.0f, 1.0f };
@@ -1516,6 +1548,7 @@ void properties_window(int ent_len)
             }
             nk_menu_end(ctx);
         }
+        nk_layout_row_push(ctx, 50);
         if (nk_menu_begin_label(ctx, "Theme", NK_TEXT_LEFT, nk_vec2(80, 200)))
         {
             nk_layout_row_dynamic(ctx, 25, 1);
@@ -1541,7 +1574,7 @@ void properties_window(int ent_len)
             }
             nk_menu_end(ctx);
         }
-        nk_layout_row_push(ctx, 70);
+        // nk_layout_row_push(ctx, 70);
         nk_menubar_end(ctx);
 
         // ---- play / pause ----
@@ -2998,7 +3031,7 @@ void asset_browser_window()
     {
 
         static asset_type selected = TEXTURE_ASSET;
-        static int selected_check[6]; 
+        static int selected_check[7]; 
         static int init = nk_true; 
         if(init == nk_true) 
         {
@@ -3037,6 +3070,14 @@ void asset_browser_window()
         shaders = get_all_shaders(&shaders_len);
         static int selected_shader = 9999;
 
+        int scenes_len = get_scenes_len();
+        char** scenes = malloc(scenes_len * sizeof(char*));
+        for (int i = 0; i < scenes_len; ++i)
+        {
+            scenes[i] = get_scene_by_idx(i);
+        }
+        static int selected_scene = 9999;
+
         int internals_len = 0;
         char** internals = get_all_internals(&internals_len);
         static int selected_internal = 9999;
@@ -3059,18 +3100,19 @@ void asset_browser_window()
                 asset_type selected_old = selected;
                 nk_layout_row_static(ctx, 18, 100, 1);
                 nk_selectable_label(ctx, "Textures", NK_TEXT_LEFT,  &selected_check[0]);
-                if (selected_check[0] == nk_true) { selected = TEXTURE_ASSET;  for (int i = 0; i < 6; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
+                if (selected_check[0] == nk_true) { selected = TEXTURE_ASSET;  for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[0] = nk_true; }
                 nk_selectable_label(ctx, "Meshes", NK_TEXT_LEFT,    &selected_check[1]);
-                if (selected_check[1] == nk_true) { selected = MESH_ASSET;     for (int i = 0; i < 6; ++i) { selected_check[i] = 0; } selected_check[1] = nk_true; }
+                if (selected_check[1] == nk_true) { selected = MESH_ASSET;     for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[1] = nk_true; }
                 nk_selectable_label(ctx, "Shaders", NK_TEXT_LEFT,   &selected_check[2]);
-                if (selected_check[2] == nk_true) { selected = SHADER_ASSET;   for (int i = 0; i < 6; ++i) { selected_check[i] = 0; } selected_check[2] = nk_true; }
+                if (selected_check[2] == nk_true) { selected = SHADER_ASSET;   for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[2] = nk_true; }
                 nk_selectable_label(ctx, "Materials", NK_TEXT_LEFT, &selected_check[3]);
-                if (selected_check[3] == nk_true) { selected = MATERIAL_ASSET; for (int i = 0; i < 6; ++i) { selected_check[i] = 0; } selected_check[3] = nk_true; }
+                if (selected_check[3] == nk_true) { selected = MATERIAL_ASSET; for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[3] = nk_true; }
                 nk_selectable_label(ctx, "Scripts", NK_TEXT_LEFT,   &selected_check[4]);
-                if (selected_check[4] == nk_true) { selected = SCRIPT_ASSET;   for (int i = 0; i < 6; ++i) { selected_check[i] = 0; } selected_check[4] = nk_true; }
-                nk_selectable_label(ctx, "Internal", NK_TEXT_LEFT, &selected_check[5]);
-                if (selected_check[5] == nk_true) { selected = INTERNAL_ASSET; for (int i = 0; i < 5; ++i) { selected_check[i] = 0; } selected_check[5] = nk_true; }
-
+                if (selected_check[4] == nk_true) { selected = SCRIPT_ASSET;   for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[4] = nk_true; }
+                nk_selectable_label(ctx, "Scenes", NK_TEXT_LEFT, &selected_check[5]);
+                if (selected_check[5] == nk_true) { selected = SCENE_ASSET; for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[5] = nk_true; }
+                nk_selectable_label(ctx, "Internal", NK_TEXT_LEFT, &selected_check[6]);
+                if (selected_check[6] == nk_true) { selected = INTERNAL_ASSET; for (int i = 0; i < 7; ++i) { selected_check[i] = 0; } selected_check[6] = nk_true; }
 
                 if (selected_old != selected && selected_logged != NULL)
                 {
@@ -3078,7 +3120,7 @@ void asset_browser_window()
                 }
                 if (selected == MATERIAL_ASSET)
                 {
-                    nk_layout_row_static(ctx, 50, 100, 1);
+                    nk_layout_row_static(ctx, 20, 100, 1);
                     nk_label(ctx, "", NK_TEXT_LEFT);
 
                     nk_layout_row_static(ctx, 30, 100, 1);
@@ -3091,7 +3133,7 @@ void asset_browser_window()
                 }
                 else if (selected == SHADER_ASSET)
                 {
-                    nk_layout_row_static(ctx, 50, 100, 1);
+                    nk_layout_row_static(ctx, 20, 100, 1);
                     nk_label(ctx, "", NK_TEXT_LEFT);
 
                     nk_layout_row_static(ctx, 30, 100, 1);
@@ -3100,9 +3142,20 @@ void asset_browser_window()
                         shader_add_popup_act = BEE_TRUE;
                     }
                 }
+                else if (selected == SCENE_ASSET)
+                {
+                    nk_layout_row_static(ctx, 20, 100, 1);
+                    nk_label(ctx, "", NK_TEXT_LEFT);
+
+                    nk_layout_row_static(ctx, 30, 100, 1);
+                    if (nk_button_label(ctx, "Add Scene"))
+                    {
+                        // @TODO: add scene 
+                    }
+                }
                 else 
                 {
-                    nk_layout_row_static(ctx, 80, 100, 1);
+                    nk_layout_row_static(ctx, 50, 100, 1);
                     //nk_spacing(ctx, 1);
                     nk_label(ctx, "", NK_TEXT_LEFT);
                 }
@@ -3481,6 +3534,54 @@ void asset_browser_window()
                         }
                     }
                 }
+                else if (selected == SCENE_ASSET)
+                {
+                    nk_layout_row_static(ctx, 120, 100, 8);
+
+                    for (int i = 0; i < scenes_len; ++i)
+                    {
+                        if (check_asset_internal(scenes[i]))
+                        {
+                            continue;
+                        }
+                        // struct nk_rect bounds = nk_widget_bounds(ctx);
+                        // 
+                        // if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && asset_drag_popup_act == 9999)
+                        // {
+                        //     asset_drag_popup_act = i;
+                        //     asset_drag_type = SHADER_ASSET;
+                        // }
+
+                        bee_bool act = BEE_FALSE;
+                        // highlight selected
+                        if (selected_scene == i)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r * 1.25f, button.normal.data.color.g * 1.25f, button.normal.data.color.b * 1.25f));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
+                            act = BEE_TRUE;
+                        }
+                        if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
+                        {
+                            nk_layout_row_static(ctx, 90, 90, 1);
+                            // struct nk_image img = nk_image_id(textures[i].handle);
+                            if (nk_button_image(ctx, icons.scene))
+                            {
+                                if (selected_scene == i) { selected_scene = 9999; }
+                                else { selected_scene = i; }
+                            }
+                            nk_layout_row_dynamic(ctx, 20, 1);
+                            nk_label(ctx, scenes[i], NK_TEXT_LEFT);
+                            nk_group_end(ctx);
+                        }
+                        // reset color
+                        if (act)
+                        {
+                            ctx->style.button.normal = nk_style_item_color(nk_rgb(button.normal.data.color.r, button.normal.data.color.g, button.normal.data.color.b));
+                            ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r, button.hover.data.color.g, button.hover.data.color.b));
+                            act = BEE_FALSE;
+                        }
+                    }
+                }
                 else if (selected == INTERNAL_ASSET)
                 {
                     nk_layout_row_static(ctx, 120, 100, 8);
@@ -3762,6 +3863,33 @@ void asset_browser_window()
 
                     }
                 }
+                else if (selected == SCENE_ASSET)
+                {
+                if (selected_scene == 9999)
+                {
+                    struct nk_color red = { 255, 0, 0 };
+                    nk_label_colored(ctx, "no scene selected", NK_TEXT_ALIGN_LEFT, red);
+                }
+                else
+                {
+                    nk_layout_row_dynamic(ctx, 40, 1);
+                    char* buf[64];
+                    sprintf(buf, "Name: \"%s\"", scenes[selected_scene]);
+                    nk_label_wrap(ctx, buf);
+                    nk_layout_row_dynamic(ctx, 80, 1);
+                    sprintf(buf, "Path: \"%s\"", get_scene_path(scenes[selected_scene]));
+                    nk_label_wrap(ctx, buf);
+
+                    if (strcmp(scenes[selected_scene], get_active_scene_name()))
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        if (nk_button_label(ctx, "Load Scene"))
+                        {
+                            load_scene(scenes[selected_scene]);
+                        }
+                    }
+                }
+                }
                 else if (selected == INTERNAL_ASSET)
                 {
                     if (selected_internal == 9999)
@@ -3869,6 +3997,9 @@ void asset_browser_window()
             }
             else { asset_drag_timer = 0.0f; }
         }
+
+        free(scenes);
+
         nk_layout_row_end(ctx);
     }
     nk_end(ctx);
@@ -4063,6 +4194,48 @@ void add_shader_window()
     }
 }
 
+void scene_context_window()
+{
+    int w, h;
+    get_window_size(&w, &h);
+
+
+    // less height because the window bar on top and below
+    const float w_ratio = 180.0f / 1920.0f;
+    const float h_ratio = 200.0f / 1020.0f;
+    const float x_ratio = 300.0f / 1920.0f;
+    const float y_ratio = 10.0f / 1020.0f;
+
+    // if (nk_begin(ctx, "Console", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
+    //     NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE)) // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
+    // {
+    //     nk_layout_row_static(ctx, 230, 278, 1);
+    //     nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
+    // }
+
+    if (nk_begin(ctx, "Save Scene", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), window_flags | NK_WINDOW_NO_SCROLLBAR))
+        // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
+    {
+        static char name_edit_buffer[64];
+        nk_layout_row_dynamic(ctx, 30, 1);
+        nk_label(ctx, "Name: ", NK_TEXT_LEFT);
+        static nk_flags event = NK_EDIT_DEACTIVATED;
+        event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
+        char save_name[64 + 6]; // +6 for .scene
+        sprintf(save_name, "%s.scene", name_edit_buffer);
+        nk_layout_row_dynamic(ctx, 30, 2);
+        nk_label(ctx, "File Name: ", NK_TEXT_LEFT);
+        nk_label(ctx, save_name, NK_TEXT_LEFT);
+
+        nk_layout_row_dynamic(ctx, 30, 1);
+        if (nk_button_label(ctx, "Save"))
+        {
+            save_scene(save_name);
+            scene_context_act = BEE_FALSE;
+        }
+    }
+    nk_end(ctx);
+}
 
 void submit_txt_console(char* txt)
 {

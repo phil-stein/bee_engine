@@ -5,6 +5,9 @@
 #include "renderer.h" // tmp
 #include "scene_manager.h" // tmp
 
+const f32 version = 0.1f;
+
+
 void test_serialization()
 {
 	int int_val = -123456789;
@@ -53,8 +56,11 @@ void test_serialization()
 // serialize ------------------------------------------------------------
 void serialize_scene(char* buffer, int* offset, scene* s)
 {
-	// serializing assets that arent defined in files
+	// serialization version number
+	serialize_float(buffer, offset, version);
 
+	// serializing assets that arent defined in files
+	
 	int shaders_len = 0;
 	shader* shaders = get_all_shaders(&shaders_len);
 
@@ -133,7 +139,8 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 
 void serialize_material(char* buffer, int* offset, material* m)
 {
-	serialize_shader(buffer, offset, &m->shader);
+	// serialize_shader(buffer, offset, &m->shader);
+	serialize_str(buffer, offset, m->shader.name);
 	serialize_texture(buffer, offset, &m->dif_tex);
 	serialize_texture(buffer, offset, &m->spec_tex);
 
@@ -291,9 +298,21 @@ void serialize_vec3(char* buffer, int* offset, vec3 val)
 
 // deserialize ----------------------------------------------------------
 
-scene deserialize_scene(char* buffer, int* offset)
+scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 {
+	// serialization version number
+	f32 ver = deserialize_float(buffer, offset);
 
+	if (ver != version)
+	{
+		printf("[ERROR] scene serialization out of date\n");
+		// assert(0);
+		scene s; s.entities_len = 0;
+		*success = BEE_ERROR;
+		return s;
+	}
+
+	// deserialize assets that arent defined in their own files
 	int shaders_len = deserialize_int(buffer, offset);
 
 	for (int i = 0; i < shaders_len; ++i)
@@ -308,7 +327,7 @@ scene deserialize_scene(char* buffer, int* offset)
 		deserialize_material(buffer, offset);  // automatically adds to the asset-manager
 	}
 
-
+	// deserialize entities
 	scene s;
 	s.entities = NULL;
 	s.entities_len = deserialize_int(buffer, offset);
@@ -316,6 +335,8 @@ scene deserialize_scene(char* buffer, int* offset)
 	{
 		arrput(s.entities, deserialize_entity(buffer, offset));
 	}
+
+	*success = BEE_OK;
 	return s;
 }
 
@@ -372,7 +393,8 @@ entity deserialize_entity(char* buffer, int* offset)
 
 material* deserialize_material(char* buffer, int* offset)
 {
-	shader s = deserialize_shader(buffer, offset);
+	// shader s = deserialize_shader(buffer, offset);
+	char* shader = deserialize_str(buffer, offset);
 	texture dif  = deserialize_texture(buffer, offset);
 	texture spec = deserialize_texture(buffer, offset);
 
@@ -383,7 +405,7 @@ material* deserialize_material(char* buffer, int* offset)
 
 	bee_bool backfaces = deserialize_enum(buffer, offset);
 	char* name = deserialize_str(buffer, offset);
-	return add_material(s, dif, spec, is_trans, shininess, tile, tint, backfaces, name);
+	return add_material(get_shader(shader), dif, spec, is_trans, shininess, tile, tint, backfaces, name);
 }
 
 mesh* deserialize_mesh(char* buffer, int* offset)

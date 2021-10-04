@@ -10,9 +10,9 @@ Browse.VC.opendb
 #**/assets/#internal
 #**/assets/fonts
 #**/assets/gravity
-**/assets/models
+#**/assets/models
 #**/assets/shaders
-**/assets/textures
+#**/assets/textures
 
 # vim-files
 *~

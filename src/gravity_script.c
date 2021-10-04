@@ -198,7 +198,7 @@ rtn_code gravity_run_update(gravity_script* script, int entity_index)
         if (!VALUE_ISA_CLOSURE(update_func))
         {
             printf("Unable to find update() function in Gravity VM.\n");
-            assert(0 == 1);
+            assert(0);
             return BEE_ERROR;
         }
         // convert function to closure

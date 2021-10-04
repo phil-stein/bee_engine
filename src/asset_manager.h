@@ -88,9 +88,10 @@ char** get_all_vert_file_names(int* vert_files_len);
 char** get_all_frag_file_names(int* frag_files_len);
 
 
-scene* get_all_scenes(int* scenes_len);
+int   get_scenes_len();
 char* get_scene_path(const char* name);
-void log_scene(const char* path, const char* name);
+char* get_scene_by_idx(int idx);
+void  log_scene(const char* path, const char* name);
 
 
 #endif

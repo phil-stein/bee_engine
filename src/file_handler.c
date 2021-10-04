@@ -154,7 +154,8 @@ void write_text_file(const char* file_path, const char* txt, int len)
         assert(BEE_FALSE);
     }
 
-    fwrite(txt, sizeof(char), len, f);
+    int rtn = fwrite(txt, sizeof(char), len, f);
+    assert(rtn != EOF);
 
     fclose(f);
 }

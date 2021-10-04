@@ -5,6 +5,8 @@
 #include "renderer.h"
 
 
+char* active_scene = "no_name.scene";
+
 void load_scene(char* name)
 {
 	renderer_clear_scene();
@@ -16,20 +18,31 @@ void load_scene(char* name)
 	printf("read scene length: %d\n", len);
 
 	int offset = 0;
-	scene s = deserialize_scene(txt, &offset);
+	rtn_code rtn = BEE_OK;
+	scene s = deserialize_scene(txt, &offset, &rtn);
+
+	if (rtn == BEE_ERROR)
+	{
+		printf("[ERROR] failed to get scene, abort loading\n");
+		return;
+	}
 
 	for (int i = 0; i < s.entities_len; ++i)
 	{
 		add_entity_direct(s.entities[i]);
 	}
+
+	active_scene = name;
 }
 
-void save_scene()
+void save_scene(char* name)
 {
 	// write to file
 
 	char* path = get_asset_dir();
-	strcat(path, "\\test_write.scene");
+	strcat(path, "\\scenes\\");
+	strcat(path, name);
+	// strcat(path, "test02.scene");
 
 	scene s;
 	s.entities = get_entites();
@@ -42,5 +55,10 @@ void save_scene()
 
 	printf("serialized scene length -> %d\n", offset);
 
-	// write_text_file(path, buffer, offset);
+	write_text_file(path, buffer, offset);
+}
+
+char* get_active_scene_name()
+{
+	return active_scene;
 }

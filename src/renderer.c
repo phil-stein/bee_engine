@@ -34,10 +34,9 @@ f32 editor_near_plane = 0.1f;
 f32 editor_far_plane = 100.0f;
 
 // entities
-entity* entities;
+struct { int key;	 entity value; }*entities = NULL;
+// entity* entities = NULL;
 int entities_len = 0;
-// size_t entities_size = 0;
-// bee_bool entity_arr_init = BEE_FALSE;
 
 int* transparent_ents     = NULL;
 int  transparent_ents_len = 0;
@@ -226,13 +225,14 @@ void renderer_update()
 		}
 		if (is_trans) { continue; }
 
-		if (entities[i].has_model)
+		entity* ent = get_entity(i);
+		if (ent->has_model)
 		{
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(i, pos, rot, scale);
-			draw_mesh(&entities[i]._mesh, entities[i]._material, pos, rot, scale, entities[i].rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
+			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 	}
 
@@ -245,8 +245,8 @@ void renderer_update()
 		for (int i = transparent_ents_len -2; i > 0; --i)
 		{
 			// calc dist for each transparent obj
-			f32 dist01 = glm_vec3_distance(cam_pos, entities[transparent_ents[i]].pos);
-			f32 dist02 = glm_vec3_distance(cam_pos, entities[transparent_ents[i + 1]].pos);
+			f32 dist01 = glm_vec3_distance(cam_pos, get_entity(transparent_ents[i]   )->pos);
+			f32 dist02 = glm_vec3_distance(cam_pos, get_entity(transparent_ents[i +1])->pos);
 			if (dist02 > dist01)
 			{
 				// switch places
@@ -319,13 +319,14 @@ void renderer_update()
 	for (int n = 0; n < transparent_ents_len; ++n)
 	{
 		int i = transparent_ents[n];
-		if (entities[i].has_model)
+		entity* ent = get_entity(i);
+		if (ent->has_model)
 		{
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(i, pos, rot, scale);
-			draw_mesh(&entities[i]._mesh, entities[i]._material, pos, rot, scale, entities[i].rotate_global);
+			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global);
 		}
 	}
 	// ------------------------------------------------------------------------
@@ -358,7 +359,7 @@ void renderer_update()
 
 	for (int i = 0; i < entities_len; ++i)
 	{
-		update_entity(&entities[i]);
+		update_entity(get_entity(i)); //@TODO: make this not dependent on 
 	}
 
 	// ------------------------------------------------------------------------
@@ -487,7 +488,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 
 		if (gamestate) // in play-mode
 		{
-			shader_set_vec3(mat->shader, "viewPos", entities[camera_ent_idx].pos);
+			shader_set_vec3(mat->shader, "viewPos", get_entity(camera_ent_idx)->pos);
 		}
 		else 
 		{
@@ -511,63 +512,67 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		// set shader light ---------------------------------
 		char buffer[28]; // pointLights[i].quadratic is the longest str at 24
 		shader_set_int(mat->shader, "Num_DirLights", dir_lights_len);
+		entity* light;
 		for (int i = 0; i < dir_lights_len; ++i)
 		{
+			light = get_entity(dir_lights[i]);
 			sprintf(buffer, "dirLights[%d].direction", i);
-			shader_set_vec3(mat->shader, buffer, entities[dir_lights[i]]._light.direction);
+			shader_set_vec3(mat->shader, buffer, light->_light.direction);
 
 			sprintf(buffer, "dirLights[%d].ambient", i);
-			shader_set_vec3(mat->shader, buffer,  entities[dir_lights[i]]._light.ambient);
+			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
 			sprintf(buffer, "dirLights[%d].diffuse", i);
-			shader_set_vec3(mat->shader, buffer,  entities[dir_lights[i]]._light.diffuse);
+			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
 			sprintf(buffer, "dirLights[%d].specular", i);
-			shader_set_vec3(mat->shader, buffer, entities[dir_lights[i]]._light.specular);
+			shader_set_vec3(mat->shader, buffer, light->_light.specular);
 		}
 		shader_set_int(mat->shader, "Num_PointLights", point_lights_len);
 		for (int i = 0; i < point_lights_len; ++i)
 		{
+			light = get_entity(point_lights[i]);
 			sprintf(buffer, "pointLights[%d].position", i);
-			shader_set_vec3(mat->shader, buffer,	  entities[point_lights[i]].pos);
+			shader_set_vec3(mat->shader, buffer, light->pos);
 
 			sprintf(buffer, "pointLights[%d].ambient", i);
-			shader_set_vec3(mat->shader, buffer,    entities[point_lights[i]]._light.ambient);
+			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
 			sprintf(buffer, "pointLights[%d].diffuse", i);
-			shader_set_vec3(mat->shader, buffer,    entities[point_lights[i]]._light.diffuse);
+			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
 			sprintf(buffer, "pointLights[%d].specular", i);
-			shader_set_vec3(mat->shader, buffer,   entities[point_lights[i]]._light.specular);
+			shader_set_vec3(mat->shader, buffer, light->_light.specular);
 			sprintf(buffer, "pointLights[%d].constant", i);
-			shader_set_float(mat->shader, buffer,  entities[point_lights[i]]._light.constant);
+			shader_set_float(mat->shader, buffer, light->_light.constant);
 			sprintf(buffer, "pointLights[%d].linear", i);
-			shader_set_float(mat->shader, buffer,    entities[point_lights[i]]._light.linear);
+			shader_set_float(mat->shader, buffer, light->_light.linear);
 			sprintf(buffer, "pointLights[%d].quadratic", i);
-			shader_set_float(mat->shader, buffer, entities[point_lights[i]]._light.quadratic);
+			shader_set_float(mat->shader, buffer, light->_light.quadratic);
 		}
 		shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len);
 		// printf("amount of spotlights: %d\n", spot_lights_len);
 		for (int i = 0; i < spot_lights_len; ++i)
 		{
+			light = get_entity(spot_lights[i]);
 			sprintf(buffer, "spotLights[%d].position", i);
-			shader_set_vec3(mat->shader, buffer, entities[spot_lights[i]].pos);
+			shader_set_vec3(mat->shader, buffer, light->pos);
 
 			sprintf(buffer, "spotLights[%d].direction", i);
-			shader_set_vec3(mat->shader, buffer, entities[spot_lights[i]]._light.direction);
+			shader_set_vec3(mat->shader, buffer, light->_light.direction);
 
 			sprintf(buffer, "spotLights[%d].ambient", i);
-			shader_set_vec3(mat->shader, buffer, entities[spot_lights[i]]._light.ambient);
+			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
 			sprintf(buffer, "spotLights[%d].diffuse", i);
-			shader_set_vec3(mat->shader, buffer, entities[spot_lights[i]]._light.diffuse);
+			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
 			sprintf(buffer, "spotLights[%d].specular", i);
-			shader_set_vec3(mat->shader, buffer, entities[spot_lights[i]]._light.specular);
+			shader_set_vec3(mat->shader, buffer, light->_light.specular);
 			sprintf(buffer, "spotLights[%d].constant", i);
-			shader_set_float(mat->shader, buffer, entities[spot_lights[i]]._light.constant);
+			shader_set_float(mat->shader, buffer, light->_light.constant);
 			sprintf(buffer, "spotLights[%d].linear", i);
-			shader_set_float(mat->shader, buffer, entities[spot_lights[i]]._light.linear);
+			shader_set_float(mat->shader, buffer, light->_light.linear);
 			sprintf(buffer, "spotLights[%d].quadratic", i);
-			shader_set_float(mat->shader, buffer, entities[spot_lights[i]]._light.quadratic);
+			shader_set_float(mat->shader, buffer, light->_light.quadratic);
 			sprintf(buffer, "spotLights[%d].cutOff", i);
-			shader_set_float(mat->shader, buffer, entities[spot_lights[i]]._light.cut_off);
+			shader_set_float(mat->shader, buffer, light->_light.cut_off);
 			sprintf(buffer, "spotLights[%d].outerCutOff", i);
-			shader_set_float(mat->shader, buffer, entities[spot_lights[i]]._light.outer_cut_off);
+			shader_set_float(mat->shader, buffer, light->_light.outer_cut_off);
 		}
 #ifdef EDITOR_ACT
 	}
@@ -633,7 +638,8 @@ void renderer_cleanup()
 		free_entity(&entities[i]);
 	}
 
-	arrfree(entities);
+	// arrfree(entities);
+	hmfree(entities);
 	arrfree(dir_lights);
 	arrfree(point_lights);
 	arrfree(spot_lights);
@@ -671,11 +677,16 @@ void renderer_clear_scene()
 	}
 	spot_lights_len = 0;
 	
-	
 	camera_ent_idx = 0;
 	editor_perspective = 45.0f;
 	editor_near_plane = 0.1f;
 	editor_far_plane = 100.0f;
+
+#ifdef EDITOR_ACT
+	set_gamestate(BEE_FALSE);
+#else
+	set_gamestate(BEE_TRUE);
+#endif
 }
 
 // add an entity
@@ -687,10 +698,12 @@ int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material,
 
 	return entities_len -1;
 }
-int add_entity_direct(entity e)
+int add_entity_direct(entity e) 
 {
+	// arrput(entities, e);
+	hmput(entities, entities_len, e);
+	e.id = entities_len;
 	entities_len++;
-	arrput(entities, e);
 
 	if (e.has_model && e._material != NULL && e._material->is_transparent)
 	{
@@ -727,14 +740,15 @@ void add_entity_cube()
 	vec3 pos = { 0.0f, 0.0f, 0.0f };
 	vec3 rot = { 0.0f, 0.0f, 0.0f };
 	vec3 scale = { 1.0f, 1.0f, 1.0f };
-	add_entity(pos, rot, scale, &m, &entities[0]._material, NULL, NULL, "cube");
+	add_entity(pos, rot, scale, &m, get_material("MAT_blank"), NULL, NULL, "cube");
 }
 
 // doesnt work yet
 void entity_switch_light_type(int entity_id, light_type new_type)
 {
+	entity* ent = get_entity(entity_id);
 	// remove from old type categorisation
-	switch (entities[entity_id]._light.type)
+	switch (ent->_light.type)
 	{
 		case DIR_LIGHT:
 			arrdel(dir_lights, entity_id);
@@ -761,25 +775,26 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 			spot_lights_len++;
 	}
 
-	entities[entity_id]._light.type = new_type;
+	ent->_light.type = new_type;
 }
 
 void entity_add_script(int entity_index, const char* name)
 {
-	// gravity_script script = make_script(path);
+	entity* ent = &hmget(entities, entity_index);
 	gravity_script* script = get_script(name);
 #ifdef EDITOR_ACT
 	script->active = BEE_FALSE;
 #endif
-	arrput(entities[entity_index].scripts, script);
-	entities[entity_index].scripts_len++;
+	arrput(ent->scripts, script);
+	ent->scripts_len++;
 
 }
 void entity_remove_script(int entity_index, int script_index)
 {
-	free_script(entities[entity_index].scripts[script_index]);
-	arrdel(entities[entity_index].scripts, script_index);
-	entities[entity_index].scripts_len--;
+	entity* ent = &hmget(entities, entity_index);
+	free_script(ent->scripts[script_index]);
+	arrdel(ent->scripts, script_index);
+	ent->scripts_len--;
 }
 
 void set_gamestate(bee_bool play)
@@ -827,9 +842,10 @@ void set_all_scripts(bee_bool act)
 {
 	for (int i = 0; i < entities_len; ++i)
 	{
-		for (int n = 0; n < entities[i].scripts_len; ++n)
+		entity* ent = get_entity(i);
+		for (int n = 0; n < ent->scripts_len; ++n)
 		{
-			entities[i].scripts[n]->active = act;
+			ent->scripts[n]->active = act;
 		}
 	}
 }
@@ -837,23 +853,23 @@ void set_all_gizmo_meshes(bee_bool act)
 {
 	for (int i = 0; i < point_lights_len; ++i)
 	{
-		if (entities[point_lights[i]].has_model)
+		if (get_entity(point_lights[i])->has_model)
 		{
-			entities[point_lights[i]]._mesh.visible = act;
+			get_entity(point_lights[i])->_mesh.visible = act;
 		}
 	}
 	for (int i = 0; i < dir_lights_len; ++i)
 	{
-		if (entities[dir_lights[i]].has_model)
+		if (get_entity(dir_lights[i])->has_model)
 		{
-			entities[dir_lights[i]]._mesh.visible = act;
+			get_entity(dir_lights[i])->_mesh.visible = act;
 		}
 	}
 	for (int i = 0; i < spot_lights_len; ++i)
 	{
-		if (entities[spot_lights[i]].has_model)
+		if (get_entity(spot_lights[i])->has_model)
 		{
-			entities[spot_lights[i]]._mesh.visible = act;
+			get_entity(spot_lights[i])->_mesh.visible = act;
 		}
 	}
 	entity* cam = get_entity(camera_ent_idx);
@@ -930,9 +946,10 @@ void entity_remove_child(int parent, int child)
 // doesnt work yet
 void entity_remove(int entity_idx)
 {
-	if (entities[entity_idx].has_light)
+	entity* ent = &hmget(entities, entity_idx);
+	if (ent->has_light)
 	{
-		switch (entities[entity_idx]._light.type)
+		switch (ent->_light.type)
 		{
 			case DIR_LIGHT:
 				for (int i = 0; i < dir_lights_len; ++i)
@@ -967,11 +984,14 @@ void entity_remove(int entity_idx)
 		}
 	}
 
+	// unparent all children
+	for (int i = 0; i < ent->children_len; ++i)
+	{
+		entity_remove_child(entity_idx, ent->children[i]);
+	}
 
-	// entity* ptr = &entities[entity_idx];
-	arrdel(entities, entity_idx);
+	hmdel(entities, entity_idx);
 	entities_len--;
-	// free_entity(ptr);
 }
 
 void get_entity_len(int* _entities_len)
@@ -980,17 +1000,17 @@ void get_entity_len(int* _entities_len)
 }
 entity* get_entites()
 {
-	return entities;
+	return &entities->value;
 }
 entity* get_entity(int idx)
 {
-	return &entities[idx];
+	return &hmget(entities, idx);
 }
 int get_entity_id_by_name(char* name)
 {
 	for (int i = 0; i < entities_len; ++i)
 	{
-		if (strcmp(entities[i].name, name) == 0)
+		if (strcmp(get_entity(i)->name, name) == 0)
 		{
 			return i;
 		}

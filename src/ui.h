@@ -150,6 +150,8 @@ void add_shader_window();
 
 void set_source_code_window(char* src);
 
+void scene_context_window();
+
 // themes
 enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };
 static void set_style(struct nk_context* ctx, enum theme theme);

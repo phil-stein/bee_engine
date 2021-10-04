@@ -6,6 +6,8 @@
 #include "object_data.h"
 
 void load_scene(char* name);
-void save_scene();
+void save_scene(char* name);
+
+char* get_active_scene_name();
 
 #endif
