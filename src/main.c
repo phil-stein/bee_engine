@@ -122,7 +122,9 @@ int main(void)
 
 	// free allocated memory
 	cleanup();
+#ifdef EDITOR_ACT
 	ui_cleanup();
+#endif
 	renderer_cleanup();
 	assetm_cleanup();
 

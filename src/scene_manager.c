@@ -2,10 +2,19 @@
 #include "asset_manager.h"
 #include "file_handler.h"
 #include "serialization.h"
+#include "stb/stb_ds.h"
 #include "renderer.h"
 
 
-char* active_scene = "no_name.scene";
+char scene_state_buffer[10000];
+char scene_name_before_state_change[25];
+
+char* active_scene = "no_name";
+
+char* get_active_scene_name()
+{
+	return active_scene;
+}
 
 void load_scene(char* name)
 {
@@ -45,8 +54,12 @@ void save_scene(char* name)
 	// strcat(path, "test02.scene");
 
 	scene s;
-	s.entities = get_entites();
-	get_entity_len(&s.entities_len);
+	s.entities = NULL;
+	int* entity_ids = get_entity_ids(&s.entities_len);
+	for (int i = 0; i < s.entities_len; ++i)
+	{
+		arrput(s.entities, *get_entity(entity_ids[i]));
+	}
 
 
 	char buffer[10000];
@@ -58,7 +71,44 @@ void save_scene(char* name)
 	write_text_file(path, buffer, offset);
 }
 
-char* get_active_scene_name()
+void save_scene_state()
 {
-	return active_scene;
+	scene s;
+	s.entities = NULL;
+	int* entity_ids = get_entity_ids(&s.entities_len);
+	for (int i = 0; i < s.entities_len; ++i)
+	{
+		arrput(s.entities, *get_entity(entity_ids[i]));
+	}
+
+
+	int offset = 0;
+	serialize_scene(scene_state_buffer, &offset, &s);
+
+	strcpy(scene_name_before_state_change, active_scene);
+
+	printf("serialized scene length -> %d\n", offset);
 }
+
+void load_scene_state()
+{
+	renderer_clear_scene();
+
+	int offset = 0;
+	rtn_code rtn = BEE_OK;
+	scene s = deserialize_scene(scene_state_buffer, &offset, &rtn);
+
+	if (rtn == BEE_ERROR)
+	{
+		printf("[ERROR] failed to get scene, abort loading\n");
+		return;
+	}
+
+	for (int i = 0; i < s.entities_len; ++i)
+	{
+		add_entity_direct(s.entities[i]);
+	}
+
+	strcpy(active_scene, scene_name_before_state_change);
+}
+

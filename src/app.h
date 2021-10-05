@@ -32,9 +32,9 @@ settings get_settings();
 
 void process_input(GLFWwindow* window);
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void rotate_cam_by_mouse();
 
-void reset_cursor_pos();
+void center_cursor_pos();
 
 f32 rnd_num();
 

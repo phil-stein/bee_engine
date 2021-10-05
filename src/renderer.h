@@ -40,7 +40,7 @@ void entity_switch_light_type(int entity_id, light_type new_type);
 void entity_add_script(int entity_index, const char* name);
 void entity_remove_script(int entity_index, int script_index);
 // set play / pause used for editor
-void set_gamestate(bee_bool play);
+void set_gamestate(bee_bool play, bee_bool _hide_gizmos);
 bee_bool get_gamestate();
 void set_all_scripts(bee_bool act);
 void set_all_gizmo_meshes(bee_bool act);
@@ -57,10 +57,10 @@ renderer_properties get_renderer_properties();
 // amount of entities at the moment
 void get_entity_len(int* _entities_len);
 
-// pointer to all entities
-entity* get_entites();
-// get an entity by its index
-entity* get_entity(int idx);
+// pointer to all entity ids
+int* get_entity_ids(int* len);
+// get an entity by its id
+entity* get_entity(int id);
 // returns the index to the entity
 int get_entity_id_by_name(char* name);
 

@@ -1,3 +1,5 @@
+#ifdef EDITOR_ACT
+
 #include "ui.h"
 
 #include "GLAD/glad.h"
@@ -67,6 +69,7 @@ int selected_entities[100];
 asset_drop dropped_asset;
 
 bee_bool hide_ui_on_play = BEE_TRUE;
+bee_bool hide_gizmos_on_play = BEE_TRUE;
 
 // ---- right-click ----
 int ent_right_click_popup = 9999; // 9999 = inactive, otherwise entity id
@@ -1482,8 +1485,7 @@ void properties_window(int ent_len)
             }
             if (nk_menu_item_label(ctx, "Save As", NK_TEXT_LEFT))
             {
-                printf("need to make a popup for this\n");
-                assert(0);
+                scene_context_act = BEE_TRUE;
             }
             nk_menu_end(ctx);
         }
@@ -1505,7 +1507,8 @@ void properties_window(int ent_len)
             {
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one  = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "mesh");
+                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "mesh");
+                get_entity(cube)->_mesh.visible = BEE_TRUE;
             }
             if (nk_menu_item_label(ctx, "Camera", NK_TEXT_LEFT))
             {
@@ -1577,24 +1580,16 @@ void properties_window(int ent_len)
         // nk_layout_row_push(ctx, 70);
         nk_menubar_end(ctx);
 
-        // ---- play / pause ----
-        
-        nk_layout_row_static(ctx, 25, 80, 2);
+        // ---- play / pause ---
+        nk_layout_row_dynamic(ctx, 25, 2);
         if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
         {
-            set_gamestate(BEE_SWITCH);
+            set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
         }
-        // if (nk_button_label(ctx, gamestate_act == 0 ? "Play" : "Pause"))
-        // {
-        //     
-        //     // set_all_scripts(scripts_act == 0 ? BEE_TRUE : BEE_FALSE);
-        //     // scripts_act = scripts_act == 0 ? 1 : 0;
-        //     // set_all_light_meshes(scripts_act == 0 ? BEE_TRUE : BEE_FALSE); 
-        //     gamestate_act = !gamestate_act;
-        //     set_gamestate(gamestate_act);
-        // }
+        nk_label(ctx, " ", NK_TEXT_LEFT);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
         nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
-        
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
         nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
@@ -1798,6 +1793,13 @@ void properties_window(int ent_len)
 
                 if (nk_tree_push(ctx, NK_TREE_TAB, "FPS Diagnostics", NK_MINIMIZED))
                 {
+                    char buf[10];
+                    sprintf_s(buf, 10, "FPS: %d", (int)get_fps());
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+
+                    // ----
+
                     float id = 0;
                     static int col_index = -1;
                     static int line_index = -1;
@@ -1905,6 +1907,8 @@ void properties_window(int ent_len)
         if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) // NK_MAXIMIZED: open on start
         {
             static int selected_entities_old[100];
+            int entity_ids_len = 0;
+            int* entity_ids = get_entity_ids(&entity_ids_len);
 
             for (int i = 0; i < 100; ++i)
             {
@@ -1929,7 +1933,7 @@ void properties_window(int ent_len)
                     int* upper_hierarchy_ents = NULL;
                     for (int i = 0; i < ent_len; ++i)
                     {
-                        entity* ent = get_entity(i);
+                        entity* ent = get_entity(entity_ids[i]);
                         if (ent->parent == 9999)
                         {
                             arrput(upper_hierarchy_ents, i);
@@ -1939,7 +1943,7 @@ void properties_window(int ent_len)
                     // recursively handle child-parent relation between the entities
                     for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
                     {
-                        draw_entity_hierachy_entity(upper_hierarchy_ents[i], 0); // start with 0 offset
+                        draw_entity_hierachy_entity(entity_ids[upper_hierarchy_ents[i]], 0, upper_hierarchy_ents[i]); // start with 0 offset
                     }
                     // assign the dropped entity detected in draw_entity_hierachy_entity()
                     if (dropped_entity.handled == BEE_TRUE && dropped_entity.assigned == BEE_FALSE)
@@ -1964,7 +1968,7 @@ void properties_window(int ent_len)
                     for (int i = 0; i < ent_len; ++i)
                     {
                         // entity_properties prop = get_entity_properties(i);
-                        entity* ent = get_entity(i);
+                        entity* ent = get_entity(entity_ids[i]);
                         // nk_selectable_label(ctx, prop.ent_name, NK_TEXT_LEFT, &selected_entities[i]);
                         char type_buffer[64]; strcpy(type_buffer, "empty");
                         // if (*prop.has_trans && !*prop.has_model && !*prop.has_light) { strcpy(type_buffer, "empty"); }
@@ -1984,7 +1988,7 @@ void properties_window(int ent_len)
            
             }
             // right-click on entity popup
-            if (ent_right_click_popup != 9999 && nk_popup_begin(ctx, NK_POPUP_STATIC, "right click entity", NK_WINDOW_NO_SCROLLBAR, ent_right_click_popup_bounds))
+            if (ent_right_click_popup != 9999 && nk_popup_begin(ctx, NK_POPUP_STATIC, "right click entity", NK_WINDOW_BACKGROUND | NK_WINDOW_NO_SCROLLBAR, ent_right_click_popup_bounds))
             {
                 nk_layout_row_dynamic(ctx, 30, 1);
                 nk_bool remove = nk_false;
@@ -2044,7 +2048,7 @@ void properties_window(int ent_len)
             {
                 if (selected_entities[i] == nk_true && selected_entities_old[i] == nk_false)
                 {
-                    selected_entity = i;
+                    selected_entity = entity_ids[i];
                     break;
                 }
             }
@@ -2073,8 +2077,8 @@ void properties_window(int ent_len)
 
             if (is_selected == nk_false || selected_entity == -999 || selected_entity >= ent_len || selected_entity < 0)
             {
-                nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
-                nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);
+                // nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                // nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);
 
             }
             else 
@@ -2840,15 +2844,14 @@ void properties_window(int ent_len)
     nk_end(ctx);
 }
 
-void draw_entity_hierachy_entity(int idx, int offset)
+void draw_entity_hierachy_entity(int idx, int offset, int pos)
 {
     // right-click popup
     struct nk_rect bounds = nk_widget_bounds(ctx);
     if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
     {
-        submit_txt_console("clicked on entity label");
         ent_right_click_popup = idx; // setting it to the current entity id
-        ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 100);
+        ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 40);
     }
     // entity drag popup
     if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && entity_drag_popup_act == 9999)
@@ -2879,12 +2882,12 @@ void draw_entity_hierachy_entity(int idx, int offset)
     nk_spacing(ctx, 1);
     nk_layout_row_push(ctx, 150 - (25 * offset));
 
-    nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[idx]);
+    nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[pos]);
 
     // draw its children
     for (int i = 0; i < ent->children_len; ++i)
     {
-        draw_entity_hierachy_entity(ent->children[i], offset +1);
+        draw_entity_hierachy_entity(ent->children[i], offset +1, get_entity(ent->children[i])->id_idx);
     }
 
 }
@@ -2896,8 +2899,8 @@ void pause_button_window()
 
 
     // less height because the window bar on top and below
-    const float w_ratio = 180.0f / 1920.0f;
-    const float h_ratio = 80.0f / 1020.0f;
+    const float w_ratio = 140.0f / 1920.0f;
+    const float h_ratio = 95.0f / 1020.0f;
     const float x_ratio = 10.0f / 1920.0f;
     const float y_ratio = 10.0f / 1020.0f;
 
@@ -2907,16 +2910,22 @@ void pause_button_window()
     //     nk_layout_row_static(ctx, 230, 278, 1);
     //     nk_edit_string(ctx, NK_EDIT_BOX, box_buffer, &box_len, 512, nk_filter_default);
     // }
-    if (nk_begin(ctx, "Pause", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), window_flags | NK_WINDOW_NO_SCROLLBAR))
+    if (nk_begin(ctx, "", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) // to title
         // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
         // ---- play / pause ---
-        nk_layout_row_static(ctx, 25, 80, 2);
+        nk_layout_row_dynamic(ctx, 25, 1);
         if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
         {
-            set_gamestate(BEE_SWITCH);
+            set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
         }
+        // nk_label(ctx, " ", NK_TEXT_LEFT);
+        // nk_layout_row_dynamic(ctx, 25, 1);
+        nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
         nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
+        // spacing
+        nk_layout_row_static(ctx, 5, 10, 1);
+        nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
     }
     nk_end(ctx);
 }
@@ -4425,3 +4434,18 @@ static void set_style(struct nk_context* ctx, enum theme theme)
         nk_style_default(ctx);
     }
 }
+
+#else
+#include "ui.h"
+
+void submit_txt_console(char* doesnt_show_up)
+{
+    return;
+}
+
+void set_error_popup(error_type type, char* msg)
+{
+    return;
+}
+
+#endif

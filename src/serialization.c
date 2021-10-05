@@ -229,7 +229,7 @@ void serialize_script(char* buffer, int* offset, gravity_script* s)
 void serialize_int(char* buffer, int* offset, int val)
 {
 	// write to buffer
-	printf("serialize int: %d\n", val);
+	// printf("serialize int: %d\n", val);
 	sprintf(buffer + *offset, "%d", val);
 
 	// move the offset to after the newly written data
@@ -239,7 +239,7 @@ void serialize_int(char* buffer, int* offset, int val)
 void serialize_float(char* buffer, int* offset, f32 val)
 {
 	// write to buffer
-	printf("serialize f32: %f\n", val);
+	// printf("serialize f32: %f\n", val);
 	sprintf(buffer + *offset, "%f", val);
 
 	// move the offset to after the newly written data
@@ -249,7 +249,7 @@ void serialize_float(char* buffer, int* offset, f32 val)
 void serialize_u32(char* buffer, int* offset, u32 val)
 {
 	// write to buffer
-	printf("serialize u32: %d\n", val);
+	// printf("serialize u32: %d\n", val);
 	sprintf(buffer + *offset, "%d", val);
 	
 	// move the offset to after the newly written data
@@ -271,14 +271,14 @@ void serialize_str(char* buffer, int* offset, char* val)
 	int len = strlen(val);
 	serialize_int(buffer, offset, len);
 
-	printf("serialize str: ");;
+	// printf("serialize str: ");;
 	for (int i = 0; i < len; ++i)
 	{
 		buffer[*offset] = val[i];
-		printf("%c", buffer[*offset]);
+		// printf("%c", buffer[*offset]);
 		*offset += sizeof(char);
 	}
-	printf("\n");
+	// printf("\n");
 	// move the offset to after the newly written data
 }
 
@@ -376,7 +376,13 @@ entity deserialize_entity(char* buffer, int* offset)
 	e.scripts_len =  deserialize_int(buffer, offset);
 	for (int i = 0; i < e.scripts_len; ++i)
 	{
+#ifdef EDITOR_ACT
+		gravity_script* script = deserialize_script(buffer, offset);
+		script->active = get_gamestate();
+		arrput(e.scripts, script);
+#else 
 		arrput(e.scripts, deserialize_script(buffer, offset));
+#endif
 	}
 
 	e.children = NULL; // for stb_ds
@@ -489,7 +495,7 @@ int deserialize_int(char* buffer, int* offset)
 	int result = strtol(bytes, NULL, 10);
 	
 	*offset += sizeof(int);
-	printf("deserialized int:  %d\n", result);
+	// printf("deserialized int:  %d\n", result);
 	return result;
 }
 
@@ -501,7 +507,7 @@ f32 deserialize_float(char* buffer, int* offset)
 	memcpy(bytes, buffer + *offset, sizeof(f32));
 	f32 result = strtof(bytes, NULL); // buffer + *offset
 	*offset += sizeof(f32);
-	printf("deserialized f32:  %f\n", result);
+	// printf("deserialized f32:  %f\n", result);
 	return result;
 }
 
@@ -511,7 +517,7 @@ u32 deserialize_u32(char* buffer, int* offset)
 	memcpy(bytes, buffer + *offset, sizeof(u32));
 	u32 result = strtoul(bytes, NULL, 10);
 	*offset += sizeof(u32);
-	printf("deserialized u32:  %d\n", result);
+	// printf("deserialized u32:  %d\n", result);
 	return result;
 }
 
@@ -519,7 +525,7 @@ char deserialize_enum(char* buffer, int* offset)
 {
 	char result = buffer[*offset];
 	*offset += sizeof(char); // gets serializes as a char
-	printf("deserialized enum:  %d\n", result);
+	// printf("deserialized enum:  %d\n", result);
 	return result;
 }
 
@@ -537,23 +543,23 @@ char* deserialize_str(char* buffer, int* offset)
 	}
 	result[len] = '\0';
 	// *offset += sizeof(char);
-	printf("deserialized str:  %s\n", result);
+	// printf("deserialized str:  %s\n", result);
 	return result;
 }
 
 void deserialize_vec2(char* buffer, int* offset, vec2 out)
 {
-	printf("deserialize vec2 ----\n");
+	// printf("deserialize vec2 ----\n");
 	out[0] = deserialize_float(buffer, offset);
 	out[1] = deserialize_float(buffer, offset);
-	printf("---------------------\n");
+	// printf("---------------------\n");
 }
 
 void deserialize_vec3(char* buffer, int* offset, vec3 out)
 {
-	printf("deserialize vec3 ----\n");
+	// printf("deserialize vec3 ----\n");
 	out[0] = deserialize_float(buffer, offset);
 	out[1] = deserialize_float(buffer, offset);
 	out[2] = deserialize_float(buffer, offset);
-	printf("---------------------\n");
+	// printf("---------------------\n");
 }

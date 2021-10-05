@@ -10,11 +10,6 @@
 #include "window.h"
 
 
-//
-// !!! the free_ functions could potentially be called multiple times, by different entitys 
-// !!! so safe-guard the buffered data with a if (data != NULL)
-//
-
 // ---- material ----
 
 material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, bee_bool draw_backfaces, const char* name)
@@ -385,7 +380,6 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, 
 // for script, collider, etc. components
 void update_entity(entity* ent)
 {
-
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)
 	{
@@ -425,7 +419,7 @@ void free_entity(entity* ent)
 	{
 		// scripts
 		// scripts get freed in asset-manager as the same script might be on multiple entites
-		arrfree(ent->scripts);
+		// arrfree(ent->scripts);
 	}
 }
 void free_mesh(mesh* _mesh)
@@ -440,7 +434,6 @@ void free_mesh(mesh* _mesh)
 }
 void free_texture(texture* tex)
 {
-
 	glDeleteTextures(1, &tex->handle);
 }
 void free_shader(shader* s)

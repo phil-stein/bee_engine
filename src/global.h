@@ -27,6 +27,12 @@ enum bee_bool {
 };
 typedef enum bee_bool bee_bool;
 
+typedef enum error_type
+{
+	GENERAL_ERROR,
+	GRAVITY_ERROR
+}error_type;
+
 // ints
 typedef signed char			s8;
 typedef short				s16;
@@ -40,5 +46,9 @@ typedef unsigned long long	u64;
 // floats
 typedef float				f32;
 typedef double				f64;
+
+
+// function template with no args, used for calllbacks
+typedef void (*empty_callback)();
 
 #endif

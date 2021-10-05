@@ -5,12 +5,15 @@
 #include "stb/stb_image.h"
 #include "GLAD/glad.h"
 
+#include "input.h"
 #include "shader.h"
 #include "window.h"
 #include "camera.h"
 #include "framebuffer.h"
 #include "file_handler.h"
 #include "asset_manager.h"
+#include "scene_manager.h"
+#include "gravity_interface.h"
 
 
 #define BLEND_SORT_DEPTH 3
@@ -20,8 +23,10 @@
 
 #ifdef EDITOR_ACT
 bee_bool gamestate = BEE_FALSE; // start of in editor mode
+bee_bool hide_gizmos = BEE_TRUE;
 #else 
 bee_bool gamestate = BEE_TRUE; // start of in game mode
+bee_bool hide_gizmos = BEE_TRUE;
 #endif
 // camera
 f32 perspective = 45.0f;
@@ -34,9 +39,11 @@ f32 editor_near_plane = 0.1f;
 f32 editor_far_plane = 100.0f;
 
 // entities
-struct { int key;	 entity value; }*entities = NULL;
+struct { int key; entity value; }* entities = NULL;
 // entity* entities = NULL;
-int entities_len = 0;
+int  entities_len = 0;
+int* entity_ids = NULL;
+int  entity_ids_len = 0;
 
 int* transparent_ents     = NULL;
 int  transparent_ents_len = 0;
@@ -54,7 +61,7 @@ int spot_lights_len  = 0;
 bee_bool wireframe_mode_enabled = BEE_FALSE;
 bee_bool normal_mode_enabled	 = BEE_FALSE;
 bee_bool uv_mode_enabled		 = BEE_FALSE;
-vec3 wireframe_color = { 0.0f, 0.0f, 0.0f };
+vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
 
 shader modes_shader;
 #endif
@@ -181,6 +188,12 @@ void renderer_init()
 
 	// set background-color
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+	// set default return if key doesn't exist
+	entity e; 
+	e.has_trans = 0; e.has_model = 0; e.has_cam = 0;  e.has_light = 0;
+	e.name = "x"; e.scripts_len = 0; e.children_len = 0; e.id = -1; e.id_idx = -1;
+	hmdefault(entities, e);
 }
 
 void renderer_update()
@@ -200,6 +213,9 @@ void renderer_update()
 	glEnable(GL_DEPTH_TEST); // enable the z-buffer
 #endif
 
+	int entity_ids_len = 0;
+	int* entity_ids = get_entity_ids(&entity_ids_len);
+
 #ifdef EDITOR_ACT
 	if (wireframe_mode_enabled == BEE_FALSE)
 	{
@@ -215,25 +231,53 @@ void renderer_update()
 #endif
  
 	// draw opaque objects
-	for (int i = 0; i < entities_len; ++i)
+	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		// skip transparent objects
 		bee_bool is_trans = BEE_FALSE;
 		for (int n = 0; n < transparent_ents_len; ++n)
 		{
-			if (i == transparent_ents[n]) { is_trans = BEE_TRUE; break; }
+			if (entity_ids[i] == transparent_ents[n]) { is_trans = BEE_TRUE; break; }
 		}
 		if (is_trans) { continue; }
 
-		entity* ent = get_entity(i);
+		entity* ent = get_entity(entity_ids[i]);
 		if (ent->has_model)
 		{
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(i, pos, rot, scale);
+			get_entity_global_transform(entity_ids[i], pos, rot, scale);
 			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
+		#ifdef EDITOR_ACT
+		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam))
+		{
+			vec3 pos = { 0.0f, 0.0f, 0.0f };
+			vec3 rot = { 0.0f, 0.0f, 0.0f };
+			vec3 scale = { 0.0f, 0.0f, 0.0f };
+			get_entity_global_transform(entity_ids[i], pos, rot, scale);
+			mesh* m = NULL;
+			if (ent->has_cam) { m = get_mesh("camera.obj"); }
+			else if (ent->has_light) 
+			{
+				switch (ent->_light.type)
+				{
+					case DIR_LIGHT:
+						m = get_mesh("arrow_down.obj"); 
+						break;
+					case POINT_LIGHT:
+						m = get_mesh("lightbulb.obj");
+						break;
+					case SPOT_LIGHT:
+						m = get_mesh("flashlight.obj");
+						break;
+				}
+			}
+			if (m == NULL) { continue; }
+			draw_mesh(m, get_material("MAT_cel"), pos, rot, scale, ent->rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
+		}
+		#endif
 	}
 
 	// sort transparent / translucent objects
@@ -357,10 +401,11 @@ void renderer_update()
 
 	// entities ---------------------------------------------------------------
 
-	for (int i = 0; i < entities_len; ++i)
+	for (int i = 0; i < entity_ids_len; ++i)
 	{
-		update_entity(get_entity(i)); //@TODO: make this not dependent on 
+		update_entity(get_entity(entity_ids[i]));
 	}
+	check_for_level_load(); // check if one of the run scripts requested to change scene
 
 	// ------------------------------------------------------------------------
 
@@ -511,8 +556,11 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 
 		// set shader light ---------------------------------
 		char buffer[28]; // pointLights[i].quadratic is the longest str at 24
-		shader_set_int(mat->shader, "Num_DirLights", dir_lights_len);
 		entity* light;
+		vec3 pos_l   = { 0, 0, 0 };
+		vec3 rot_l   = { 0, 0, 0 };
+		vec3 scale_l = { 0, 0, 0 };
+		shader_set_int(mat->shader, "Num_DirLights", dir_lights_len);
 		for (int i = 0; i < dir_lights_len; ++i)
 		{
 			light = get_entity(dir_lights[i]);
@@ -530,8 +578,9 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		for (int i = 0; i < point_lights_len; ++i)
 		{
 			light = get_entity(point_lights[i]);
+			get_entity_global_transform(point_lights[i], pos_l, rot_l, scale_l);
 			sprintf(buffer, "pointLights[%d].position", i);
-			shader_set_vec3(mat->shader, buffer, light->pos);
+			shader_set_vec3(mat->shader, buffer, pos_l);
 
 			sprintf(buffer, "pointLights[%d].ambient", i);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
@@ -551,8 +600,9 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		for (int i = 0; i < spot_lights_len; ++i)
 		{
 			light = get_entity(spot_lights[i]);
+			get_entity_global_transform(spot_lights[i], pos_l, rot_l, scale_l);
 			sprintf(buffer, "spotLights[%d].position", i);
-			shader_set_vec3(mat->shader, buffer, light->pos);
+			shader_set_vec3(mat->shader, buffer, pos_l);
 
 			sprintf(buffer, "spotLights[%d].direction", i);
 			shader_set_vec3(mat->shader, buffer, light->_light.direction);
@@ -648,89 +698,107 @@ void renderer_cleanup()
 
 void renderer_clear_scene()
 {
-	for (int i = entities_len -1; i >= 0; --i)
-	{
-		arrdel(entities, i);
-	}
+	// for (int i = 0; i < entity_ids_len; ++i)
+	// {
+	// 	hmdel(entities, entity_ids[i]);
+	// }
+	hmfree(entities);
+	entities = NULL;
 	entities_len = 0;
-	for (int i = transparent_ents_len - 1; i >= 0; --i)
-	{
-		arrdel(transparent_ents, i);
-	}
+	// ------------------
+	// for (int i = 0; i < entity_ids_len; ++i)
+	// {
+	// 	bee_bool success = arrdel(entity_ids, i);
+	// 	printf("deleting entity - %s\n", success == 0 ? "FAILED" : "SUCCESS");
+	// }
+	arrfree(entity_ids);
+	entity_ids = NULL;
+	entity_ids_len = 0;
+	// for (int i = transparent_ents_len - 1; i >= 0; --i)
+	// {
+	// 	arrdel(transparent_ents, i);
+	// }
+	arrfree(transparent_ents);
+	transparent_ents = NULL;
 	transparent_ents_len = 0;
 
-	for (int i = dir_lights_len - 1; i >= 0; --i)
-	{
-		arrdel(dir_lights, i);
-	}
+	// for (int i = dir_lights_len - 1; i >= 0; --i)
+	// {
+	// 	arrdel(dir_lights, i);
+	// }
+	arrfree(dir_lights);
+	dir_lights = NULL;
 	dir_lights_len = 0;
 
-	for (int i = point_lights_len - 1; i >= 0; --i)
-	{
-		arrdel(point_lights, i);
-	}
+	// for (int i = point_lights_len - 1; i >= 0; --i)
+	// {
+	// 	arrdel(point_lights, i);
+	// }
+	arrfree(point_lights);
+	point_lights = NULL;
 	point_lights_len = 0;
 
-	for (int i = spot_lights_len - 1; i >= 0; --i)
-	{
-		arrdel(spot_lights, i);
-	}
+	// for (int i = spot_lights_len - 1; i >= 0; --i)
+	// {
+	// 	arrdel(spot_lights, i);
+	// }
+	arrfree(spot_lights);
+	spot_lights = NULL;
 	spot_lights_len = 0;
 	
 	camera_ent_idx = 0;
 	editor_perspective = 45.0f;
 	editor_near_plane = 0.1f;
 	editor_far_plane = 100.0f;
-
-#ifdef EDITOR_ACT
-	set_gamestate(BEE_FALSE);
-#else
-	set_gamestate(BEE_TRUE);
-#endif
 }
 
 // add an entity
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name)
 {
-	// entities_len++;
-	// arrput(entities, );
-	add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
-
-	return entities_len -1;
+	return add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
 }
 int add_entity_direct(entity e) 
 {
-	// arrput(entities, e);
-	hmput(entities, entities_len, e);
+	// need to set any values before putting in hm
 	e.id = entities_len;
-	entities_len++;
+	e.id_idx = entity_ids_len;
 
 	if (e.has_model && e._material != NULL && e._material->is_transparent)
 	{
 		transparent_ents_len++;
-		arrput(transparent_ents, entities_len - 1);
+		arrput(transparent_ents, entities_len);
 	}
 
 	if (e.has_light)
 	{
+		printf(" -> registered light id: %d, entity: %s\n", entities_len -1, e.name);
 		switch (e._light.type)
 		{
 		case DIR_LIGHT:
-			arrput(dir_lights, entities_len - 1);
+			arrput(dir_lights, entities_len);
+			e._light.id = dir_lights_len;
 			dir_lights_len++;
 		case POINT_LIGHT:
-			arrput(point_lights, entities_len - 1);
+			arrput(point_lights, entities_len);
+			e._light.id = point_lights_len;
 			point_lights_len++;
 		case SPOT_LIGHT:
-			arrput(spot_lights, entities_len - 1);
+			arrput(spot_lights, entities_len);
+			e._light.id = spot_lights_len;
 			spot_lights_len++;
 		}
 	}
 
 	if (e.has_cam)
 	{
-		camera_ent_idx = entities_len - 1;
+		camera_ent_idx = entities_len;
 	}
+
+	hmput(entities, entities_len, e);
+	printf("added entity: \"%s\", idx: %d\n", e.name, entities_len);
+	arrput(entity_ids, entities_len);
+	entities_len++;
+	entity_ids_len++;
 
 	return entities_len - 1;
 }
@@ -747,17 +815,18 @@ void add_entity_cube()
 void entity_switch_light_type(int entity_id, light_type new_type)
 {
 	entity* ent = get_entity(entity_id);
+	if (!ent->has_light) { return; }
 	// remove from old type categorisation
 	switch (ent->_light.type)
 	{
 		case DIR_LIGHT:
-			arrdel(dir_lights, entity_id);
+			arrdel(dir_lights, ent->_light.id);
 			dir_lights_len--;
 		case POINT_LIGHT:
-			arrdel(point_lights, entity_id);
+			arrdel(point_lights, ent->_light.id);
 			point_lights_len--;
 		case SPOT_LIGHT:
-			arrdel(spot_lights, entity_id);
+			arrdel(spot_lights, ent->_light.id);
 			spot_lights_len--;
 	}
 
@@ -765,13 +834,13 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 	switch (new_type)
 	{
 		case DIR_LIGHT:
-			arrput(dir_lights, entities_len - 1);
+			arrput(dir_lights, entity_id);
 			dir_lights_len++;
 		case POINT_LIGHT:
-			arrput(point_lights, entities_len - 1);
+			arrput(point_lights, entity_id);
 			point_lights_len++;
 		case SPOT_LIGHT:
-			arrput(spot_lights, entities_len - 1);
+			arrput(spot_lights, entity_id);
 			spot_lights_len++;
 	}
 
@@ -797,18 +866,21 @@ void entity_remove_script(int entity_index, int script_index)
 	ent->scripts_len--;
 }
 
-void set_gamestate(bee_bool play)
+#ifdef EDITOR_ACT
+void set_gamestate(bee_bool play, bee_bool _hide_gizmos)
 {
 	if (play == BEE_SWITCH)
 	{
-		set_gamestate(!gamestate);
+		set_gamestate(!gamestate, _hide_gizmos);
 		return;
 	}
 
 	gamestate = play;
+	hide_gizmos = _hide_gizmos;
 
 	if (play)
 	{
+		save_scene_state();
 		// set in-game cam to be act
 		entity* ent_cam = get_entity(camera_ent_idx);
 		if (ent_cam == NULL || ent_cam->has_cam == BEE_FALSE) 
@@ -825,6 +897,8 @@ void set_gamestate(bee_bool play)
 	}
 	else
 	{
+		load_scene_state();
+		set_cursor_visible(BEE_TRUE);
 		// act editor cam
 		perspective = editor_perspective;
 		near_plane  = editor_near_plane;
@@ -832,7 +906,10 @@ void set_gamestate(bee_bool play)
 	}
 
 	set_all_scripts(play);
-	set_all_gizmo_meshes(!play);
+	// if (hide_gizmos)
+	// {
+	// 	set_all_gizmo_meshes(!play);
+	// }
 }
 bee_bool get_gamestate()
 {
@@ -849,35 +926,7 @@ void set_all_scripts(bee_bool act)
 		}
 	}
 }
-void set_all_gizmo_meshes(bee_bool act)
-{
-	for (int i = 0; i < point_lights_len; ++i)
-	{
-		if (get_entity(point_lights[i])->has_model)
-		{
-			get_entity(point_lights[i])->_mesh.visible = act;
-		}
-	}
-	for (int i = 0; i < dir_lights_len; ++i)
-	{
-		if (get_entity(dir_lights[i])->has_model)
-		{
-			get_entity(dir_lights[i])->_mesh.visible = act;
-		}
-	}
-	for (int i = 0; i < spot_lights_len; ++i)
-	{
-		if (get_entity(spot_lights[i])->has_model)
-		{
-			get_entity(spot_lights[i])->_mesh.visible = act;
-		}
-	}
-	entity* cam = get_entity(camera_ent_idx);
-	if (cam != NULL && cam->has_cam && cam->has_model)
-	{
-		cam->_mesh.visible = act;
-	}
-}
+#endif
 
 void entity_set_parent(int child, int parent)
 {
@@ -946,7 +995,7 @@ void entity_remove_child(int parent, int child)
 // doesnt work yet
 void entity_remove(int entity_idx)
 {
-	entity* ent = &hmget(entities, entity_idx);
+	entity* ent = get_entity(entity_idx);
 	if (ent->has_light)
 	{
 		switch (ent->_light.type)
@@ -989,37 +1038,48 @@ void entity_remove(int entity_idx)
 	{
 		entity_remove_child(entity_idx, ent->children[i]);
 	}
+	assert(ent->children_len == 0);
 
+	if (ent->parent != 9999)
+	{
+		entity_remove_child(ent->parent, entity_idx);
+	}
+
+	int id_idx = ent->id_idx;
 	hmdel(entities, entity_idx);
 	entities_len--;
+	arrdel(entity_ids, id_idx);
+	entity_ids_len--;
 }
 
 void get_entity_len(int* _entities_len)
 {
 	*_entities_len = entities_len;
 }
-entity* get_entites()
+int* get_entity_ids(int* len)
 {
-	return &entities->value;
+	*len = entity_ids_len;
+	return entity_ids;
 }
-entity* get_entity(int idx)
+entity* get_entity(int id)
 {
-	return &hmget(entities, idx);
+	return &hmget(entities, id);
 }
 int get_entity_id_by_name(char* name)
 {
 	for (int i = 0; i < entities_len; ++i)
 	{
-		if (strcmp(get_entity(i)->name, name) == 0)
+		if (strcmp(get_entity(entity_ids[i])->name, name) == 0)
 		{
 			return i;
 		}
 	}
-	assert(0 == 1);
+	assert(0); // no entity with given name
 	return 9999;
 }
 
 
+#ifdef EDITOR_ACT
 renderer_properties get_renderer_properties()
 {
 	renderer_properties prop;
@@ -1086,3 +1146,4 @@ void renderer_set_skybox_active(bee_bool act)
 
 	printf("> switching to %s\n", draw_skybox == 0 ? "drawing skybox" : "not drawing skybox");
 }
+#endif

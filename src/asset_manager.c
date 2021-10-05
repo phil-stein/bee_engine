@@ -130,7 +130,11 @@ char* internal_assets_names[] = {
 									
 								    // mesh with index 0 in meshes_data array 
 									// this means this mesh shows up when requested mesh isnt found
-									"missing_mesh.obj", 
+									"missing_mesh.obj",
+									
+									// scene with index 0 in scenes_paths array 
+									// this means this scene shows up when requested scene isnt found
+									// "default.scene",
 
 									// ---- misc ----
 									// needed for blank material, unlit material, etc.
@@ -140,6 +144,7 @@ char* internal_assets_names[] = {
 									"mesh_icon.png",
 									"script_icon.png",
 									"shader_icon.png",
+									"scene_icon.png",
 									"logged_mesh_icon.png",
 									"logged_texture_icon.png",
 
@@ -157,7 +162,7 @@ char* internal_assets_names[] = {
 									"arrow_down.obj",
 									"flashlight.obj",
 };
-int internal_assets_names_len = 17;
+int internal_assets_names_len = 18;
 // bee_bool all_internal_assets_found = BEE_FALSE;
 
 
@@ -169,6 +174,13 @@ void assetm_init()
 	printf("dir path: \"%s\"\n", dir_path);
 	search_dir(dir_path, BEE_FALSE);
 
+	// set default return if key doesn't exist
+	shdefault(textures, -1);
+	shdefault(meshes, -1);
+	shdefault(shaders, -1);
+	shdefault(materials, -1);
+	shdefault(scripts, -1);
+	shdefault(scenes_paths, -1);
 }
 
 char* get_asset_dir()
@@ -561,7 +573,7 @@ bee_bool check_asset_internal(char* name)
 		if (!strcmp(internal_assets_names[i], name))
 		{
 			return BEE_TRUE;
-			printf("internal asset: %s\n", name);
+			// printf("internal asset: %s\n", name);
 		}
 	}
 	return BEE_FALSE;
@@ -574,7 +586,8 @@ bee_bool check_asset_internal(char* name)
 
 int get_texture_idx(char* name)
 {
-	return shget(textures, name);
+	int i = shget(textures, name);
+	return i == -1 ? 0 : i;
 }
 
 texture* get_all_textures(int* textures_len)
@@ -585,9 +598,12 @@ texture* get_all_textures(int* textures_len)
 
 texture get_texture(const char* name)
 {
+	if (!check_texture_exists(name))
+	{
+		// assert(0);
+	}
 	// get the index to the tex array from the hashmap
 	int i = shget(textures, name);
-
 	// check if the texture hasn't been loaded yet 
 	if (i == 9999 || i > texture_data_len) // 0 == 0
 	{
@@ -595,7 +611,7 @@ texture get_texture(const char* name)
 	}
 
 	// retrieve texture from tex array
-	return texture_data[shget(textures, name)];
+	return texture_data[shget(textures, name) == -1 ? 0 : shget(textures, name)];
 }
 
 texture* get_texture_by_idx(int idx)
@@ -686,6 +702,11 @@ void create_texture(const char* name)
 	remove_logged_texture(name);
 }
 
+bee_bool check_texture_exists(const char* name)
+{
+	return shget(textures, name) != -1;
+}
+
 // 
 // ---- meshes ----
 // 
@@ -724,11 +745,16 @@ mesh* get_all_meshes(int* meshes_len)
 
 mesh* get_mesh(const char* name)
 {
+	// @TODO: add security check that the texture doesn't exist at all
+	//		  for example make the 0th texture allways be all pink etc.
+	if (!check_mesh_exists(name))
+	{
+		assert(0);
+	}
+
 	// get the index to the mesh_data array from the hashmap
 	int i = shget(meshes, name);
 
-	// @TODO: add security check that the texture doesn't exist at all
-	//		  for example make the 0th texture allways be all pink etc.
 
 	// check if the mesh hasn't been loaded yet 
 	if (i == 9999 || i > mesh_data_len) // 0 == 0
@@ -737,7 +763,7 @@ mesh* get_mesh(const char* name)
 	}
 
 	// retrieve mesh from mesh_data array
-	return &mesh_data[shget(meshes, name)];
+	return &mesh_data[shget(meshes, name) == -1 ? 0 : shget(meshes, name)];
 }
 
 void log_mesh(const char* path, const char* name)
@@ -796,11 +822,22 @@ void create_mesh(const char* name)
 	}
 }
 
-void add_mesh(mesh m)
+rtn_code add_mesh(mesh m)
 {
+	if (shget(meshes, m.name) != -1) // check if already exist
+	{
+		printf("[ERROR] Mesh added already exists\n");
+		return BEE_ERROR;
+	}
 	shput(meshes, m.name, mesh_data_len);
 	arrput(mesh_data, m);
 	mesh_data_len++;
+	return BEE_OK;
+}
+
+bee_bool check_mesh_exists(const char* name)
+{
+	return shget(meshes, name) != -1;
 }
 
 // 
@@ -820,6 +857,10 @@ gravity_script* get_all_scripts(int* scripts_len)
 
 gravity_script* get_script(const char* name)
 {
+	if (!check_script_exists(name))
+	{
+		assert(0);
+	}
 	// get the index to the mesh_data array from the hashmap
 	int i = shget(scripts, name);
 
@@ -833,7 +874,7 @@ gravity_script* get_script(const char* name)
 	// }
 
 	// retrieve mesh from mesh_data array
-	return &scripts_data[shget(scripts, name)];
+	return &scripts_data[shget(scripts, name) == -1 ? 0 : shget(scripts, name)];
 }
 
 void create_script(const char* path, const char* name)
@@ -871,6 +912,10 @@ void create_script(const char* path, const char* name)
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
 
+bee_bool check_script_exists(const char* name)
+{
+	return shget(scripts, name) != -1;
+}
 
 //
 // ---- materials ----
@@ -883,6 +928,11 @@ int get_material_idx(char* name)
 
 material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name)
 {
+	if (shget(materials, name) != -1) // check if already exist
+	{
+		printf("[ERROR] Material added already exists\n");
+		return get_material(name);
+	}
 	// make a persistent copy of the passed name
 	char* name_cpy = malloc((strlen(name) +1) * sizeof(char)); 
 	assert(name_cpy != NULL);
@@ -902,9 +952,13 @@ material* get_material(char* name)
 {
 	// @TODO: add security check that the texture doesn't exist at all
 	//		  for example make the 0th texture allways be all pink etc.
+	if (!check_material_exists(name))
+	{
+		assert(0);
+	}
 
 	// retrieve mesh from mesh_data array
-	return &materials_data[shget(materials, name)];
+	return &materials_data[shget(materials, name) == -1 ? 0 : shget(materials, name)];
 }
 
 material* get_all_materials(int* materials_len)
@@ -930,6 +984,11 @@ void change_material_name(char* old_name, char* new_name)
 	shdel(materials, old_name);
 }
 
+bee_bool check_material_exists(const char* name)
+{
+	return shget(materials, name) != -1;
+}
+
 
 //
 // ---- shaders ----
@@ -942,6 +1001,12 @@ int get_shader_idx(char* name)
 
 shader add_shader(const char* vert_name, const char* frag_name, const char* name)
 {
+	if (shget(shaders, name) != -1) // check if already exist
+	{
+		printf("[ERROR] Shader added already exists\n");
+		return get_shader(name);
+	}
+
 	// key for the path is the index of the file in the hashmap
 	int path_idx = shgeti(vert_files, vert_name);
 	char* vert_path = hmget(vert_files_paths, path_idx);
@@ -969,9 +1034,13 @@ shader get_shader(char* name)
 {
 	// @TODO: add security check that the texture doesn't exist at all
 	//		  for example make the 0th texture allways be all pink etc.
+	if (!check_shader_exists(name))
+	{
+		assert(0);
+	}
 
 	// retrieve mesh from mesh_data array
-	return shaders_data[shget(shaders, name)];
+	return shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)];
 }
 
 shader* get_all_shaders(int* shaders_len)
@@ -1052,6 +1121,10 @@ void log_frag_file(const char* path, const char* name)
 	// not freeing name_cpy and path_cpy as they need to be used in the future
 }
 
+bee_bool check_shader_exists(const char* name)
+{
+	return shget(shaders, name) != -1;
+}
 
 //
 // ---- scenes ----
@@ -1064,7 +1137,11 @@ int get_scenes_len()
 
 char* get_scene_path(const char* name)
 {
-	return shget(scenes_paths, name);
+	if (!check_scene_exists(name))
+	{
+		// assert(0);
+	}
+	return shget(scenes_paths, name) == -1 ? 0 : shget(scenes_paths, name);
 }
 
 char* get_scene_by_idx(int idx)
@@ -1087,4 +1164,9 @@ void log_scene(const char* path, const char* name)
 	scenes_paths_len++;
 
 	// not freeing name_cpy and path_cpy as they need to be used in the future
+}
+
+bee_bool check_scene_exists(const char* name)
+{
+	return shget(scenes_paths, name) != -1;
 }

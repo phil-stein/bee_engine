@@ -5,9 +5,13 @@ extern var Game;
 extern var Input;
 extern var World;
 
+var original_level = true;
+
 func init()
 {
 	System.print("called init: game_controller");
+	var input = Input();
+	input.set_cursor_visible(false);
 }
 
 func update()
@@ -19,6 +23,19 @@ func update()
 	if (input.get_key_ESCAPE())
 	{
 		game.quit();
+	}
+
+	if (input.get_key_ENTER())
+	{
+		if (original_level)
+		{
+			game.load_level("test");
+		}
+		else
+		{
+			game.load_level("big");
+		}
+		original_level = !original_level;
 	}
 }
 

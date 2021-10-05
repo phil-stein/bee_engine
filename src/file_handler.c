@@ -156,6 +156,7 @@ void write_text_file(const char* file_path, const char* txt, int len)
 
     int rtn = fwrite(txt, sizeof(char), len, f);
     assert(rtn != EOF);
+    // fprintf(f, "%s", txt);
 
     fclose(f);
 }

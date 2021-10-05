@@ -15,6 +15,8 @@
 void set_cur_script(gravity_script* script);
 gravity_script* get_cur_script();
 
+void check_for_level_load();
+
 void setup_entity_class(gravity_vm* vm);
 
 static bee_bool move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
@@ -31,7 +33,7 @@ void setup_game_class(gravity_vm* vm);
 static bee_bool get_game_total_sec(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool get_game_delta_t(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool game_quit(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
-
+static bee_bool game_load_level(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 void setup_world_class(gravity_vm* vm);
 
@@ -47,6 +49,8 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
 
 
 void setup_input_class(gravity_vm* vm);
+
+static bee_bool input_set_cursor(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 // get_key()
 static bee_bool get_key_SPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);

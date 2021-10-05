@@ -5,9 +5,12 @@
 #include "global.h"
 #include "object_data.h"
 
+char* get_active_scene_name();
+
 void load_scene(char* name);
 void save_scene(char* name);
 
-char* get_active_scene_name();
+void save_scene_state();
+void load_scene_state();
 
 #endif

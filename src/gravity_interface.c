@@ -1,10 +1,12 @@
 #include "gravity_interface.h"
 
-#include "game_time.h"
+#include "asset_manager.h"
+#include "scene_manager.h"
 #include "file_handler.h"
-#include "camera.h"
-#include "str_util.h"
+#include "game_time.h"
 #include "renderer.h"
+#include "str_util.h"
+#include "camera.h"
 #include "input.h"
 #include "ui.h"
 
@@ -12,6 +14,9 @@
 // ---- vars ----
 gravity_script* cur_script = NULL;
 int cur_script_entity = 0;
+
+bee_bool load_level_act = BEE_FALSE;
+char load_level_name[25];
 
 
 void set_cur_script(gravity_script* script, int entity_index)
@@ -22,6 +27,15 @@ void set_cur_script(gravity_script* script, int entity_index)
 gravity_script* get_cur_script()
 {
     return cur_script;
+}
+
+void check_for_level_load()
+{
+    if (load_level_act && check_scene_exists(load_level_name))
+    {
+        load_scene(load_level_name);
+    }
+    load_level_act = BEE_FALSE;
 }
 
 void setup_entity_class(gravity_vm* vm)
@@ -161,6 +175,7 @@ void setup_game_class(gravity_vm* vm)
     gravity_class_bind(c, "get_total_secs", NEW_CLOSURE_VALUE(get_game_total_sec));
     gravity_class_bind(c, "get_delta_t", NEW_CLOSURE_VALUE(get_game_delta_t));
     gravity_class_bind(c, "quit", NEW_CLOSURE_VALUE(game_quit));
+    gravity_class_bind(c, "load_level", NEW_CLOSURE_VALUE(game_load_level));
 
     // register class c inside VM
     gravity_vm_setvalue(vm, "Game", VALUE_FROM_OBJECT(c));
@@ -189,10 +204,38 @@ static bee_bool game_quit(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 
     // go back to edior in editor-build and quit application in game-build
 #ifdef EDITOR_ACT
-    set_gamestate(BEE_FALSE);
+    set_gamestate(BEE_FALSE, BEE_TRUE);
 #else
     close_window();
 #endif
+}
+
+static bee_bool game_load_level(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 2) { throw_error("[Game.load_level(string)] Wrong amount of arguments, 1 arguments are needed."); }
+
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_STRING(v1) == BEE_FALSE)
+    {
+        throw_error("[[Game.load_level(string)] Wrong argument type.");
+    }
+
+    // printf("passed ent name: %s\n", VALUE_AS_CSTRING(v1));
+    char* name = VALUE_AS_CSTRING(v1);
+    if (str_find_last_of(name, ".scene") == NULL)
+    {
+        strcat(name, ".scene");
+    }
+
+    if (!check_scene_exists(name))
+    {
+        throw_error("[Game.load_level(string)] Scene does not exist.");
+    }
+
+    // load_scene(name);
+    load_level_act = BEE_TRUE;
+    strcpy(load_level_name, name);
 }
 
 void setup_world_class(gravity_vm* vm)
@@ -359,7 +402,6 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
     RETURN_VALUE(VALUE_FROM_FLOAT(x), rindex);
 }
 
-
 void setup_camera_class(gravity_vm* vm)
 {
     // create a new Foo class
@@ -459,6 +501,7 @@ void setup_input_class(gravity_vm* vm)
 
     // allocate and bind bar closure to the newly created class
     // get_key()
+    gravity_class_bind(c, "set_cursor_visible", NEW_CLOSURE_VALUE(input_set_cursor));
     gravity_class_bind(c, "get_key_SPACE", NEW_CLOSURE_VALUE(get_key_SPACE));
     gravity_class_bind(c, "get_key_APOSTROPHE", NEW_CLOSURE_VALUE(get_key_APOSTROPHE));
     gravity_class_bind(c, "get_key_COMMA", NEW_CLOSURE_VALUE(get_key_COMMA));
@@ -647,6 +690,21 @@ void setup_input_class(gravity_vm* vm)
     // register class c inside VM
     gravity_vm_setvalue(vm, "Input", VALUE_FROM_OBJECT(c));
 }
+
+static bee_bool input_set_cursor(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 2) { throw_error("[Input.set_cursor_visible(bool)] Wrong amount of arguments, 1 argument are needed."); return; }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_BOOL(v1) == BEE_FALSE)
+    {
+        throw_error("[Input.set_cursor_visible(bool)] Wrong argument type."); return;
+    }
+
+    bee_bool b = VALUE_AS_BOOL(v1);
+    set_cursor_visible(b);
+}
+
 
 // get_key()
 static bee_bool get_key_SPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)

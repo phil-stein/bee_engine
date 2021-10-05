@@ -7,8 +7,8 @@
 
 
 // "keystate" mapps directly to glfws key definitions
-enum keystate { KEY_RELEASED, KEY_PRESS };
-typedef enum keystate keystate;
+typedef enum input_state { STATE_RELEASED, STATE_PRESS } input_state;
+// typedef enum keystate ;
 
 // "key" mapps directly to glfws key definitions
 enum key
@@ -159,71 +159,70 @@ enum mouse_btn
     ///     Mouse button 1.
     ///     <para>Same as <see cref="Left" />.</para>
     /// </summary>
-    Button1 = 0,
+    MOUSE_button1 = 0,
 
     /// <summary>
     ///     Mouse button 2.
     ///     <para>Same as <see cref="Right" />.</para>
     /// </summary>
-    Button2 = 1,
+    MOUSE_button2 = 1,
 
     /// <summary>
     ///     Mouse button 3.
     ///     <para>Same as <see cref="Middle" />.</para>
     /// </summary>
-    Button3 = 2,
+    MOUSE_button3 = 2,
 
     /// <summary>
     ///     Mouse button 4.
     /// </summary>
-    Button4 = 3,
+    MOUSE_button4 = 3,
 
     /// <summary>
     ///     Mouse button 4.
     /// </summary>
-    Button5 = 4,
+    MOUSE_button5 = 4,
 
     /// <summary>
     ///     Mouse button 5.
     /// </summary>
-    Button6 = 5,
+    MOUSE_button6 = 5,
 
     /// <summary>
     ///     Mouse button 6.
     /// </summary>
-    Button7 = 6,
+    MOUSE_button7 = 6,
 
     /// <summary>
     ///     Mouse button 7.
     /// </summary>
-    Button8 = 7,
+    MOUSE_button8 = 7,
 
     /// <summary>
     ///     The left mouse button.
     ///     <para>Same as <see cref="Button1" />.</para>
     /// </summary>
-    Left = Button1,
+    MOUSE_left = MOUSE_button1,
 
     /// <summary>
     ///     The right mouse button.
     ///     <para>Same as <see cref="Button2" />.</para>
     /// </summary>
-    Right = Button2,
+    MOUSE_right = MOUSE_button2,
 
     /// <summary>
     ///     The middle mouse button.
     ///     <para>Same as <see cref="Button3" />.</para>
     /// </summary>
-    Middle = Button3
+    MOUSE_middle = MOUSE_button3
 };
 typedef enum mouse_btn mouse_btn;
-
 
 void input_init();
 void input_update();
 
 // returns the state of the key [KEY_PRESS, KEY_RELEASED]
-keystate get_key_state(key _key);
+input_state get_key_state(key _key);
 
 // returns true if the key is pressed, false it it is released
 bee_bool is_key_down(key _key);
@@ -236,9 +235,38 @@ bee_bool is_key_released(key _key);
 bee_bool is_key_pressed(key _key);
 
 // sets the key states for the last frame
-void key_callback(GLFWwindow* window, key _key, int scancode, keystate state, int mods);
+void key_callback(GLFWwindow* window, key _key, int scancode, input_state state, int mods);
 
 // gets the state of the key last frame 
 bee_bool get_last_key_state(key _key);
+
+
+// returns the state of the button [KEY_PRESS, KEY_RELEASED]
+input_state get_mouse_state(mouse_btn btn);
+// returns true if the mouse-button is pressed, false it it is released
+bee_bool is_mouse_down(mouse_btn btn);
+// returns true if the mouse-button is released, false it it is pressed
+bee_bool is_mouse_released(mouse_btn btn);
+// check whether a mouse-button is pressed and not held
+// returns true the first frame the button is held/pressed
+bee_bool is_mouse_pressed(mouse_btn btn);
+// gets the state of the mouse-button last frame 
+bee_bool get_last_mouse_state(mouse_btn btn);
+void mouse_callback(GLFWwindow* window, mouse_btn button, input_state state, int mods);
+
+f64 get_mouse_x();
+f64 get_mouse_y();
+void get_mouse_pos(f64* x, f64* y);
+f64 get_mouse_delta_x();
+f64 get_mouse_delta_y();
+void get_mouse_delta(f64* x, f64* y);
+
+// puts the cursor in the middle of the window
+void center_cursor_pos();
+// set if the cursor is visible
+void set_cursor_visible(bee_bool visible);
+
+void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos);
+void register_mouse_pos_callback(empty_callback func);
 
 #endif

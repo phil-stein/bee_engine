@@ -1,16 +1,14 @@
+#ifdef EDITOR_ACT
 #pragma once
+
 #ifndef UI_H
 #define UI_H
 
+
+#include "global.h"
 #include "asset_manager.h"
 #include "object_data.h"
-#include "global.h"
 
-typedef enum error_type
-{
-	GENERAL_ERROR,
-	GRAVITY_ERROR
-}error_type;
 
 typedef struct
 {
@@ -130,7 +128,7 @@ void demo_window();
 void overview_window();
 
 void properties_window(int ent_len);
-void draw_entity_hierachy_entity(int idx, int offset);
+void draw_entity_hierachy_entity(int idx, int offset, int pos);
 void pause_button_window();
 
 void console_window();
@@ -156,4 +154,22 @@ void scene_context_window();
 enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };
 static void set_style(struct nk_context* ctx, enum theme theme);
 
+#endif
+#else 
+#pragma once
+
+#ifndef UI_H
+#define UI_H
+
+
+#include "global.h"
+
+
+// during play-build this obviously doesnt do anything
+void submit_txt_console(char* doesnt_show_up);
+
+// during play-build this obviously doesnt do anything
+void set_error_popup(error_type type, char* msg);
+
+#endif
 #endif

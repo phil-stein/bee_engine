@@ -24,21 +24,14 @@
 
 // ---- vars ----
 GLFWwindow* window;
-enum bee_bool wireframe_switch = BEE_FALSE;
-enum bee_bool maximized_enabled = BEE_FALSE;
-enum bee_bool maximized_switch = BEE_FALSE;
-enum bee_bool fly_enabled = BEE_FALSE;
-enum bee_bool fly_switch = BEE_FALSE;
+bee_bool wireframe_switch = BEE_FALSE;
+bee_bool maximized_enabled = BEE_FALSE;
+bee_bool maximized_switch = BEE_FALSE;
+bee_bool fly_enabled = BEE_FALSE;
+bee_bool fly_switch = BEE_FALSE;
 
 // settings
 f32 free_look_mouse_sensitivity = 0.125;
-
-// assets
-
-u8  first_mouse = 0;
-f32 last_x = 540;
-f32 last_y = 360;
-f32 yaw, pitch;
 
 #pragma endregion
 
@@ -46,8 +39,6 @@ f32 yaw, pitch;
 void init()
 {
 	window = get_window();
-
-	glfwSetCursorPosCallback(window, mouse_callback);
 
 	// ---- populate scene ----
 
@@ -107,7 +98,8 @@ void init()
 	vec3 cam_rot   = { 0, 0, 0 };
 	vec3 cam_scale = { 1, 1, 1 };
 	mesh* m_camera = get_mesh("camera.obj");
-	add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_cel"), &cam, NULL, "camera");
+	// add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_cel"), &cam, NULL, "camera");
+	add_entity(cam_pos, cam_rot, cam_scale, NULL, NULL, &cam, NULL, "camera");
 
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
 	entity_add_script(ent_empty, "game_controller_tmp.gravity");
@@ -130,13 +122,15 @@ void init()
 	vec3 pos_light02   = { 0.75f, 0.0f, 0.0f };
 	vec3 pos_light03   = { -1.0f, 0.75f, 0.0f };
 	vec3 rot_light	   = { 0.0f, 0.0f,  0.0f };
-	vec3 scale_light01 = { 0.1f, 0.1f,  0.1f };
-	vec3 scale_light02 = { 0.5f, 0.5f,  0.5f };
+	vec3 scale		   = { 1.0f, 1.0f, 1.0f };
 	glm_vec3_copy(diffuse01, mat_blank->tint);
-	add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_cel"), NULL, &dir_light,   "dir_light");	// mat_blank_unlit
-	add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_cel"), NULL, &spot_light,  "spot_light");	// mat_blank_unlit
+	// add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_cel"), NULL, &dir_light,   "dir_light");	// mat_blank_unlit
+	add_entity(pos_light01, rot_light, scale, NULL, NULL, NULL, &dir_light,   "dir_light");	// mat_blank_unlit
+	// add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_cel"), NULL, &spot_light,  "spot_light");	// mat_blank_unlit
+	add_entity(pos_light03, rot_light, scale, NULL, NULL, NULL, &spot_light,  "spot_light");	// mat_blank_unlit
 	glm_vec3_copy(diffuse02, mat_blank->tint);
-	add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
+	// add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
+	add_entity(pos_light02, rot_light, scale, NULL, NULL, NULL, &point_light, "point_light");	// mat_blank_unlit
 	glm_vec3_copy(specular, mat_blank->tint); // all 1.0f
 
 	// plane
@@ -146,7 +140,6 @@ void init()
 	vec3 pos03 = { -1.5f, 0.25f, 1.5f };
 	vec3 pos04 = { -1.5f, 0.5f, 1.5f };
 	vec3 rot01 = { 0.0f, 0.0f, 0.0f };
-	vec3 scale = { 1.0f, 1.0f, 1.0f };
 	vec3 scale01;
 	glm_vec3_scale(scale, 5.0f, scale01);
 	add_entity(pos01, rot01, scale01, &m_plane, get_material("MAT_grass"), NULL, NULL, "ground");  // mat_grass
@@ -202,7 +195,7 @@ void init()
 
 	// */
 
-	// load_scene("test.scene");
+	// load_scene("test01.scene");
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
@@ -212,6 +205,11 @@ void init()
 	// model grid_model = make_model(&m_grid, &mat);
 	// vec3 pos02 = { 0.0f, -0.5f, 0.0f };
 	// add_entity(pos02, rot, scale, &grid_model, NULL, "grid");
+
+#ifdef EDITOR_ACT
+	// glfwSetCursorPosCallback(window, rotate_cam_by_mouse);
+	register_mouse_pos_callback(rotate_cam_by_mouse);
+#endif
 
 }
 
@@ -225,13 +223,9 @@ void update()
 	// ---- fps ----
 
 	
-	char fl_buffer[8]; // limits the fps counter to 7 digits (1 byte for null-terminator)
-	int rtn = snprintf(fl_buffer, sizeof(fl_buffer), "%d", (int)get_fps());
-	assert(rtn >= 0);
-
-	char title[19 + sizeof(fl_buffer)] = "bee engine | fps: "; // 19 chars + 8 for float
-
-	strcat(title, fl_buffer);
+	char title[50]; // limits the fps counter to 7 digits (1 byte for null-terminator)
+	int rtn = sprintf_s(title, sizeof(title), "bee engine | fps: %d | scene: \"%s\"", (int)get_fps(), get_active_scene_name());
+	assert(rtn != 0);
 
 	set_window_title(title);
 
@@ -259,13 +253,17 @@ settings get_settings()
 }
 
 // handle input
+#ifdef EDITOR_ACT
 void process_input(GLFWwindow* window)
 {
 
-#pragma region CAM_WASD_&_QE_INPUT
-
+	#pragma region CAM_WASD_&_QE_INPUT
 	// move the cam
-	const float cam_speed = 2 * get_delta_time();
+	float cam_speed = 2.5f * get_delta_time();
+	if (is_key_down(KEY_LeftShift))
+	{
+		cam_speed *= 3;
+	}
 	if (is_key_down(KEY_W))
 	{
 		vec3 front; get_editor_camera_front(&front);
@@ -318,8 +316,7 @@ void process_input(GLFWwindow* window)
 
 		editor_camera_move(up);
 	}
-#pragma endregion
-
+	#pragma endregion
 
 	if (is_key_pressed(KEY_F10))
 	{
@@ -348,14 +345,6 @@ void process_input(GLFWwindow* window)
 		submit_txt_console("pressed F10");
 	}
 
-	// exit on esc
-	if (is_key_pressed(KEY_Escape))
-	{
-		printf("pressed esc\n> not used for exiting anymore\n");
-		// printf("pressed esc\n> exiting ...\n");
-		// glfwSetWindowShouldClose(window, GLFW_TRUE);
-	}
-
 	// wireframe- / solid-mode switch on tab
 	if (is_key_pressed(KEY_Tab))
 	{
@@ -378,60 +367,62 @@ void process_input(GLFWwindow* window)
 		maximized_enabled = !maximized_enabled;
 	}
 
-	// mouse active / fly-mode switch
-	if (is_key_pressed(KEY_Space))
+	// fly-mode, rotate cam with mouse
+	if (is_mouse_pressed(MOUSE_right))
 	{
-		printf("pressed space\n> switching to %s\n", fly_enabled == 0 ? "fly-mode" : "mouse-mode");
-		if (fly_enabled == BEE_FALSE)
-		{
-			reset_cursor_pos();
-			// disable cursor visibility
-			glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		}
-		else 
-		{
-			// disable cursor visibility
-			glfwSetInputMode(get_window(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		}
-
-		fly_enabled = !fly_enabled;
+		// printf("pressed right mouse\n");
+		fly_enabled = BEE_TRUE;
+		set_cursor_visible(BEE_FALSE);
 	}
-
+	else if (is_mouse_released(MOUSE_right) && fly_enabled)
+	{
+		// printf("reset mouse\n");
+		center_cursor_pos();
+		fly_enabled = BEE_FALSE;
+		set_cursor_visible(BEE_TRUE);
+	}
 }
+#endif
 
+#ifdef EDITOR_ACT
 // rotates the camera accoding to the mouse-movement
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void rotate_cam_by_mouse()
 {
 	if (fly_enabled == BEE_FALSE)
 	{
 		return;
 	}
 
-	if (first_mouse == 0)
-	{
-		last_x = (f32)xpos;
-		last_y = (f32)ypos;
-		first_mouse = 1;
-	}
+	static bee_bool init = BEE_FALSE;
+	static f32 pitch, yaw;
 
-	f32 xoffset = (f32)xpos - last_x;
-	f32 yoffset = last_y - (f32)ypos;
-	last_x = (f32)xpos;
-	last_y = (f32)ypos;
+	f32 xoffset = get_mouse_delta_x();
+	f32 yoffset = get_mouse_delta_y();
 
 	xoffset *= free_look_mouse_sensitivity;
 	yoffset *= free_look_mouse_sensitivity;
 
+	
 	yaw += xoffset;
 	pitch += yoffset;
 
+	// printf("pitch: %f, yaw: %f\n", pitch, yaw);
+
 	if (pitch > 89.0f)
-		pitch = 89.0f;
+	{ pitch = 89.0f; }
 	if (pitch < -89.0f)
-		pitch = -89.0f;
+	{ pitch = -89.0f; }
+
+	if (!init)
+	{
+		// @TODO: get the cameras current pitch, yaw
+		pitch = -30.375f;
+		yaw	  =	-90.875;
+		init = BEE_TRUE;
+	}
 
 	vec3 dir;
-	f32 yaw_rad = yaw;   glm_make_rad(&yaw_rad);
+	f32 yaw_rad = yaw;     glm_make_rad(&yaw_rad);
 	f32 pitch_rad = pitch; glm_make_rad(&pitch_rad);
 
 	dir[0] = (f32)cos(yaw_rad) * (f32)cos(pitch_rad);
@@ -439,14 +430,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	dir[2] = (f32)sin(yaw_rad) * (f32)cos(pitch_rad);
 	set_editor_camera_front(dir);
 }
-
-// puts the cursor in the middle of the window
-void reset_cursor_pos()
-{
-	int w, h;
-	get_window_size(&w, &h);
-	glfwSetCursorPos(get_window(), (double)w / 2, (double)h / 2);
-}
+#endif
 
 // @TODO: move this to a util file
 // returns: random number with range 0.0 - 1.0

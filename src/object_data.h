@@ -87,6 +87,7 @@ typedef enum light_type light_type;
 typedef struct light
 {
 	// ---- general ----
+	int id;
 
 	light_type type;
 
@@ -114,6 +115,7 @@ typedef struct entity
 {
 	char* name;
 	int   id;
+	int   id_idx;
 
 	bee_bool has_trans;
 	vec3 pos;
