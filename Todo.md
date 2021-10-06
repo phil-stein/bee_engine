@@ -48,16 +48,17 @@ Todo
   - [ ] entity_switch_light_type() in renderer.c
   
 - [ ] scene system
-  - [x] serialization
+  - [ ] serialization
     - [x] integer, float, u32, bool
     - [x] string (integer length & char's)
     - [x] texture, shader
     - [x] components
     - [x] entities
-    - [x] scene
+    - [ ] scene
       - [x] make scene struct
       - [x] shader & material serialization
       - [x] entities
+      - [ ] add cubemap & use_msaa to scene header
     
   - [x] saving scenes
   
@@ -83,13 +84,29 @@ Todo
   
   - [ ] geometry shader normal direction
   
-  - [ ] anti-aliasing
+  - [x] anti-aliasing
   
-  - [ ] advanced blinn-phong
+  - [x]  blinn-phong
   
   - [ ] gamma correction
   
   - [ ] shadows
+  
+    - [ ] shadow mapping
+    - [ ] point shadows
+    - [ ] cascaded shadow mapping
+    
+  - [ ] normal mapping
+  
+  - [ ] parallax mapping
+  
+  - [ ] hdr
+  
+  - [ ] bloom
+  
+  - [ ] deferred shading
+  
+  - [ ] ssao
   
     
   

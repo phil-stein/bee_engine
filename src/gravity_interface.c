@@ -18,6 +18,9 @@ int cur_script_entity = 0;
 bee_bool load_level_act = BEE_FALSE;
 char load_level_name[25];
 
+bee_bool rotate_cam_by_mouse_act = BEE_FALSE;
+int      rotate_cam_by_mouse_idx = 0;
+f32      rotate_cam_by_mouse_speed = 1.0f;
 
 void set_cur_script(gravity_script* script, int entity_index)
 {
@@ -36,6 +39,13 @@ void check_for_level_load()
         load_scene(load_level_name);
     }
     load_level_act = BEE_FALSE;
+}
+void mouse_movement_callback()
+{
+    if (rotate_cam_by_mouse_act)
+    {
+        rotate_game_cam_by_mouse(rotate_cam_by_mouse_speed * 0.125f);
+    }
 }
 
 void setup_entity_class(gravity_vm* vm)
@@ -502,6 +512,7 @@ void setup_input_class(gravity_vm* vm)
     // allocate and bind bar closure to the newly created class
     // get_key()
     gravity_class_bind(c, "set_cursor_visible", NEW_CLOSURE_VALUE(input_set_cursor));
+    gravity_class_bind(c, "rot_cam_by_mouse", NEW_CLOSURE_VALUE(input_rotate_cam_by_mouse));
     gravity_class_bind(c, "get_key_SPACE", NEW_CLOSURE_VALUE(get_key_SPACE));
     gravity_class_bind(c, "get_key_APOSTROPHE", NEW_CLOSURE_VALUE(get_key_APOSTROPHE));
     gravity_class_bind(c, "get_key_COMMA", NEW_CLOSURE_VALUE(get_key_COMMA));
@@ -703,6 +714,21 @@ static bee_bool input_set_cursor(gravity_vm* vm, gravity_value_t* args, uint16_t
 
     bee_bool b = VALUE_AS_BOOL(v1);
     set_cursor_visible(b);
+}
+
+static bee_bool input_rotate_cam_by_mouse(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2) { throw_error("[Input.rot_cam_by_mouse(float)] Wrong amount of arguments, 1 argument is needed."); return; }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Input.rot_cam_by_mouse(float)] Wrong argument type."); return;
+    }
+    if (rotate_cam_by_mouse_act) { printf("already active \n");  return 1; }
+
+    rotate_cam_by_mouse_act = BEE_TRUE;
+    rotate_cam_by_mouse_idx = register_mouse_pos_callback(mouse_movement_callback);
+    rotate_cam_by_mouse_speed = VALUE_ISA_FLOAT(v1) ? VALUE_AS_FLOAT(v1) : VALUE_AS_INT(v1);
 }
 
 

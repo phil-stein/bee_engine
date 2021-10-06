@@ -11,7 +11,6 @@ func init()
 {
 	System.print("called init: game_controller");
 	var input = Input();
-	input.set_cursor_visible(false);
 }
 
 func update()

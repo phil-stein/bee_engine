@@ -267,6 +267,10 @@ void center_cursor_pos();
 void set_cursor_visible(bee_bool visible);
 
 void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos);
-void register_mouse_pos_callback(empty_callback func);
+int  register_mouse_pos_callback(empty_callback func);
+void remove_mouse_pos_callback(int idx);
+
+// rotates the camera accoding to the mouse-movement
+void rotate_game_cam_by_mouse(f32 mouse_sensitivity);
 
 #endif

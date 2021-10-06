@@ -32,7 +32,7 @@ settings get_settings();
 
 void process_input(GLFWwindow* window);
 
-void rotate_cam_by_mouse();
+void rotate_editor_cam_by_mouse();
 
 void center_cursor_pos();
 

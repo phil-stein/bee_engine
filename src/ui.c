@@ -1481,7 +1481,7 @@ void properties_window(int ent_len)
             nk_layout_row_dynamic(ctx, 25, 1);
             if (nk_menu_item_label(ctx, "Save", NK_TEXT_LEFT))
             {
-                scene_context_act = BEE_TRUE;
+                save_scene(get_active_scene_name());
             }
             if (nk_menu_item_label(ctx, "Save As", NK_TEXT_LEFT))
             {
@@ -1610,22 +1610,13 @@ void properties_window(int ent_len)
                 nk_layout_row_static(ctx, 5, 10, 1);
                 nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
-                static int skybox_enabled = 1;
-                static int skybox_enabled_last_frame = 1;
+                int* skybox_enabled = renderer_get(RENDER_CUBEMAP);
                 nk_layout_row_dynamic(ctx, 15, 1);
-                nk_checkbox_label(ctx, " draw skybox", &skybox_enabled);
-                if (skybox_enabled == 0 && skybox_enabled_last_frame == 1)
-                {
-                    renderer_set_skybox_active(BEE_FALSE);
+                nk_checkbox_label(ctx, " draw skybox", skybox_enabled);
 
-                    skybox_enabled_last_frame = 0;
-                }
-                else if (skybox_enabled == 1 && skybox_enabled_last_frame == 0)
-                {
-                    renderer_set_skybox_active(BEE_TRUE);
-
-                    skybox_enabled_last_frame = 1;
-                }
+                int* msaa_enabled = renderer_get(RENDER_MSAA);
+                nk_layout_row_dynamic(ctx, 15, 1);
+                nk_checkbox_label(ctx, " MSAA", msaa_enabled);
 
                 nk_layout_row_dynamic(ctx, 30, 1);
                 nk_label(ctx, "background color", NK_TEXT_LEFT);
@@ -1679,72 +1670,27 @@ void properties_window(int ent_len)
                 const struct nk_input* in = &ctx->input;
                 struct nk_rect bounds;
 
-                static int wireframe_mode_enabled = 0;
-                static int wireframe_mode_enabled_last_frame = 0;
+                int* wireframe_mode_enabled = renderer_get(RENDER_WIREFRAME);
                 nk_layout_row_dynamic(ctx, 15, 1);
                 bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "Wireframe", &wireframe_mode_enabled);
+                nk_checkbox_label(ctx, "Wireframe", wireframe_mode_enabled);
                 if (nk_input_is_mouse_hovering_rect(in, bounds))
                     nk_tooltip(ctx, " Activate Wireframe-Mode, you can also use Tab.");
 
-                static int normal_mode_enabled = 0;
-                static int normal_mode_enabled_last_frame = 0;
+                int* normal_mode_enabled = renderer_get(RENDER_NORMAL);
                 nk_layout_row_dynamic(ctx, 15, 1);
                 bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "Normals", &normal_mode_enabled);
+                nk_checkbox_label(ctx, "Normals", normal_mode_enabled);
                 if (nk_input_is_mouse_hovering_rect(in, bounds))
                     nk_tooltip(ctx, " Not implemented yet.");
 
-                static int uv_mode_enabled = 0;
-                static int uv_mode_enabled_last_frame = 0;
+                int* uv_mode_enabled = renderer_get(RENDER_UV);
                 nk_layout_row_dynamic(ctx, 15, 1);
                 bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "UVs", &uv_mode_enabled);
+                nk_checkbox_label(ctx, "UVs", uv_mode_enabled);
                 if (nk_input_is_mouse_hovering_rect(in, bounds))
                     nk_tooltip(ctx, " Not implemented yet.");
 
-                if (wireframe_mode_enabled == 0 && wireframe_mode_enabled_last_frame == 1)
-                {
-                    // draw in solid-mode
-                    renderer_enable_wireframe_mode(BEE_FALSE);
-
-                    wireframe_mode_enabled_last_frame = 0;
-                }
-                else if ( wireframe_mode_enabled == 1 && wireframe_mode_enabled_last_frame == 0)
-                {
-                    // draw in wireframe-mode
-                    renderer_enable_wireframe_mode(BEE_TRUE);
-
-                    wireframe_mode_enabled_last_frame = 1;
-                }
-                if (normal_mode_enabled == 0 && normal_mode_enabled_last_frame == 1)
-                {
-                    // draw in solid-mode
-                    renderer_enable_normal_mode(BEE_FALSE);
-
-                    normal_mode_enabled_last_frame = 0;
-                }
-                else if (normal_mode_enabled == 1 && normal_mode_enabled_last_frame == 0)
-                {
-                    // draw in wireframe-mode
-                    renderer_enable_normal_mode(BEE_TRUE);
-
-                    normal_mode_enabled_last_frame = 1;
-                }
-                if (uv_mode_enabled == 0 && uv_mode_enabled_last_frame == 1)
-                {
-                    // draw in solid-mode
-                    renderer_enable_uv_mode(BEE_FALSE);
-
-                    uv_mode_enabled_last_frame = 0;
-                }
-                else if (uv_mode_enabled == 1 && uv_mode_enabled_last_frame == 0)
-                {
-                    // draw in wireframe-mode
-                    renderer_enable_uv_mode(BEE_TRUE);
-
-                    uv_mode_enabled_last_frame = 1;
-                }
 
                 // complex color combobox
                 struct nk_colorf col = { *prop.wireframe_col_r, *prop.wireframe_col_g, *prop.wireframe_col_b, 0.0f };
@@ -2353,7 +2299,7 @@ void properties_window(int ent_len)
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_checkbox_label(ctx, " draw backfaces", &ent->_material->draw_backfaces);
-                    nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 1.0f, 0.1f, 0.002f);
+                    nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 32.0f, 0.1f, 0.002f);
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_property_float(ctx, "Tile X", 0.0f, &ent->_material->tile[0], 100.0f, 0.1f, 0.1f);         
                     nk_property_float(ctx, "Tile Y", 0.0f, &ent->_material->tile[1], 100.0f, 0.1f, 0.1f);
@@ -2539,7 +2485,6 @@ void properties_window(int ent_len)
                     nk_tree_pop(ctx);
                 }
 
-
                 if (ent->has_light == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Light", NK_MINIMIZED))
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
@@ -2557,6 +2502,9 @@ void properties_window(int ent_len)
                         light_type new_type = selected_type == 0 ? POINT_LIGHT : selected_type == 1 ? SPOT_LIGHT : selected_type == 2 ? DIR_LIGHT : POINT_LIGHT;
                         entity_switch_light_type(get_entity_id_by_name(ent->name), new_type);
                     }
+
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_checkbox_label(ctx, " enabled", &ent->_light.enabled);
 
                     // ambient, diffuse, specular
                     nk_layout_row_dynamic(ctx, 25, 1);

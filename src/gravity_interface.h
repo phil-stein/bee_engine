@@ -16,6 +16,7 @@ void set_cur_script(gravity_script* script);
 gravity_script* get_cur_script();
 
 void check_for_level_load();
+void mouse_movement_callback();
 
 void setup_entity_class(gravity_vm* vm);
 
@@ -51,6 +52,7 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
 void setup_input_class(gravity_vm* vm);
 
 static bee_bool input_set_cursor(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool input_rotate_cam_by_mouse(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 // get_key()
 static bee_bool get_key_SPACE(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);

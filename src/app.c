@@ -24,14 +24,15 @@
 
 // ---- vars ----
 GLFWwindow* window;
-bee_bool wireframe_switch = BEE_FALSE;
-bee_bool maximized_enabled = BEE_FALSE;
-bee_bool maximized_switch = BEE_FALSE;
+// bee_bool wireframe_switch = BEE_FALSE;
+// bee_bool maximized_enabled = BEE_FALSE;
+// bee_bool maximized_switch = BEE_FALSE;
 bee_bool fly_enabled = BEE_FALSE;
-bee_bool fly_switch = BEE_FALSE;
+// bee_bool fly_switch = BEE_FALSE;
 
 // settings
 f32 free_look_mouse_sensitivity = 0.125;
+int mouse_callback_idx = 0;
 
 #pragma endregion
 
@@ -42,7 +43,7 @@ void init()
 
 	// ---- populate scene ----
 
-	// /*
+	/*
 	shader shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
 	shader shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
@@ -193,9 +194,10 @@ void init()
 	// cube for testing noise shader
 	add_entity(scale, rot01, scale, get_mesh("cube.obj"), get_material("MAT_noise"), NULL, NULL, "noise_cube"); // mat_barrel
 
-	// */
+	*/
 
-	// load_scene("test01.scene");
+	load_scene("good.scene");
+
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
@@ -208,7 +210,7 @@ void init()
 
 #ifdef EDITOR_ACT
 	// glfwSetCursorPosCallback(window, rotate_cam_by_mouse);
-	register_mouse_pos_callback(rotate_cam_by_mouse);
+	mouse_callback_idx = register_mouse_pos_callback(rotate_editor_cam_by_mouse);
 #endif
 
 }
@@ -348,23 +350,13 @@ void process_input(GLFWwindow* window)
 	// wireframe- / solid-mode switch on tab
 	if (is_key_pressed(KEY_Tab))
 	{
-		renderer_enable_wireframe_mode(BEE_SWITCH);
+		renderer_set(RENDER_WIREFRAME, BEE_SWITCH);
 	}
 
 	// maximized- / minimized window switch on f11
 	if (is_key_pressed(KEY_F11))
 	{
-		printf("pressed f11\n> switching to %s\n", maximized_enabled == 0 ? "maximized" : "minimized");
-		if (maximized_enabled == BEE_FALSE)
-		{
-			set_window_maximized(BEE_TRUE);
-		}
-		else
-		{
-			set_window_maximized(BEE_FALSE);
-		}
-
-		maximized_enabled = !maximized_enabled;
+		set_window_maximized(BEE_SWITCH);
 	}
 
 	// fly-mode, rotate cam with mouse
@@ -386,12 +378,14 @@ void process_input(GLFWwindow* window)
 
 #ifdef EDITOR_ACT
 // rotates the camera accoding to the mouse-movement
-void rotate_cam_by_mouse()
+void rotate_editor_cam_by_mouse()
 {
 	if (fly_enabled == BEE_FALSE)
 	{
 		return;
 	}
+
+
 
 	static bee_bool init = BEE_FALSE;
 	static f32 pitch, yaw;

@@ -33,7 +33,7 @@ void throw_error(char* msg)
 {
     char error[248];
     sprintf_s(error, 248, "[GRAVITY_ERROR] %s", msg);
-    printf(error);
+    printf("%s\n", error);
     set_error_popup(GRAVITY_ERROR, msg);
     submit_txt_console(error);
     // disable current script

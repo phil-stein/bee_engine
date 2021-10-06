@@ -10,6 +10,8 @@
 GLFWwindow* window;
 char* window_title;
 
+bee_bool is_maximized = BEE_TRUE;;
+
 // framebuffer texture buffer ptr
 u32* tex_buffer = NULL;
 
@@ -88,13 +90,21 @@ void set_window_maximized(bee_bool maximize)
 {
 	//glfwSetWindowAttrib(window, GLFW_MAXIMIZED, maximized == BEE_TRUE ? GLFW_TRUE : GLFW_FALSE);
 
+	if (maximize == BEE_SWITCH)
+	{
+		set_window_maximized(!is_maximized);
+		return;
+	}
+
 	if (maximize == BEE_TRUE)
 	{
 		glfwMaximizeWindow(window);
+		is_maximized = BEE_TRUE;
 	}
 	else
 	{
 		glfwRestoreWindow(window);
+		is_maximized = BEE_FALSE;
 	}
 }
 

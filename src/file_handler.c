@@ -221,14 +221,14 @@ void texture_load_pixels(char* path, u8** pixels_out, size_t* width_out, size_t*
     stbi_image_free(image);
 }
 
-u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int channel_num) 
+u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int channel_num, bee_bool gamma_correct)
 {
     u32 handle;
 
     glGenTextures(1, &handle);
     glBindTexture(GL_TEXTURE_2D, handle);
 
-    // No interpolation
+    // no interpolation
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -237,18 +237,18 @@ u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int chan
     assert(channel_num >= 1);
     assert(channel_num != 2);
     assert(channel_num <= 4);
-    GLint gl_internal_format = 0;
-    GLint gl_format          = 0;
+    int gl_internal_format = 0;
+    int gl_format          = 0;
     switch (channel_num)
     {
         case 1:
             gl_internal_format = GL_R8;
             gl_format = GL_RED;
         case 3:
-            gl_internal_format = GL_RGB8;
+            gl_internal_format = gamma_correct ? GL_SRGB : GL_RGB; // GL_SRGB
             gl_format = GL_RGB;
         case 4:
-            gl_internal_format = GL_RGBA8;
+            gl_internal_format = gamma_correct ? GL_SRGB_ALPHA : GL_RGBA; // GL_SRGB_APLHA
             gl_format = GL_RGBA;
     }
     assert(gl_format != 0);
@@ -257,13 +257,13 @@ u32 texture_create_from_pixels(u8* pixels, size_t width, size_t height, int chan
     return handle;
 }
 
-texture texture_create_from_path(const char* file_path, const char* name, bee_bool flip_vertical)
+texture texture_create_from_path(const char* file_path, const char* name, bee_bool flip_vertical, bee_bool gamma_correct)
 {
     u8* pixels;
     size_t width, height;
     int channel_num = 0;
     texture_load_pixels(file_path, &pixels, &width, &height, &channel_num, flip_vertical);
-    u32 handle = texture_create_from_pixels(pixels, width, height, channel_num);
+    u32 handle = texture_create_from_pixels(pixels, width, height, channel_num, gamma_correct);
     free(pixels);
 
     texture tex;

@@ -110,7 +110,7 @@
         //explanaition: https://learnopengl.com/Lighting/Light-casters, LearnOpenGL page 137
 
         //diffuse----------------------------------
-        //vec3 lightDir = normalize(light.position - FragPos);
+        // vec3 lightDir = normalize(light.position - FragPos);
         vec3 lightDir = normalize(-light.direction);
 
         //dot product between surface-normal and light-dir, the clamped to get a value between 0-1, would otherwise be neg. if the angle was greater than 90° 
@@ -121,11 +121,14 @@
         vec3 ambient = light.ambient * vec3(texture(material.diffuse, texCoords)); //light.ambient * material.ambient;
 
         //specular----------------------------------
-        vec3 reflectDir = reflect(-lightDir, normal); //lightDir negated, because reflect() wants a Vec3 pointing from the light-source toward the fragment
+        // vec3 reflectDir = reflect(-lightDir, normal); //lightDir negated, because reflect() wants a Vec3 pointing from the light-source toward the fragment
 
         //the shininess-value dictates how focused the spot of reflected light is
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess * 128);
-        vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
+        // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess * 128);
+        // vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess * 128);
+	vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
 
         return (ambient + diffuse + specular);
 
@@ -136,7 +139,7 @@
         //explanaition: https://learnopengl.com/Lighting/Light-casters, LearnOpenGL page 141
 
         float dist = length(light.position - FragPos);
-        float attenuation = 1.0 / (light.constant + light.linear * dist + light.quadratic * (dist * dist)); 
+        float attenuation = 1.0 / (light.constant + light.linear * dist + light.quadratic * dist); // (dist * dist) 
 
         //diffuse----------------------------------
         //get surface normal and the dir the light is coming from
@@ -150,11 +153,15 @@
         vec3 ambient = light.ambient * vec3(texture(material.diffuse, texCoords)); //light.ambient * material.ambient;
 
         //specular----------------------------------
-        vec3 reflectDir = reflect(-lightDir, normal); //lightDir negated, because reflect() wants a Vec3 pointing from the light-source toward the fragment
+        // vec3 reflectDir = reflect(-lightDir, normal); //lightDir negated, because reflect() wants a Vec3 pointing from the light-source toward the fragment
 
         //the shininess-value dictates how focused the spot of reflected light is
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess * 128);
-        vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
+        // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess * 128);
+        // vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess * 128);
+	vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
+
 
         return ((ambient * attenuation) + (diffuse * attenuation) + (specular * attenuation));
     }
@@ -184,15 +191,18 @@
 
         //specular----------------------------------
         //get the angle betwee the reflected light-ray and the view-direction        
-        vec3 reflectDir = reflect(-lightDir, norm); //lightDir negated, because reflect() wants a Vec3 pointing from the light-source toward the fragment
+        // vec3 reflectDir = reflect(-lightDir, norm); //lightDir negated, because reflect() wants a Vec3 pointing from the light-source toward the fragment
 
         //the shininess-value dictates how focused the spot of reflected light is
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess * 128);
-        vec3 specular = light.specular * spec * vec3(texture(material.specular, normTexCoords));
+        // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess * 128);
+        // vec3 specular = light.specular * spec * vec3(texture(material.specular, normTexCoords));
+	vec3 halfwayDir = normalize(lightDir + viewDir);
+	float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess * 128);
+	vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
 
         //attenuation
         float distance    = length(light.position - FragPos);
-        float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
+        float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance); // (distance * distance)
         ambient  *= attenuation; 
         diffuse   *= attenuation;
         specular *= attenuation; 

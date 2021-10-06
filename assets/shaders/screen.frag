@@ -21,19 +21,6 @@
         	vec2( offset, -offset)  // bottom-right    
     	);
 
-
-// func declarrations
-vec3 run_kernel(float kernel[9], vec3 col);
-vec3 avg_color(vec3 col);
-vec3 greater_than_col(vec3 col);
-
-
-void main()
-{	
-	// FragColor = texture(tex, TexCoord);
-	// float avg = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
-	// FragColor = vec4(avg, avg, avg, 1.0);  
-	
     	float sharpen_kernel[9] = float[](
         	-1, -1, -1,
         	-1,  9, -1,
@@ -50,6 +37,19 @@ void main()
         	1, 1, 1
     	);
 
+
+// func declarrations
+vec3 run_kernel(float kernel[9], vec3 col);
+vec3 avg_color(vec3 col);
+vec3 greater_than_col(vec3 col);
+
+
+void main()
+{	
+	// FragColor = texture(tex, TexCoord);
+	// float avg = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
+	// FragColor = vec4(avg, avg, avg, 1.0);  
+	
 	vec3 col = vec3(0.0);
 	// col = run_kernel(sharpen_kernel, col);
 	// col = run_kernel(blur_kernel, col);
@@ -62,7 +62,9 @@ void main()
 	//	col = avg_color(col);
 	//}
 
+	float inv_gamma = 0.4545454545454545; // 1/2.2
 	col = texture(tex, TexCoord).xyz;
+	col = pow(col, vec3(inv_gamma)); // gamma correction
     	FragColor = vec4(col, 1.0);
 
 }

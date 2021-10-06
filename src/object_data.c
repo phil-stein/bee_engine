@@ -288,6 +288,7 @@ camera make_camera(f32 perspective, f32 near_plane, f32 far_plane)
 light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, f32 linear, f32 quadratic)
 {
 	light _light;
+	_light.enabled = BEE_TRUE;
 	_light.type = POINT_LIGHT;
 	
 	glm_vec3_copy(ambient, _light.ambient);
@@ -303,6 +304,7 @@ light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, 
 light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 {
 	light _light;
+	_light.enabled = BEE_TRUE;
 	_light.type = DIR_LIGHT;
 
 	glm_vec3_copy(ambient, _light.ambient);
@@ -316,6 +318,7 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction, f32 constant, f32 linear, f32 quadratic, f32 cut_off, f32 outer_cut_off)
 {
 	light _light;
+	_light.enabled = BEE_TRUE;
 	_light.type = SPOT_LIGHT;
 
 	glm_vec3_copy(ambient, _light.ambient);

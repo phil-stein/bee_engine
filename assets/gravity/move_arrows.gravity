@@ -11,7 +11,12 @@ func init()
 {
 	System.print("called init: move arrows");
 	var world = World();
+	var input = Input();
 	camera_ent = world.get_entity("camera");
+
+	// camera movement
+	input.rot_cam_by_mouse(1); // arg is speed
+	input.set_cursor_visible(false);
 }
 
 func update()
@@ -23,25 +28,25 @@ func update()
 	var world = World();
 
 	var dist = 10 * game.get_delta_t();
-	if(input.get_key_down_ARROW_LEFT())
+	if(input.get_key_down_ARROW_LEFT() || input.get_key_down_A())
 	{
 		this.move_x(-dist);
 		// cam.move_x(-dist);
 		world.move_x(camera_ent, -dist);
 	}
-	if(input.get_key_down_ARROW_RIGHT())
+	if(input.get_key_down_ARROW_RIGHT() || input.get_key_down_D())
 	{
 		this.move_x(dist);
 		// cam.move_x(dist);
 		world.move_x(camera_ent, dist);
 	}
-	if(input.get_key_down_ARROW_UP())
+	if(input.get_key_down_ARROW_UP() || input.get_key_down_W())
 	{
 		this.move_z(-dist);
 		// cam.move_z(-dist);
 		world.move_z(camera_ent, -dist);
 	}
-	if(input.get_key_down_ARROW_DOWN())
+	if(input.get_key_down_ARROW_DOWN() || input.get_key_down_S())
 	{
 		this.move_z(dist);
 		// cam.move_z(dist);

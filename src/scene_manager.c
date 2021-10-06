@@ -5,11 +5,12 @@
 #include "stb/stb_ds.h"
 #include "renderer.h"
 
+#define NAME_SIZE 25
 
 char scene_state_buffer[10000];
-char scene_name_before_state_change[25];
+char scene_name_before_state_change[NAME_SIZE];
 
-char* active_scene = "no_name";
+char active_scene[NAME_SIZE] = "no_name";
 
 char* get_active_scene_name()
 {
@@ -41,17 +42,14 @@ void load_scene(char* name)
 		add_entity_direct(s.entities[i]);
 	}
 
-	active_scene = name;
+	strcpy_s(active_scene, NAME_SIZE, name);
 }
 
 void save_scene(char* name)
 {
-	// write to file
-
 	char* path = get_asset_dir();
 	strcat(path, "\\scenes\\");
 	strcat(path, name);
-	// strcat(path, "test02.scene");
 
 	scene s;
 	s.entities = NULL;
@@ -61,7 +59,6 @@ void save_scene(char* name)
 		arrput(s.entities, *get_entity(entity_ids[i]));
 	}
 
-
 	char buffer[10000];
 	int offset = 0;
 	serialize_scene(buffer, &offset, &s);
@@ -69,6 +66,8 @@ void save_scene(char* name)
 	printf("serialized scene length -> %d\n", offset);
 
 	write_text_file(path, buffer, offset);
+
+	strcpy_s(active_scene, NAME_SIZE, name);
 }
 
 void save_scene_state()
@@ -85,7 +84,7 @@ void save_scene_state()
 	int offset = 0;
 	serialize_scene(scene_state_buffer, &offset, &s);
 
-	strcpy(scene_name_before_state_change, active_scene);
+	strcpy_s(scene_name_before_state_change, NAME_SIZE, active_scene);
 
 	printf("serialized scene length -> %d\n", offset);
 }
@@ -109,6 +108,6 @@ void load_scene_state()
 		add_entity_direct(s.entities[i]);
 	}
 
-	strcpy(active_scene, scene_name_before_state_change);
+	strcpy_s(active_scene, NAME_SIZE, scene_name_before_state_change);
 }
 

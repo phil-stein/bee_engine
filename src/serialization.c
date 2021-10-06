@@ -91,6 +91,8 @@ void serialize_scene(char* buffer, int* offset, scene* s)
 
 void serialize_entity(char* buffer, int* offset, entity* ent)
 {
+	// id & id_idx dont need to get serialized
+
 	serialize_str(buffer, offset, ent->name);
 
 	serialize_enum(buffer, offset, ent->has_trans);
@@ -182,6 +184,8 @@ void serialize_camera(char* buffer, int* offset, camera* c)
 
 void serialize_light(char* buffer, int* offset, light* l)
 {
+	// id doesnt have to be serialized
+	// @TODO: enabled still has to be serialized
 	serialize_enum(buffer, offset, l->type);
 
 	serialize_vec3(buffer, offset, l->ambient);

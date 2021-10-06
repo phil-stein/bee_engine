@@ -88,6 +88,7 @@ typedef struct light
 {
 	// ---- general ----
 	int id;
+	bee_bool enabled;
 
 	light_type type;
 

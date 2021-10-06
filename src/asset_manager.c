@@ -112,6 +112,7 @@ char** logged_frag_files = NULL;
 struct { char*   key;	 char* value; }*scenes_paths = NULL;
 int scenes_paths_len = 0;
 
+
 // array of holding scenes
 // scene* scene_data = NULL;
 // int texture_data_len = 0;
@@ -650,6 +651,12 @@ void remove_logged_texture(char* name)
 
 void log_texture(const char* path, const char* name)
 {
+	if (check_texture_exists(name))
+	{
+		printf("tried to add texture: \"%s\" but already existed\n", name);
+		return;
+	}
+
 	// make a persistent copy of the passed name
 	char* name_cpy = malloc( (strlen(name) +1) * sizeof(char));
 	assert(name_cpy != NULL);
@@ -690,7 +697,8 @@ void create_texture(const char* name)
 	char* name_cpy = malloc( (strlen(name) +1) * sizeof(char));
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
-	texture t = texture_create_from_path(path, name_cpy, BEE_FALSE);
+	bee_bool gamma_correct = str_find_last_of(name, "_dif") != NULL;
+	texture t = texture_create_from_path(path, name_cpy, BEE_FALSE, gamma_correct);
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
 	// and put the created texture into the tex array
@@ -704,7 +712,7 @@ void create_texture(const char* name)
 
 bee_bool check_texture_exists(const char* name)
 {
-	return shget(textures, name) != -1;
+	return shget(textures, name) != -1 && shget(textures, name) != NULL;
 }
 
 // 
@@ -768,6 +776,12 @@ mesh* get_mesh(const char* name)
 
 void log_mesh(const char* path, const char* name)
 {
+	if (check_mesh_exists(name))
+	{
+		printf("tried to add mesh: \"%s\" but already existed\n", name);
+		return;
+	}
+
 	// make a persistent copy of the passed name
 	char* name_cpy = calloc(strlen(name) +1, sizeof(char));
 	assert(name_cpy != NULL);
@@ -837,7 +851,7 @@ rtn_code add_mesh(mesh m)
 
 bee_bool check_mesh_exists(const char* name)
 {
-	return shget(meshes, name) != -1;
+	return shget(meshes, name) != -1 && shget(meshes, name) != NULL;
 }
 
 // 
@@ -879,6 +893,12 @@ gravity_script* get_script(const char* name)
 
 void create_script(const char* path, const char* name)
 {
+	if (check_script_exists(name))
+	{
+		printf("tried to add script: \"%s\" but already existed\n", name);
+		return;
+	}
+
 	// make a persistent copy of the passed name
 	char* name_cpy = calloc(strlen(name), sizeof(char));
 	assert(name_cpy != NULL);
@@ -914,7 +934,7 @@ void create_script(const char* path, const char* name)
 
 bee_bool check_script_exists(const char* name)
 {
-	return shget(scripts, name) != -1;
+	return shget(scripts, name) != -1 && shget(scripts, name) != NULL;
 }
 
 //
@@ -986,7 +1006,7 @@ void change_material_name(char* old_name, char* new_name)
 
 bee_bool check_material_exists(const char* name)
 {
-	return shget(materials, name) != -1;
+	return shget(materials, name) != -1 && shget(materials, name) != NULL;
 }
 
 
@@ -1123,8 +1143,10 @@ void log_frag_file(const char* path, const char* name)
 
 bee_bool check_shader_exists(const char* name)
 {
-	return shget(shaders, name) != -1;
+	return shget(shaders, name) != -1; // && shget(shaders, name) != NULL;
 }
+
+// @TODO: check_vert_file_exists & check_frag_file_exists
 
 //
 // ---- scenes ----
@@ -1152,6 +1174,12 @@ char* get_scene_by_idx(int idx)
 
 void log_scene(const char* path, const char* name)
 {
+	if (check_scene_exists(name)) 
+	{ 
+		printf("tried to add scene: \"%s\" but already existed\n", name);  
+		return; 
+	}
+
 	// make a persistent copy of the passed name
 	char* name_cpy = malloc((strlen(name) + 1) * sizeof(char));
 	assert(name_cpy != NULL);
@@ -1168,5 +1196,5 @@ void log_scene(const char* path, const char* name)
 
 bee_bool check_scene_exists(const char* name)
 {
-	return shget(scenes_paths, name) != -1;
+	return shget(scenes_paths, name) != -1 && shget(scenes_paths, name) != NULL;
 }

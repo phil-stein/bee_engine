@@ -69,8 +69,10 @@ shader modes_shader;
 // framebuffer
 mesh m;
 shader screen_shader;
+u32 tex_aa_buffer;
 u32 tex_col_buffer;
 u32 quad_vao, quad_vbo;
+bee_bool use_msaa = BEE_TRUE;
 
 // skybox
 u32 cube_map;
@@ -86,7 +88,9 @@ void renderer_init()
 	// create_shader_from_file used before
 	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer");
 
+	create_framebuffer_multisampled(&tex_aa_buffer);
 	create_framebuffer(&tex_col_buffer);
+	set_framebuffer_to_update(&tex_aa_buffer);  // updates framebuffer on window resize
 	set_framebuffer_to_update(&tex_col_buffer); // updates framebuffer on window resize
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -199,8 +203,7 @@ void renderer_init()
 void renderer_update()
 {
 	// first pass
-	bind_framebuffer();
-	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	bind_framebuffer(use_msaa); // bind multisampled fbo or color texture fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
 	// need to restore the opengl state after calling nuklear
@@ -385,16 +388,21 @@ void renderer_update()
 #endif
 
 	// second pass
+	if (use_msaa)
+	{
+		blit_multisampled_framebuffer(); // convert multisampled buffer to normal texture
+	}
 	unbind_framebuffer();
+
 	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	glDisable(GL_DEPTH_TEST);
 	glUseProgram(screen_shader.handle);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex_col_buffer);
 	shader_set_int(screen_shader, "tex", 0);
 	glBindVertexArray(quad_vao);
-	glDisable(GL_DEPTH_TEST);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glEnable(GL_DEPTH_TEST);
 	// ------------------------------------------------------------------------
@@ -561,67 +569,90 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		vec3 rot_l   = { 0, 0, 0 };
 		vec3 scale_l = { 0, 0, 0 };
 		shader_set_int(mat->shader, "Num_DirLights", dir_lights_len);
+		int disabled_lights = 0;
 		for (int i = 0; i < dir_lights_len; ++i)
 		{
 			light = get_entity(dir_lights[i]);
-			sprintf(buffer, "dirLights[%d].direction", i);
+			if (!light->_light.enabled) 
+			{ 
+				disabled_lights++;
+				shader_set_int(mat->shader, "Num_DirLights", dir_lights_len - disabled_lights); 
+				continue; 
+			}
+			int idx = i - disabled_lights;
+			sprintf(buffer, "dirLights[%d].direction", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.direction);
 
-			sprintf(buffer, "dirLights[%d].ambient", i);
+			sprintf(buffer, "dirLights[%d].ambient", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
-			sprintf(buffer, "dirLights[%d].diffuse", i);
+			sprintf(buffer, "dirLights[%d].diffuse", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
-			sprintf(buffer, "dirLights[%d].specular", i);
+			sprintf(buffer, "dirLights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
 		}
 		shader_set_int(mat->shader, "Num_PointLights", point_lights_len);
+		disabled_lights = 0;
 		for (int i = 0; i < point_lights_len; ++i)
 		{
 			light = get_entity(point_lights[i]);
+			if (!light->_light.enabled) 
+			{ 
+				disabled_lights++; 
+				shader_set_int(mat->shader, "Num_PointLights", point_lights_len - disabled_lights); 
+				continue; 
+			}
+			int idx = i - disabled_lights;
 			get_entity_global_transform(point_lights[i], pos_l, rot_l, scale_l);
-			sprintf(buffer, "pointLights[%d].position", i);
+			sprintf(buffer, "pointLights[%d].position", idx);
 			shader_set_vec3(mat->shader, buffer, pos_l);
 
-			sprintf(buffer, "pointLights[%d].ambient", i);
+			sprintf(buffer, "pointLights[%d].ambient", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
-			sprintf(buffer, "pointLights[%d].diffuse", i);
+			sprintf(buffer, "pointLights[%d].diffuse", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
-			sprintf(buffer, "pointLights[%d].specular", i);
+			sprintf(buffer, "pointLights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
-			sprintf(buffer, "pointLights[%d].constant", i);
+			sprintf(buffer, "pointLights[%d].constant", idx);
 			shader_set_float(mat->shader, buffer, light->_light.constant);
-			sprintf(buffer, "pointLights[%d].linear", i);
+			sprintf(buffer, "pointLights[%d].linear", idx);
 			shader_set_float(mat->shader, buffer, light->_light.linear);
-			sprintf(buffer, "pointLights[%d].quadratic", i);
+			sprintf(buffer, "pointLights[%d].quadratic", idx);
 			shader_set_float(mat->shader, buffer, light->_light.quadratic);
 		}
 		shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len);
-		// printf("amount of spotlights: %d\n", spot_lights_len);
+		disabled_lights = 0;
 		for (int i = 0; i < spot_lights_len; ++i)
 		{
 			light = get_entity(spot_lights[i]);
+			if (!light->_light.enabled) 
+			{ 
+				disabled_lights++;
+				shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len - disabled_lights); 
+				continue; 
+			}
+			int idx = i - disabled_lights;
 			get_entity_global_transform(spot_lights[i], pos_l, rot_l, scale_l);
-			sprintf(buffer, "spotLights[%d].position", i);
+			sprintf(buffer, "spotLights[%d].position", idx);
 			shader_set_vec3(mat->shader, buffer, pos_l);
 
-			sprintf(buffer, "spotLights[%d].direction", i);
+			sprintf(buffer, "spotLights[%d].direction", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.direction);
 
-			sprintf(buffer, "spotLights[%d].ambient", i);
+			sprintf(buffer, "spotLights[%d].ambient", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
-			sprintf(buffer, "spotLights[%d].diffuse", i);
+			sprintf(buffer, "spotLights[%d].diffuse", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
-			sprintf(buffer, "spotLights[%d].specular", i);
+			sprintf(buffer, "spotLights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
-			sprintf(buffer, "spotLights[%d].constant", i);
+			sprintf(buffer, "spotLights[%d].constant", idx);
 			shader_set_float(mat->shader, buffer, light->_light.constant);
-			sprintf(buffer, "spotLights[%d].linear", i);
+			sprintf(buffer, "spotLights[%d].linear", idx);
 			shader_set_float(mat->shader, buffer, light->_light.linear);
-			sprintf(buffer, "spotLights[%d].quadratic", i);
+			sprintf(buffer, "spotLights[%d].quadratic", idx);
 			shader_set_float(mat->shader, buffer, light->_light.quadratic);
-			sprintf(buffer, "spotLights[%d].cutOff", i);
+			sprintf(buffer, "spotLights[%d].cutOff", idx);
 			shader_set_float(mat->shader, buffer, light->_light.cut_off);
-			sprintf(buffer, "spotLights[%d].outerCutOff", i);
+			sprintf(buffer, "spotLights[%d].outerCutOff", idx);
 			shader_set_float(mat->shader, buffer, light->_light.outer_cut_off);
 		}
 #ifdef EDITOR_ACT
@@ -927,6 +958,48 @@ void set_all_scripts(bee_bool act)
 	}
 }
 #endif
+void renderer_set(render_setting setting, bee_bool value)
+{
+	if (value == BEE_SWITCH)
+	{
+		renderer_set(setting, !renderer_get(setting));
+		return;
+	}
+	switch (setting)
+	{
+		case RENDER_WIREFRAME:
+			wireframe_mode_enabled = value;
+			break;
+		case RENDER_UV:
+			uv_mode_enabled = value;
+			break;
+		case RENDER_NORMAL:
+			normal_mode_enabled = value;
+			break;
+		case RENDER_CUBEMAP:
+			draw_skybox = value;
+			break;
+		case RENDER_MSAA:
+			use_msaa = value;
+			break;
+	}
+}
+bee_bool* renderer_get(render_setting setting)
+{
+	switch (setting)
+	{
+		case RENDER_WIREFRAME:
+			return &wireframe_mode_enabled;
+		case RENDER_UV:
+			return &uv_mode_enabled;
+		case RENDER_NORMAL:
+			return &normal_mode_enabled;
+		case RENDER_CUBEMAP:
+			return &draw_skybox;
+		case RENDER_MSAA:
+			return &use_msaa;
+	}
+}
 
 void entity_set_parent(int child, int parent)
 {
@@ -1065,6 +1138,10 @@ entity* get_entity(int id)
 {
 	return &hmget(entities, id);
 }
+entity* get_cam_entity()
+{
+	return get_entity(camera_ent_idx);
+}
 int get_entity_id_by_name(char* name)
 {
 	for (int i = 0; i < entities_len; ++i)
@@ -1092,58 +1169,5 @@ renderer_properties get_renderer_properties()
 	prop.wireframe_col_b = &wireframe_color[2];
 
 	return prop;
-}
-
-void renderer_enable_wireframe_mode(bee_bool act)
-{
-	if (act == BEE_SWITCH)
-	{
-		wireframe_mode_enabled = !wireframe_mode_enabled;
-	}
-	else
-	{
-		wireframe_mode_enabled = act;
-	}
-
-	printf("> switching to %s\n", wireframe_mode_enabled == 0 ? "solid-mode" : "wireframe-mode");
-}
-void renderer_enable_normal_mode(bee_bool act)
-{
-	if (act == BEE_SWITCH)
-	{
-		normal_mode_enabled = !normal_mode_enabled;
-	}
-	else
-	{
-		normal_mode_enabled = act;
-	}
-
-	printf("> switching to %s\n", normal_mode_enabled == 0 ? "default" : "normal-mode");
-}
-void renderer_enable_uv_mode(bee_bool act)
-{
-	if (act == BEE_SWITCH)
-	{
-		uv_mode_enabled = !uv_mode_enabled;
-	}
-	else
-	{
-		uv_mode_enabled = act;
-	}
-
-	printf("> switching to %s\n", uv_mode_enabled == 0 ? "default" : "uv-mode");
-}
-void renderer_set_skybox_active(bee_bool act)
-{
-	if (act == BEE_SWITCH)
-	{
-		draw_skybox = !draw_skybox;
-	}
-	else
-	{
-		draw_skybox = act;
-	}
-
-	printf("> switching to %s\n", draw_skybox == 0 ? "drawing skybox" : "not drawing skybox");
 }
 #endif

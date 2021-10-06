@@ -1,8 +1,10 @@
 #include "input.h"
 
 #include "GLFW/glfw3.h"
-
 #include "stb/stb_ds.h"
+#include "CGLM/cglm.h"
+
+#include "renderer.h"
 
 
 // ---- vars ----
@@ -481,8 +483,62 @@ void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos)
     }
 }
 
-void register_mouse_pos_callback(empty_callback func)
+int register_mouse_pos_callback(empty_callback func)
 {
     arrput(mouse_pos_callbacks, func);
     mouse_pos_callbacks_len++;
+    return mouse_pos_callbacks_len - 1;
+}
+void remove_mouse_pos_callback(int idx)
+{
+    arrdel(mouse_pos_callbacks, idx);
+    mouse_pos_callbacks_len--;
+}
+
+
+void rotate_game_cam_by_mouse(f32 mouse_sensitivity)
+{
+
+    static bee_bool init = BEE_FALSE;
+    static f32 pitch, yaw;
+
+    f32 xoffset = get_mouse_delta_x();
+    f32 yoffset = get_mouse_delta_y();
+
+    xoffset *= mouse_sensitivity;
+    yoffset *= mouse_sensitivity;
+
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // printf("pitch: %f, yaw: %f\n", pitch, yaw);
+
+    if (pitch > 89.0f)
+    {
+        pitch = 89.0f;
+    }
+    if (pitch < -89.0f)
+    {
+        pitch = -89.0f;
+    }
+
+    if (!init)
+    {
+        // @TODO: get the cameras current pitch, yaw
+        pitch = -30.375f;
+        yaw = -90.875;
+        init = BEE_TRUE;
+    }
+
+    vec3 dir;
+    f32 yaw_rad = yaw;     glm_make_rad(&yaw_rad);
+    f32 pitch_rad = pitch; glm_make_rad(&pitch_rad);
+
+    dir[0] = (f32)cos(yaw_rad) * (f32)cos(pitch_rad);
+    dir[1] = (f32)sin(pitch_rad);
+    dir[2] = (f32)sin(yaw_rad) * (f32)cos(pitch_rad);
+
+    entity* cam = get_cam_entity();
+    glm_vec3_copy(dir, cam->_camera.front);
 }

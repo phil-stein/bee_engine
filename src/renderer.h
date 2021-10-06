@@ -19,6 +19,15 @@ typedef struct
 	f32* wireframe_col_b;
 }renderer_properties;
 
+typedef enum render_setting
+{
+	RENDER_WIREFRAME,
+	RENDER_UV,
+	RENDER_NORMAL,
+	RENDER_CUBEMAP,
+	RENDER_MSAA
+}render_setting;
+
 
 void renderer_init();
 
@@ -43,16 +52,17 @@ void entity_remove_script(int entity_index, int script_index);
 void set_gamestate(bee_bool play, bee_bool _hide_gizmos);
 bee_bool get_gamestate();
 void set_all_scripts(bee_bool act);
-void set_all_gizmo_meshes(bee_bool act);
+// void set_all_gizmo_meshes(bee_bool act);
+
+void renderer_set(render_setting setting, bee_bool value);
+bee_bool* renderer_get(render_setting setting);
+
 void entity_set_parent(int child, int parent);
 void entity_remove_child(int parent, int child);
 void entity_remove(int entity_idx);
 
 void add_entity_cube();
 
-// entity_properties get_entity_properties(int index);
-
-renderer_properties get_renderer_properties();
 
 // amount of entities at the moment
 void get_entity_len(int* _entities_len);
@@ -61,14 +71,11 @@ void get_entity_len(int* _entities_len);
 int* get_entity_ids(int* len);
 // get an entity by its id
 entity* get_entity(int id);
+entity* get_cam_entity();
 // returns the index to the entity
 int get_entity_id_by_name(char* name);
 
 
-void renderer_enable_wireframe_mode(bee_bool act);
-void renderer_enable_normal_mode(bee_bool act);
-void renderer_enable_uv_mode(bee_bool act);
-
-void renderer_set_skybox_active(bee_bool act);
-
+// entity_properties get_entity_properties(int index);
+renderer_properties get_renderer_properties();
 #endif
