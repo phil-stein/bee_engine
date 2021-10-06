@@ -50,6 +50,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 ## assets in use
  - [container texture dif](https://learnopengl.com/img/textures/container2.png), [continer texture spec](https://learnopengl.com/img/textures/container2_specular.png)
+ - [window texture](https://learnopengl.com/img/advanced/blending_transparent_window.png)
  - [stanford bunny](http://graphics.stanford.edu/data/3Dscanrep/)
  - [grass texture](https://www.textures.com/download/Grass0130/38953)
  - [barrel texture](https://www.textures.com/download/Barrels036/123202)
