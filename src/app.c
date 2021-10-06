@@ -198,7 +198,6 @@ void init()
 
 	load_scene("good.scene");
 
-
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
 

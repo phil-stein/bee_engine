@@ -59,26 +59,29 @@ Todo
       - [x] shader & material serialization
       - [x] entities
       - [ ] add cubemap & use_msaa to scene header
-    
   - [x] saving scenes
-  
   - [x] loading scenes
-  
   - [x] shaders still get duplicated on deserialization
-  
   - [x] switching
-  
   - [x] make scene deserialization check if material / shader already exists 
-  
   - [ ] ui
     - [x] saving & loading
     - [ ] better saving & loading ui (double click for loading scene / instancing mesh)
     - [x] add scenes to the asset manager
-    
   - [x] gravity interface
   
-    
-  
+
+
+
+- [ ] material / shader system
+
+  - allow for different shaders to get passed their own needed uniform values
+
+  - [ ] save the uniforms in a file
+  - [ ] uniform array in material that gets send one after another
+
+
+
 - graphics
   - [ ] sort geometry of transparent objects
   
@@ -88,7 +91,7 @@ Todo
   
   - [x]  blinn-phong
   
-  - [ ] gamma correction
+  - [x] gamma correction
   
   - [ ] shadows
   

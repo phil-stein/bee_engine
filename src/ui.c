@@ -1937,16 +1937,21 @@ void properties_window(int ent_len)
             if (ent_right_click_popup != 9999 && nk_popup_begin(ctx, NK_POPUP_STATIC, "right click entity", NK_WINDOW_BACKGROUND | NK_WINDOW_NO_SCROLLBAR, ent_right_click_popup_bounds))
             {
                 nk_layout_row_dynamic(ctx, 30, 1);
+                nk_bool duplicate = nk_false;
+                nk_selectable_label(ctx, "duplicate", NK_TEXT_LEFT, &duplicate);
+                if (duplicate)
+                {
+                    selected_entities[ent_right_click_popup] = nk_false;
+                    int cpy = duplicate_entity(ent_right_click_popup);
+                    selected_entities[cpy] = nk_true;
+                    ent_right_click_popup = 9999;
+                }
                 nk_bool remove = nk_false;
                 nk_selectable_label(ctx, "remove", NK_TEXT_LEFT, &remove);
-                if (remove)
+                if (nk_input_is_mouse_pressed(&ctx->input, NK_BUTTON_LEFT))
                 {
                     selected_entities[ent_right_click_popup] = nk_false;
                     entity_remove(ent_right_click_popup);
-                    ent_right_click_popup = 9999;
-                }
-                if (nk_input_is_mouse_pressed(&ctx->input, NK_BUTTON_LEFT))
-                {
                     ent_right_click_popup = 9999;
                 }
 
@@ -2799,7 +2804,7 @@ void draw_entity_hierachy_entity(int idx, int offset, int pos)
     if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
     {
         ent_right_click_popup = idx; // setting it to the current entity id
-        ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 40);
+        ent_right_click_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 100, 100, 80);
     }
     // entity drag popup
     if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_LEFT, bounds, nk_true) && entity_drag_popup_act == 9999)

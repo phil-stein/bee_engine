@@ -1006,7 +1006,7 @@ void change_material_name(char* old_name, char* new_name)
 
 bee_bool check_material_exists(const char* name)
 {
-	return shget(materials, name) != -1 && shget(materials, name) != NULL;
+	return shget(materials, name) != -1;
 }
 
 

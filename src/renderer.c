@@ -56,13 +56,13 @@ int point_lights_len = 0;
 int* spot_lights	 = NULL;
 int spot_lights_len  = 0;
 
-#ifdef EDITOR_ACT
 // different modes
 bee_bool wireframe_mode_enabled = BEE_FALSE;
 bee_bool normal_mode_enabled	 = BEE_FALSE;
 bee_bool uv_mode_enabled		 = BEE_FALSE;
 vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
 
+#ifdef EDITOR_ACT
 shader modes_shader;
 #endif
 
@@ -832,6 +832,52 @@ int add_entity_direct(entity e)
 	entity_ids_len++;
 
 	return entities_len - 1;
+}
+int duplicate_entity(int id)
+{
+	entity e;
+	entity* original = get_entity(id);
+	// memcpy(&e, original, sizeof(entity));
+	e.id     = -1;
+	e.id_idx = -1;
+	char* name = malloc(strlen(original->name) +2 +1);
+	sprintf_s(name, strlen(original->name) + 2 + 1, "%s02", original->name);
+	e.name = name;
+
+	e.has_trans = original->has_trans;
+	if (e.has_trans)
+	{
+		glm_vec3_copy(original->pos, e.pos);
+		glm_vec3_copy(original->rot, e.rot);
+		glm_vec3_copy(original->scale, e.scale);
+	}
+	e.rotate_global = original->rotate_global;
+	e.has_model = original->has_model;
+	if (e.has_model)
+	{
+		e._mesh = original->_mesh;
+		e._material = original->_material;
+	}
+	e.has_cam = original->has_cam;
+	if (e.has_cam)
+	{
+		e._camera = original->_camera;
+	}
+	e.has_light = original->has_light;
+	if (e.has_light)
+	{
+		e._light = original->_light;
+	}
+	for (int i = 0; i < e.children_len; ++i)
+	{
+		e.children[i] = 0;
+	}
+	e.children_len = 0;
+	e.parent = 9999;
+
+	// @TODO: scripts prob should be copied as well
+
+	return add_entity_direct(e);
 }
 void add_entity_cube()
 {

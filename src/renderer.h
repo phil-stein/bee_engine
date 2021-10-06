@@ -45,6 +45,8 @@ void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
 
 int add_entity_direct(entity e);
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name);
+int duplicate_entity(int id);
+
 void entity_switch_light_type(int entity_id, light_type new_type);
 void entity_add_script(int entity_index, const char* name);
 void entity_remove_script(int entity_index, int script_index);
