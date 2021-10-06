@@ -49,10 +49,12 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 	- [ ] hdri
 
 ## assets in use
- - [container texture dif] (https://learnopengl.com/img/textures/container2.png), [continer texture spec] (https://learnopengl.com/img/textures/container2_specular.png)
- - [stanford bunny] (http://graphics.stanford.edu/data/3Dscanrep/)
- - [grass texture] (https://www.textures.com/download/Grass0130/38953)
- - [barrel texture] (https://www.textures.com/download/Barrels036/38953)
+ - [container texture dif](https://learnopengl.com/img/textures/container2.png), [continer texture spec](https://learnopengl.com/img/textures/container2_specular.png)
+ - [stanford bunny](http://graphics.stanford.edu/data/3Dscanrep/)
+ - [grass texture](https://www.textures.com/download/Grass0130/38953)
+ - [barrel texture](https://www.textures.com/download/Barrels036/123202)
+  
  *the rest are made by me*
- - [eye demon] (https://www.artstation.com/artwork/eaYLzZ)
- - [other demon] (https://www.artstation.com/artwork/48YKYY)
+ 
+ - [eye demon](https://www.artstation.com/artwork/eaYLzZ)
+ - [other demon](https://www.artstation.com/artwork/48YKYY)
