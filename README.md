@@ -53,6 +53,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
  - [stanford bunny](http://graphics.stanford.edu/data/3Dscanrep/)
  - [grass texture](https://www.textures.com/download/Grass0130/38953)
  - [barrel texture](https://www.textures.com/download/Barrels036/123202)
+ - [cubemap](https://learnopengl.com/Advanced-OpenGL/Cubemaps)
   
  *the rest are made by me*
  
