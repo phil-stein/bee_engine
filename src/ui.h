@@ -130,24 +130,23 @@ void properties_window();
 void draw_entity_hierachy_entity(int idx, int offset, int pos);
 void pause_button_window();
 
-void console_window();
-
 void asset_browser_window();
 
-
+void console_window();
 void submit_txt_console(char* txt);
 
 void error_popup_window();
-
 void set_error_popup(error_type type, char* msg);
 
 void source_code_window();
+void set_source_code_window(char* src);
 
 void add_shader_window();
 
-void set_source_code_window(char* src);
-
 void scene_context_window();
+
+void edit_asset_window();
+void set_edit_asset_window(asset_type type, void* asset_ptr);
 
 // themes
 enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };

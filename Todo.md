@@ -10,40 +10,19 @@ Todo
     
   
 - buggs
-  - [x] loading images is really slow
-  
-  - [x] vm corrupts between run_init() and run_update()
-  
-  - [x] editor [show source code] cuts off the last line 
-  
-  - [x] solid objects don't get rendered in build_mode
-  
-  - [x] ~5-10 fps in build_mode *(prop. something being called that's unnecessary without the editor)*
-  
-  - [x] add entity >> cube doesn't get rendered
-  
-  - [x] attach script doesn't work anymore 
-  
-  - [x] name & path of textures get randomly freed [prob. fixed]
-  
-  - [x] new camera component sometimes frees values
-  
+
   - [ ] importing assets sometimes crashes the editor
-  
+
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
-  
+
   - [x] 'upper_hierachy_ents' sometimes crashes the engine when sorting the hierarchy
-  
+
   - [ ] saving scenes corrupts the program, probably in write_text_file()
-  
-  - [x] editor starts in play-mode for some reason
-  
-  - [x] after changing scene scripts dont work anymore
-  
-  - [ ] crash when exiting play mode sometimes (in update_entity())
-  
+
+  - [ ] dark areas look weird since adding gamma correction
+
     
-  
+
 - unfinished
   - [x] entity_remove() in renderer.c
   
@@ -77,9 +56,10 @@ Todo
 - [ ] material / shader system
 
   - allow for different shaders to get passed their own needed uniform values
-
-  - [ ] save the uniforms in a file
-  - [ ] uniform array in material that gets send one after another
+  - [x] save uniform in shader
+  - [x] uniform array in material that gets send one after another
+  - [ ] @UNCLEAR: move uniforms to material
+    - save the allowed uniforms in shader and the values in material
 
 
 
@@ -124,6 +104,7 @@ Todo
     - [ ] make assets on import be put in the right folder
     -  [x] use shdefault() & hmdefault() to check if the requested asset exists
     -  [ ] add ui for drag&drop importing
+    -  [ ] removing assets
     
   - [x] use different datastructure for entities, with GUID's  
   

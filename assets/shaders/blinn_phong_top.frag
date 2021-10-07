@@ -47,8 +47,8 @@
     in vec3 FragPos;
     in vec2 TexCoord;
 
-    uniform Material materialOne;
-    uniform Material materialTwo;
+    uniform Material material;
+    uniform Material material02;
 
     uniform int Num_DirLights;
     uniform DirectionalLight dirLights[4];
@@ -80,17 +80,17 @@
         
         for(int i = 0; i < Num_DirLights; i++)
         {
-            mat_one += CalcDirectionalLight(materialOne, dirLights[i], norm, viewDir);
+            mat_one += CalcDirectionalLight(material, dirLights[i], norm, viewDir);
         }
         
         for(int i = 0; i < Num_PointLights; i++)
         {
-            mat_one += CalcPointLight(materialOne, pointLights[i], norm, viewDir);
+            mat_one += CalcPointLight(material, pointLights[i], norm, viewDir);
         }
 
         for(int i = 0; i < Num_SpotLights; i++)
         {
-            mat_one += CalcSpotLight(materialOne, spotLights[i], norm, viewDir);
+            mat_one += CalcSpotLight(material, spotLights[i], norm, viewDir);
         }
 
         //materialTwo_two--------------------------------------------------------------------
@@ -98,24 +98,24 @@
         
         for(int i = 0; i < Num_DirLights; i++)
         {
-            mat_two += CalcDirectionalLight(materialTwo, dirLights[i], norm, viewDir);
+            mat_two += CalcDirectionalLight(material02, dirLights[i], norm, viewDir);
         }
         
         for(int i = 0; i < Num_PointLights; i++)
         {
-            mat_two += CalcPointLight(materialTwo, pointLights[i], norm, viewDir);
+            mat_two += CalcPointLight(material02, pointLights[i], norm, viewDir);
         }
 
         for(int i = 0; i < Num_SpotLights; i++)
         {
-            mat_two += CalcSpotLight(materialTwo, spotLights[i], norm, viewDir);
+            mat_two += CalcSpotLight(material02, spotLights[i], norm, viewDir);
         }
 
         //*1.5 remaps the nomal.y value to a range on 0.0 - 1.5, instead of 0.0 - 1.0
         //because of this we can take that value to the power of 2 which will return 
         //smaller values for all values < 1.0 and greater values for all values > 1.0
         //* 0.4 to get the values to a more reasonable range (0.0 - 0.99)       
-        float materialOneStrength = pow((norm.y * 1.5), 2) * 0.44;
+        float materialOneStrength = pow((norm.y * 1.5), 2) * 0.35; // 0.44;
         float materialTwoStrength = 1 - materialOneStrength;
 
         //materialOneStrength = 1.0;
@@ -123,7 +123,7 @@
         
         vec3 result = (mat_one * materialOneStrength) + (mat_two * materialTwoStrength);
 
-        FragColor = vec4(result, 1.0);
+        FragColor = vec4(result.xyz, 1.0);
     }
 
     vec3 CalcDirectionalLight(Material mat, DirectionalLight light, vec3 normal, vec3 viewDir)

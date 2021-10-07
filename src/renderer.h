@@ -36,7 +36,8 @@ void renderer_update();
 void renderer_cleanup();
 
 // renderes a single mesh, amounting in one draw-call
-void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
+void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global);
+void set_shader_uniforms(material* mat);
 
 void renderer_clear_scene();
 

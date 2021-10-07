@@ -946,11 +946,25 @@ int get_material_idx(char* name)
 	return shget(materials, name);
 }
 
-material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name)
+material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, 
+					   vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
 {
 	if (shget(materials, name) != -1) // check if already exist
 	{
-		printf("[ERROR] Material added already exists\n");
+		printf("[ERROR] Material \"%s\" already exists\n", name);
+		if (overwrite)
+		{
+			material* m = get_material(name);
+			m->shader = s;
+			m->dif_tex = dif_tex;
+			m->spec_tex = spec_tex;
+			m->is_transparent = is_transparent;
+			m->shininess = shininess;
+			glm_vec2_copy(tile, m->tile);
+			glm_vec2_copy(tint, m->tint);
+			m->draw_backfaces = draw_backfaces;
+			printf(" -> Material \"%s\" overwritten\n", name);
+		}
 		return get_material(name);
 	}
 	// make a persistent copy of the passed name
@@ -958,7 +972,7 @@ material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
-	material mat = make_material_tint(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name_cpy);
+	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name_cpy);
 
 	shput(materials, name_cpy, materials_data_len);
 	materials_len++;
@@ -1019,11 +1033,11 @@ int get_shader_idx(char* name)
 	return shget(shaders, name);
 }
 
-shader add_shader(const char* vert_name, const char* frag_name, const char* name)
+shader add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform* uniforms)
 {
 	if (shget(shaders, name) != -1) // check if already exist
 	{
-		printf("[ERROR] Shader added already exists\n");
+		printf("[ERROR] Shader \"%s\" already exists\n", name);
 		return get_shader(name);
 	}
 
@@ -1041,6 +1055,9 @@ shader add_shader(const char* vert_name, const char* frag_name, const char* name
 	shader s = create_shader_from_file(vert_path, frag_path, name_cpy);
 	s.vert_name = vert_name;
 	s.frag_name = frag_name;
+	s.use_lighting = use_lighting;
+	s.uniforms_len = uniforms_len;
+	s.uniforms	   = uniforms;
 
 	shput(shaders, name_cpy, shaders_data_len);
 	shaders_len++;
@@ -1048,6 +1065,11 @@ shader add_shader(const char* vert_name, const char* frag_name, const char* name
 	shaders_data_len++;
 
 	return shaders_data[shget(shaders, name)];
+}
+
+shader add_shader(const char* vert_name, const char* frag_name, const char* name)
+{
+	return add_shader_specific(vert_name, frag_name, name, BEE_TRUE, 0, NULL);
 }
 
 shader get_shader(char* name)

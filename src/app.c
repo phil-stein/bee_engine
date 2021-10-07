@@ -57,35 +57,35 @@ void init()
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
 	
 	texture blank_tex = get_texture("blank.png");
-	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank");
-	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit");
-	material* mat_cel		  = add_material(shader_cel, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel");
-	material* mat_noise		  = add_material(shader_noise, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_noise");
+	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
+	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
+	material* mat_cel		  = add_material(shader_cel, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
+	material* mat_noise		  = add_material(shader_noise, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_noise", BEE_TRUE);
 	
 	// load texture
 	texture crate_dif_tex   = get_texture("crate01_dif.png");
 	texture crate_spec_tex  = get_texture("crate01_spec.png");
-	material* mat_crate = add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_crate");
+	material* mat_crate = add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_crate", BEE_TRUE);
 
 	texture grass_dif_tex  = get_texture("grass01_dif.png");
 	texture grass_spec_tex = get_texture("grass01_spec.png");
-	material* mat_grass	   = add_material(shader_default, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_grass");
+	material* mat_grass	   = add_material(shader_default, grass_dif_tex, grass_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_grass", BEE_TRUE);
 	
 	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
 	texture barrel_spec_tex = get_texture("barrel01_spec.png");
-	material* mat_barrel		= add_material(shader_default, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_barrel");
+	material* mat_barrel		= add_material(shader_default, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_barrel", BEE_TRUE);
 	
 	texture robot_dif_tex  = get_texture("robot01_dif.png");
 	texture robot_spec_tex = get_texture("robot01_spec.png");
-	material* mat_robot	   = add_material(shader_default, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_robot");
+	material* mat_robot	   = add_material(shader_default, robot_dif_tex, robot_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_robot", BEE_TRUE);
 
-	add_material(shader_default, get_texture("demon_diffuse.png"), get_texture("blank_black.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_demon");
+	add_material(shader_default, get_texture("demon_diffuse.png"), get_texture("blank_black.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_demon", BEE_TRUE);
 
 	// mesh m_cube = make_cube_mesh();
 
 
 	texture glass_dif_tex = get_texture("window.png");
-	material* mat_glass = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass");
+	material* mat_glass = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass", BEE_TRUE);
 
 	//
 	// @TODO: make the renderer use the right camera
@@ -201,12 +201,6 @@ void init()
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
 
-	// grid
-	// mesh m_grid = make_grid_mesh(10, 10);
-	// model grid_model = make_model(&m_grid, &mat);
-	// vec3 pos02 = { 0.0f, -0.5f, 0.0f };
-	// add_entity(pos02, rot, scale, &grid_model, NULL, "grid");
-
 #ifdef EDITOR_ACT
 	// glfwSetCursorPosCallback(window, rotate_cam_by_mouse);
 	mouse_callback_idx = register_mouse_pos_callback(rotate_editor_cam_by_mouse);
@@ -224,7 +218,7 @@ void update()
 	// ---- fps ----
 
 	
-	char title[50]; // limits the fps counter to 7 digits (1 byte for null-terminator)
+	char title[50];
 	int rtn = sprintf_s(title, sizeof(title), "bee engine | fps: %d | scene: \"%s\"", (int)get_fps(), get_active_scene_name());
 	assert(rtn != 0);
 

@@ -3,6 +3,9 @@
 #include "glad/glad.h"
 
 #include "shader.h"
+#include "str_util.h"
+#include "stb/stb_ds.h"
+#include "asset_manager.h"
 // #include "file_handler.h"
 
 // generate a shader-program from a vertex- and fragment-shader
@@ -205,15 +208,52 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 
 	// --------------
 
-	// print the read shader source code for debugging
-	// printf("\n---- vert shader ---- \n%s\n", vert_shader_src);
-	// printf("\n---- frag shader ---- \n%s\n\n", frag_shader_src);
-
-	u32 handle = create_shader(vert_src, frag_src); // vert_shader_src, frag_shader_src_shaded
+	u32 handle = create_shader(vert_src, frag_src);
 
 	shader s;
 	s.handle = handle;
 	s.name = name;
+	s.use_lighting = BEE_TRUE;
+	s.uniforms = NULL;
+	s.uniforms_len = 0;
+	// char* frag_name = str_find_last_of(frag_path, "blinn_phong_top.frag");
+	// if (frag_name != NULL)
+	// {
+	// 	printf(" -> blinn phong top\n");
+	// 	uniform dif;
+	// 	dif.name = "material02.diffuse";
+	// 	dif.type = UNIFORM_TEX;
+	// 	dif.tex_val = get_texture("cliff01_dif.png");
+	// 	arrput(s.uniforms, dif);
+	// 	s.uniforms_len++;
+	// 	uniform spec;
+	// 	spec.name = "material02.specular";
+	// 	spec.type = UNIFORM_TEX;
+	// 	spec.tex_val = get_texture("cliff01_spec.png");
+	// 	arrput(s.uniforms, spec);
+	// 	s.uniforms_len++;
+	// 	uniform shininess;
+	// 	shininess.name = "material02.shininess";
+	// 	shininess.type = UNIFORM_F32;
+	// 	shininess.f32_val = 1.0f;
+	// 	arrput(s.uniforms, shininess);
+	// 	s.uniforms_len++;
+	// 	uniform tile;
+	// 	tile.name = "material02.tile";
+	// 	tile.type = UNIFORM_VEC2;
+	// 	vec2 val2 = { 1, 1 };
+	// 	glm_vec2_copy(val2, tile.vec2_val);
+	// 	arrput(s.uniforms, tile);
+	// 	s.uniforms_len++;
+	// 	uniform tint;
+	// 	tint.name = "material02.tint";
+	// 	tint.type = UNIFORM_VEC3;
+	// 	vec3 val3 = { 1, 1, 1 };
+	// 	glm_vec3_copy(val3, tint.vec3_val);
+	// 	arrput(s.uniforms, tint);
+	// 	s.uniforms_len++;
+	// 
+	// }
 
 	// remember to free the memory allocated by read_text_file()
 	free(vert_src);

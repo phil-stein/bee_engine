@@ -5,8 +5,8 @@
 #include "renderer.h" // tmp
 #include "scene_manager.h" // tmp
 
-const f32 version = 0.2f;
-f32 current_version = 0.2f;
+#define VERSION 0.4f
+f32 current_version = VERSION;
 
 
 void test_serialization()
@@ -58,7 +58,7 @@ void test_serialization()
 void serialize_scene(char* buffer, int* offset, scene* s)
 {
 	// serialization version number
-	serialize_float(buffer, offset, version);
+	serialize_float(buffer, offset, VERSION);
 
 	// serializing assets that arent defined in files
 	
@@ -143,6 +143,7 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 void serialize_material(char* buffer, int* offset, material* m)
 {
 	// serialize_shader(buffer, offset, &m->shader);
+	serialize_str(buffer, offset, m->name);
 	serialize_str(buffer, offset, m->shader.name);
 	serialize_texture(buffer, offset, &m->dif_tex);
 	serialize_texture(buffer, offset, &m->spec_tex);
@@ -153,7 +154,6 @@ void serialize_material(char* buffer, int* offset, material* m)
 	serialize_vec3(buffer, offset, m->tint);
 
 	serialize_enum(buffer, offset, m->draw_backfaces);
-	serialize_str(buffer, offset, m->name);
 }
 
 void serialize_mesh(char* buffer, int* offset, mesh* m)
@@ -211,6 +211,13 @@ void serialize_shader(char* buffer, int* offset, shader* s)
 	serialize_str(buffer, offset, s->vert_name);
 	serialize_str(buffer, offset, s->frag_name);
 	serialize_str(buffer, offset, s->name);
+
+	serialize_enum(buffer, offset, s->use_lighting);
+	serialize_int(buffer, offset, s->uniforms_len);
+	for (int i = 0; i < s->uniforms_len; ++i)
+	{
+		serialize_uniform(buffer, offset, &s->uniforms[i]);
+	}
 }
 
 void serialize_texture(char* buffer, int* offset, texture* t)
@@ -228,6 +235,30 @@ void serialize_script(char* buffer, int* offset, gravity_script* s)
 	serialize_str(buffer, offset, s->name);
 }
 
+void serialize_uniform(char* buffer, int* offset, uniform* u)
+{
+	serialize_str(buffer, offset, u->name);
+	serialize_enum(buffer, offset, u->type);
+	switch (u->type)
+	{
+		case UNIFORM_INT:
+			serialize_int(buffer, offset, u->int_val);
+			break;
+		case UNIFORM_F32:
+			serialize_float(buffer, offset, u->f32_val);
+			break;
+		case UNIFORM_VEC2:
+			serialize_vec2(buffer, offset, u->vec2_val);
+			break;
+		case UNIFORM_VEC3:
+			serialize_vec3(buffer, offset, u->vec3_val);
+			break;
+		case UNIFORM_TEX:
+			serialize_texture(buffer, offset, &u->tex_val);
+			break;
+	}
+
+}
 
 // ---- base types ----
 
@@ -349,9 +380,9 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 entity deserialize_entity(char* buffer, int* offset)
 {
 	entity e;
-
 	e.name = deserialize_str(buffer, offset);
-	if (current_version > 0.1f)
+
+	if (current_version >= 0.2f)
 	{
 		e.id = deserialize_int(buffer, offset);
 	}
@@ -410,6 +441,11 @@ entity deserialize_entity(char* buffer, int* offset)
 material* deserialize_material(char* buffer, int* offset)
 {
 	// shader s = deserialize_shader(buffer, offset);
+	char* name = NULL;
+	if (current_version >= 0.4f)
+	{
+		name = deserialize_str(buffer, offset);
+	}
 	char* shader = deserialize_str(buffer, offset);
 	texture dif  = deserialize_texture(buffer, offset);
 	texture spec = deserialize_texture(buffer, offset);
@@ -420,8 +456,11 @@ material* deserialize_material(char* buffer, int* offset)
 	vec3 tint; deserialize_vec3(buffer, offset, tint);
 
 	bee_bool backfaces = deserialize_enum(buffer, offset);
-	char* name = deserialize_str(buffer, offset);
-	return add_material(get_shader(shader), dif, spec, is_trans, shininess, tile, tint, backfaces, name);
+	if (current_version <= 0.3f)
+	{
+		name = deserialize_str(buffer, offset);
+	}
+	return add_material(get_shader(shader), dif, spec, is_trans, shininess, tile, tint, backfaces, name, BEE_TRUE);
 }
 
 mesh* deserialize_mesh(char* buffer, int* offset)
@@ -476,6 +515,20 @@ shader deserialize_shader(char* buffer, int* offset)
 	char* vert_name = deserialize_str(buffer, offset);
 	char* frag_name = deserialize_str(buffer, offset);
 	char* name		= deserialize_str(buffer, offset);
+	printf("deserialized shader %s\n", name);
+	if (current_version >= 0.3f)
+	{
+		bee_bool use_lighting = deserialize_enum(buffer, offset);
+		int uniforms_len = deserialize_int(buffer, offset);
+		if (uniforms_len > 0) { printf(" -> with %d uniforms\n", uniforms_len); }
+		uniform* uniforms = NULL;
+		for (int i = 0; i < uniforms_len; ++i)
+		{
+			uniform u = deserialize_uniform(buffer, offset);
+			arrput(uniforms, u);
+		}
+		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniforms_len, uniforms); 
+	}
 	return add_shader(vert_name, frag_name, name); 
 }
 
@@ -498,6 +551,32 @@ gravity_script* deserialize_script(char* buffer, int* offset)
 	// s->closure = NULL;
 	// s->vm = NULL;
 	return s;
+}
+
+uniform deserialize_uniform(char* buffer, int* offset)
+{
+	uniform u;
+	u.name = deserialize_str(buffer, offset);
+	u.type = deserialize_enum(buffer, offset);
+	switch (u.type)
+	{
+	case UNIFORM_INT:
+		u.int_val = deserialize_int(buffer, offset);
+		break;
+	case UNIFORM_F32:
+		u.f32_val = deserialize_float(buffer, offset);
+		break;
+	case UNIFORM_VEC2:
+		deserialize_vec2(buffer, offset, u.vec2_val);
+		break;
+	case UNIFORM_VEC3:
+		deserialize_vec3(buffer, offset, u.vec3_val);
+		break;
+	case UNIFORM_TEX:
+		u.tex_val = deserialize_texture(buffer, offset);
+		break;
+	}
+	return u;
 }
 
 // ---- base types ----

@@ -11,13 +11,15 @@ void test_serialization();
 
 void serialize_scene(char* buffer, int* offset, scene* s);
 void serialize_entity(char* buffer, int* offset, entity* ent);
-void serialize_mesh(char* buffer, int* offset, mesh* m);
 void serialize_material(char* buffer, int* offset, material* m);
-void serialize_light(char* buffer, int* offset, light* l);
+void serialize_mesh(char* buffer, int* offset, mesh* m);
 void serialize_camera(char* buffer, int* offset, camera* c);
-void serialize_script(char* buffer, int* offset, gravity_script* s);
-void serialize_texture(char* buffer, int* offset, texture* t);
+void serialize_light(char* buffer, int* offset, light* l);
+
 void serialize_shader(char* buffer, int* offset, shader* s);
+void serialize_texture(char* buffer, int* offset, texture* t);
+void serialize_script(char* buffer, int* offset, gravity_script* s);
+void serialize_uniform(char* buffer, int* offset, uniform* u);
 
 // ---- base types ----
 void serialize_int(char* buffer, int* offset, int val);
@@ -40,6 +42,7 @@ light     deserialize_light(char* buffer, int* offset);
 shader  deserialize_shader(char* buffer, int* offset);
 texture deserialize_texture(char* buffer, int* offset);
 gravity_script* deserialize_script(char* buffer, int* offset);
+uniform deserialize_uniform(char* buffer, int* offset);
 
 // ---- base types ----
 int   deserialize_int(char* buffer, int* offset);

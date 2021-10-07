@@ -11,15 +11,6 @@
 // ---- assets ----
 //
 
-typedef struct shader
-{
-	u32 handle;
-	char* vert_name;
-	char* frag_name;
-	char* name;
-
-}shader;
-
 typedef struct texture
 {
 	u32 handle;
@@ -32,6 +23,34 @@ typedef struct texture
 #endif
 
 }texture;
+
+typedef enum uniform_type { UNIFORM_INT, UNIFORM_F32, UNIFORM_VEC2, UNIFORM_VEC3, UNIFORM_TEX }uniform_type;
+typedef struct uniform
+{
+	char* name;
+	uniform_type type;
+	union
+	{
+		int int_val;
+		f32 f32_val;
+		vec2 vec2_val;
+		vec3 vec3_val;
+		texture tex_val;
+	};
+}uniform;
+
+typedef struct shader
+{
+	u32 handle;
+	char* vert_name;
+	char* frag_name;
+	char* name;
+
+	bee_bool use_lighting;
+	uniform* uniforms;
+	int uniforms_len;
+
+}shader;
 
 
 // ---- components ----
@@ -174,10 +193,7 @@ typedef struct scene
 }scene;
 
 // creates a material struct
-material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, bee_bool draw_backfaces, const char* name);
-// creates a material struct, tints the material
-material make_material_tint(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name);
-
+material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name);
 // creates a mesh struct 
 // dont do this manually
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name);

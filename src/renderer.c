@@ -414,7 +414,7 @@ void renderer_update()
 	{
 		update_entity(get_entity(entity_ids[i]));
 	}
-	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene
+	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene / etc
 
 	// ------------------------------------------------------------------------
 
@@ -550,35 +550,49 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 			shader_set_vec3(mat->shader, "viewPos", cam_pos);
 		}
 
-		// set shader material ------------------------------
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mat->dif_tex.handle);
-		shader_set_int(mat->shader, "material.diffuse", 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, mat->spec_tex.handle);
-		shader_set_int(mat->shader, "material.specular", 1);
+		set_shader_uniforms(mat);
 
-		shader_set_float(mat->shader, "material.shininess", mat->shininess);
-		shader_set_vec2(mat->shader, "material.tile", mat->tile);
-	
-		shader_set_vec3(mat->shader, "material.tint", mat->tint);
+#ifdef EDITOR_ACT
+	}
+#endif
 
-		// set shader light ---------------------------------
+	// shader_use(mat->shader);
+	glBindVertexArray(_mesh->vao); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+	if (_mesh->indexed == BEE_TRUE)
+	{
+		glDrawElements(GL_TRIANGLES, (_mesh->indices_len), GL_UNSIGNED_INT, 0);
+	}
+	else
+	{
+		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / 8)); // each vertices consist of 8 floats
+	}
+
+	if (mat->draw_backfaces == BEE_TRUE)
+	{
+		glEnable(GL_CULL_FACE);
+	}
+}
+
+void set_shader_uniforms(material* mat)
+{
+	// set shader light ---------------------------------
+	if (mat->shader.use_lighting)
+	{
 		char buffer[28]; // pointLights[i].quadratic is the longest str at 24
 		entity* light;
-		vec3 pos_l   = { 0, 0, 0 };
-		vec3 rot_l   = { 0, 0, 0 };
+		vec3 pos_l = { 0, 0, 0 };
+		vec3 rot_l = { 0, 0, 0 };
 		vec3 scale_l = { 0, 0, 0 };
 		shader_set_int(mat->shader, "Num_DirLights", dir_lights_len);
 		int disabled_lights = 0;
 		for (int i = 0; i < dir_lights_len; ++i)
 		{
 			light = get_entity(dir_lights[i]);
-			if (!light->_light.enabled) 
-			{ 
+			if (!light->_light.enabled)
+			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "Num_DirLights", dir_lights_len - disabled_lights); 
-				continue; 
+				shader_set_int(mat->shader, "Num_DirLights", dir_lights_len - disabled_lights);
+				continue;
 			}
 			int idx = i - disabled_lights;
 			sprintf(buffer, "dirLights[%d].direction", idx);
@@ -596,11 +610,11 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		for (int i = 0; i < point_lights_len; ++i)
 		{
 			light = get_entity(point_lights[i]);
-			if (!light->_light.enabled) 
-			{ 
-				disabled_lights++; 
-				shader_set_int(mat->shader, "Num_PointLights", point_lights_len - disabled_lights); 
-				continue; 
+			if (!light->_light.enabled)
+			{
+				disabled_lights++;
+				shader_set_int(mat->shader, "Num_PointLights", point_lights_len - disabled_lights);
+				continue;
 			}
 			int idx = i - disabled_lights;
 			get_entity_global_transform(point_lights[i], pos_l, rot_l, scale_l);
@@ -625,11 +639,11 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		for (int i = 0; i < spot_lights_len; ++i)
 		{
 			light = get_entity(spot_lights[i]);
-			if (!light->_light.enabled) 
-			{ 
+			if (!light->_light.enabled)
+			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len - disabled_lights); 
-				continue; 
+				shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len - disabled_lights);
+				continue;
 			}
 			int idx = i - disabled_lights;
 			get_entity_global_transform(spot_lights[i], pos_l, rot_l, scale_l);
@@ -656,24 +670,51 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 			sprintf(buffer, "spotLights[%d].outerCutOff", idx);
 			shader_set_float(mat->shader, buffer, light->_light.outer_cut_off);
 		}
-#ifdef EDITOR_ACT
-	}
-#endif
-
-	// shader_use(mat->shader);
-	glBindVertexArray(_mesh->vao); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-	if (_mesh->indexed == BEE_TRUE)
-	{
-		glDrawElements(GL_TRIANGLES, (_mesh->indices_len), GL_UNSIGNED_INT, 0);
-	}
-	else
-	{
-		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / 8)); // each vertices consist of 8 floats
 	}
 
-	if (mat->draw_backfaces == BEE_TRUE)
+	int texture_index = 0;
+	// set shader material ------------------------------
+	if (mat->shader.use_lighting)
 	{
-		glEnable(GL_CULL_FACE);
+		glActiveTexture(GL_TEXTURE0 + texture_index);
+		glBindTexture(GL_TEXTURE_2D, mat->dif_tex.handle);
+		shader_set_int(mat->shader, "material.diffuse", texture_index);
+		texture_index++;
+		glActiveTexture(GL_TEXTURE0 + texture_index);
+		glBindTexture(GL_TEXTURE_2D, mat->spec_tex.handle);
+		shader_set_int(mat->shader, "material.specular", texture_index);
+		texture_index++;
+
+		shader_set_float(mat->shader, "material.shininess", mat->shininess);
+		shader_set_vec2(mat->shader, "material.tile", mat->tile);
+
+		shader_set_vec3(mat->shader, "material.tint", mat->tint);
+	}
+
+	// set shader uniforms ------------------------------
+	for (int i = 0; i < mat->shader.uniforms_len; ++i)
+	{
+		switch (mat->shader.uniforms[i].type)
+		{
+			case UNIFORM_INT:
+				shader_set_int(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].int_val);
+				break;
+			case UNIFORM_F32:
+				shader_set_float(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].f32_val);
+				break;
+			case UNIFORM_VEC2:
+				shader_set_vec2(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].vec2_val);
+				break;
+			case UNIFORM_VEC3:
+				shader_set_vec3(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].vec3_val);
+				break;
+			case UNIFORM_TEX:
+				glActiveTexture(GL_TEXTURE0 + texture_index);
+				glBindTexture(GL_TEXTURE_2D, mat->shader.uniforms[i].tex_val.handle);
+				shader_set_int(mat->shader, mat->shader.uniforms[i].name, texture_index);
+				texture_index++;
+				break;
+		}
 	}
 }
 
