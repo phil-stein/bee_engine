@@ -27,6 +27,10 @@ typedef struct texture
 	int size_y;
 	char* name;
 	char* path;
+#ifdef EDITOR_ACT
+	u32 icon_handle;
+#endif
+
 }texture;
 
 

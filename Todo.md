@@ -5,6 +5,8 @@ Todo
   
   - [ ] setup x86 build
   
+  - [ ] turn dir vec into rotation and reverse
+  
     
   
 - buggs
@@ -43,9 +45,9 @@ Todo
     
   
 - unfinished
-  - [ ] entity_remove() in renderer.c
+  - [x] entity_remove() in renderer.c
   
-  - [ ] entity_switch_light_type() in renderer.c
+  - [x] entity_switch_light_type() in renderer.c
   
 - [ ] scene system
   - [ ] serialization
@@ -69,7 +71,6 @@ Todo
     - [ ] better saving & loading ui (double click for loading scene / instancing mesh)
     - [x] add scenes to the asset manager
   - [x] gravity interface
-  
 
 
 
@@ -146,6 +147,8 @@ Todo
   - [x] deselect entities
   
   - [ ] visualize normal-direction
+  
+  - [ ] material / asset editor in asset manager
   
   - [ ] show shader source
   

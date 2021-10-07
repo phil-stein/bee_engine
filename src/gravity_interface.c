@@ -15,8 +15,10 @@
 gravity_script* cur_script = NULL;
 int cur_script_entity = 0;
 
+// pending actions
 bee_bool load_level_act = BEE_FALSE;
 char load_level_name[25];
+bee_bool quit_game_act = BEE_FALSE;
 
 bee_bool rotate_cam_by_mouse_act = BEE_FALSE;
 int      rotate_cam_by_mouse_idx = 0;
@@ -32,13 +34,18 @@ gravity_script* get_cur_script()
     return cur_script;
 }
 
-void check_for_level_load()
+void gravity_check_for_pending_actions()
 {
     if (load_level_act && check_scene_exists(load_level_name))
     {
         load_scene(load_level_name);
     }
     load_level_act = BEE_FALSE;
+    if (quit_game_act)
+    {
+        set_gamestate(BEE_FALSE, BEE_TRUE);
+    }
+    quit_game_act = BEE_FALSE;
 }
 void mouse_movement_callback()
 {
@@ -57,10 +64,16 @@ void setup_entity_class(gravity_vm* vm)
     gravity_class_bind(c, "move_x", NEW_CLOSURE_VALUE(move_ent_x));
     gravity_class_bind(c, "move_y", NEW_CLOSURE_VALUE(move_ent_y));
     gravity_class_bind(c, "move_z", NEW_CLOSURE_VALUE(move_ent_z));
-
     gravity_class_bind(c, "get_x", NEW_CLOSURE_VALUE(get_ent_x));
     gravity_class_bind(c, "get_y", NEW_CLOSURE_VALUE(get_ent_y));
     gravity_class_bind(c, "get_z", NEW_CLOSURE_VALUE(get_ent_z));
+
+    gravity_class_bind(c, "rotate_x", NEW_CLOSURE_VALUE(rot_ent_x));
+    gravity_class_bind(c, "rotate_y", NEW_CLOSURE_VALUE(rot_ent_y));
+    gravity_class_bind(c, "rotate_z", NEW_CLOSURE_VALUE(rot_ent_z));
+    gravity_class_bind(c, "get_x_rot", NEW_CLOSURE_VALUE(get_ent_x_rot));
+    gravity_class_bind(c, "get_y_rot", NEW_CLOSURE_VALUE(get_ent_y_rot));
+    gravity_class_bind(c, "get_z_rot", NEW_CLOSURE_VALUE(get_ent_z_rot));
 
     // register class c inside VM
     gravity_vm_setvalue(vm, "Entity", VALUE_FROM_OBJECT(c));
@@ -176,6 +189,107 @@ static bee_bool get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     RETURN_VALUE(VALUE_FROM_FLOAT(z), rindex);
 }
 
+static bee_bool rot_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 2) { throw_error("[Entity.rotate_x(float)] Wrong amount of arguments, 1 arguments are needed."); return; }
+
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Entity.rotate_x(float)] Wrong argument types."); return;
+    }
+
+
+    int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(cur_script_entity);
+
+    f32* x = &ent->rot[0];
+    if (ent->rot == NULL) { f32 val = 0;  x = &val; }
+    *x += VALUE_AS_FLOAT(v1);
+}
+static bee_bool rot_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 2) { throw_error("[Entity.rotate_y(float)] Wrong amount of arguments, 1 arguments are needed."); return; }
+
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Entity.rotate_y(float)] Wrong argument types."); return;
+    }
+
+
+    int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(cur_script_entity);
+
+    f32* x = &ent->rot[1];
+    if (ent->rot == NULL) { f32 val = 0;  x = &val; }
+    *x += VALUE_AS_FLOAT(v1);
+}
+static bee_bool rot_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 2) { throw_error("[Entity.rotate_z(float)] Wrong amount of arguments, 1 arguments are needed."); return; }
+
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE)
+    {
+        throw_error("[Entity.rotate_z(float)] Wrong argument types."); return;
+    }
+
+
+    int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(cur_script_entity);
+
+    f32* x = &ent->rot[2];
+    if (ent->rot == NULL) { f32 val = 0;  x = &val; }
+    *x += VALUE_AS_FLOAT(v1);
+}
+
+static bee_bool get_ent_x_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 1) { throw_error("[Entity.get_x_rot()] Wrong amount of arguments, 0 arguments are needed."); return; }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(cur_script_entity);
+
+    f32 x = ent->rot[0];
+    if (ent->rot == NULL) { x = 0; }
+
+    // SKIPPED: check that both v1 and v2 are int numbers
+    RETURN_VALUE(VALUE_FROM_FLOAT(x), rindex);
+}
+static bee_bool get_ent_y_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 1) { throw_error("[Entity.get_y_rot()] Wrong amount of arguments, 0 arguments are needed."); return; }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(cur_script_entity);
+
+    f32 x = ent->rot[1];
+    if (ent->rot == NULL) { x = 0; }
+
+    // SKIPPED: check that both v1 and v2 are int numbers
+    RETURN_VALUE(VALUE_FROM_FLOAT(x), rindex);
+}
+static bee_bool get_ent_z_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 1) { throw_error("[Entity.get_z_rot()] Wrong amount of arguments, 0 arguments are needed."); return; }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(cur_script_entity);
+
+    f32 x = ent->rot[2];
+    if (ent->rot == NULL) { x = 0; }
+
+    // SKIPPED: check that both v1 and v2 are int numbers
+    RETURN_VALUE(VALUE_FROM_FLOAT(x), rindex);
+}
+
 void setup_game_class(gravity_vm* vm)
 {
     // create a new Foo class
@@ -214,12 +328,11 @@ static bee_bool game_quit(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 
     // go back to edior in editor-build and quit application in game-build
 #ifdef EDITOR_ACT
-    set_gamestate(BEE_FALSE, BEE_TRUE);
+    quit_game_act = BEE_TRUE;
 #else
     close_window();
 #endif
 }
-
 static bee_bool game_load_level(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
@@ -255,6 +368,7 @@ void setup_world_class(gravity_vm* vm)
 
     // allocate and bind bar closure to the newly created class
     gravity_class_bind(c, "get_entity", NEW_CLOSURE_VALUE(world_get_entity));
+    gravity_class_bind(c, "get_camera", NEW_CLOSURE_VALUE(world_get_camera));
     gravity_class_bind(c, "move_x", NEW_CLOSURE_VALUE(world_move_ent_x));
     gravity_class_bind(c, "move_y", NEW_CLOSURE_VALUE(world_move_ent_y));
     gravity_class_bind(c, "move_z", NEW_CLOSURE_VALUE(world_move_ent_z));
@@ -289,6 +403,15 @@ static bee_bool world_get_entity(gravity_vm* vm, gravity_value_t* args, uint16_t
     }
 
     RETURN_VALUE(VALUE_FROM_INT(id), rindex);
+}
+static bee_bool world_get_camera(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1)
+    {
+        throw_error("[World.get_camera()] Wrong amount of arguments, 0 arguments are needed."); return;
+    }
+
+    RETURN_VALUE(VALUE_FROM_INT(get_cam_entity()->id), rindex);
 }
 
 static bee_bool world_move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
@@ -412,24 +535,24 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
     RETURN_VALUE(VALUE_FROM_FLOAT(x), rindex);
 }
 
-void setup_camera_class(gravity_vm* vm)
-{
-    // create a new Foo class
-    gravity_class_t* c = gravity_class_new_pair(vm, "Camera", NULL, 0, 0);
+// void setup_camera_class(gravity_vm* vm)
+// {
+//     // create a new Foo class
+//     gravity_class_t* c = gravity_class_new_pair(vm, "Camera", NULL, 0, 0);
+// 
+//     // allocate and bind bar closure to the newly created class
+//     // gravity_class_bind(c, "move_x", NEW_CLOSURE_VALUE(move_cam_x));
+//     // gravity_class_bind(c, "move_y", NEW_CLOSURE_VALUE(move_cam_y));
+//     // gravity_class_bind(c, "move_z", NEW_CLOSURE_VALUE(move_cam_z));
+//     // gravity_class_bind(c, "get_x", NEW_CLOSURE_VALUE(get_cam_x));
+//     // gravity_class_bind(c, "get_y", NEW_CLOSURE_VALUE(get_cam_y));
+//     // gravity_class_bind(c, "get_z", NEW_CLOSURE_VALUE(get_cam_z));
+// 
+//     // register class c inside VM
+//     gravity_vm_setvalue(vm, "Camera", VALUE_FROM_OBJECT(c));
+// }
 
-    // allocate and bind bar closure to the newly created class
-    gravity_class_bind(c, "move_x", NEW_CLOSURE_VALUE(move_cam_x));
-    gravity_class_bind(c, "move_y", NEW_CLOSURE_VALUE(move_cam_y));
-    gravity_class_bind(c, "move_z", NEW_CLOSURE_VALUE(move_cam_z));
-
-    gravity_class_bind(c, "get_x", NEW_CLOSURE_VALUE(get_cam_x));
-    gravity_class_bind(c, "get_y", NEW_CLOSURE_VALUE(get_cam_y));
-    gravity_class_bind(c, "get_z", NEW_CLOSURE_VALUE(get_cam_z));
-
-    // register class c inside VM
-    gravity_vm_setvalue(vm, "Camera", VALUE_FROM_OBJECT(c));
-}
-
+/*
 static bee_bool move_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     // SKIPPED: check nargs (must be 3 because arg[0] is self)
@@ -503,6 +626,7 @@ static bee_bool get_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
     // SKIPPED: check that both v1 and v2 are int numbers
     RETURN_VALUE(VALUE_FROM_FLOAT(pos[2]), rindex);
 }
+*/
 
 void setup_input_class(gravity_vm* vm)
 {

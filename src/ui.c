@@ -190,14 +190,7 @@ void ui_update()
 
     if (!(get_gamestate() && hide_ui_on_play)) // always when isnt playing && hide ui
     {
-        int entities_len = 0;
-        get_entity_len(&entities_len);
-        // printf("entities_len: %d\n", entities_len);
-
-        // resize selected
-        assert(entities_len <= selected_entities_len);
-
-        properties_window(entities_len);
+        properties_window();
 
         console_window();
 
@@ -1448,10 +1441,12 @@ void overview_window()
 }
 */
 
-void properties_window(int ent_len)
+void properties_window()
 {
     int w, h;
     get_window_size(&w, &h);
+    int ent_len = 0;
+    get_entity_len(&ent_len);
     
     // less height because the window bar on top and below
     const float w_ratio = 350.0f  / 1920.0f;
@@ -1933,6 +1928,7 @@ void properties_window(int ent_len)
                 }
            
             }
+
             // right-click on entity popup
             if (ent_right_click_popup != 9999 && nk_popup_begin(ctx, NK_POPUP_STATIC, "right click entity", NK_WINDOW_BACKGROUND | NK_WINDOW_NO_SCROLLBAR, ent_right_click_popup_bounds))
             {
@@ -1950,7 +1946,8 @@ void properties_window(int ent_len)
                 nk_selectable_label(ctx, "remove", NK_TEXT_LEFT, &remove);
                 if (nk_input_is_mouse_pressed(&ctx->input, NK_BUTTON_LEFT))
                 {
-                    selected_entities[ent_right_click_popup] = nk_false;
+                    // selected_entities[ent_right_click_popup] = BEE_FALSE;
+                    for (int i = 0; i < selected_entities_len; ++i) { selected_entities[i] = BEE_FALSE; }
                     entity_remove(ent_right_click_popup);
                     ent_right_click_popup = 9999;
                 }
@@ -1991,11 +1988,10 @@ void properties_window(int ent_len)
             nk_layout_row_static(ctx, 5, 10, 1);
             nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
             
-
             static int selected_entity_old;
             static int selected_entity = -999;
 
-            for (int i = 0; i < ent_len; ++i)
+            for (int i = 0; i < entity_ids_len; ++i)
             {
                 if (selected_entities[i] == nk_true && selected_entities_old[i] == nk_false)
                 {
@@ -2042,7 +2038,6 @@ void properties_window(int ent_len)
 
                 nk_layout_row_dynamic(ctx, 30, 2);
                 nk_label(ctx, "Name: ", NK_TEXT_LEFT);
-                // nk_label(ctx, prop.ent_name, NK_TEXT_LEFT);
                 static nk_flags event = NK_EDIT_DEACTIVATED;
                 if(event == NK_EDIT_DEACTIVATED || event == NK_EDIT_INACTIVE) { strcpy(name_edit_buffer, ent->name); }
                 event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
@@ -2057,13 +2052,24 @@ void properties_window(int ent_len)
                     event = NK_EDIT_INACTIVE;
                 }
 
+                nk_layout_row_dynamic(ctx, 30, 2);
+                nk_label(ctx, "ID:", NK_TEXT_LEFT);
+                char buf[4]; sprintf_s(buf, 4, "%d", ent->id);
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+
+
                 if (ent->parent != 9999)
                 {
                     entity* parent = get_entity(ent->parent);
-                    nk_layout_row_dynamic(ctx, 30, 2);
+                    nk_layout_row_dynamic(ctx, 30, 4);
                     nk_label(ctx, "Parent:", NK_TEXT_LEFT);
+                    nk_spacing(ctx, 1);
+                    char buf[4]; sprintf_s(buf, 4, "%d", ent->parent);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
                     nk_label(ctx, parent->name, NK_TEXT_LEFT);
 
+
+                    nk_layout_row_dynamic(ctx, 30, 2);
                     nk_spacing(ctx, 1);
                     if (nk_button_label(ctx, "Remove Parent"))
                     {
@@ -2407,7 +2413,7 @@ void properties_window(int ent_len)
                         if (selected_dif_old != selected_dif) { ent->_material->dif_tex = textures[selected_dif]; }
 
                         float ratio_x = (float)ent->_material->dif_tex.size_y / (float)ent->_material->dif_tex.size_x;
-                        struct nk_image img = nk_image_id(ent->_material->dif_tex.handle);
+                        struct nk_image img = nk_image_id(ent->_material->dif_tex.icon_handle);
                         nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
                         struct nk_rect img_bounds_dif = nk_widget_bounds(ctx);
                         nk_image(ctx, img);
@@ -2420,7 +2426,7 @@ void properties_window(int ent_len)
                         if (selected_spec_old != selected_spec) { ent->_material->spec_tex = textures[selected_spec]; }
 
                         ratio_x = (float)ent->_material->spec_tex.size_y / (float)ent->_material->spec_tex.size_x;
-                        img = nk_image_id(ent->_material->spec_tex.handle);
+                        img = nk_image_id(ent->_material->spec_tex.icon_handle);
                         nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
                         struct nk_rect img_bounds_spec = nk_widget_bounds(ctx);
                         nk_image(ctx, img);
@@ -2835,7 +2841,8 @@ void draw_entity_hierachy_entity(int idx, int offset, int pos)
     nk_spacing(ctx, 1);
     nk_layout_row_push(ctx, 150 - (25 * offset));
 
-    nk_selectable_label(ctx, ent->name, NK_TEXT_LEFT, &selected_entities[pos]);
+    char buf[24]; sprintf(buf, "%d| %s", ent->id_idx, ent->name);
+    nk_selectable_label(ctx, buf, NK_TEXT_LEFT, &selected_entities[pos]);
 
     // draw its children
     for (int i = 0; i < ent->children_len; ++i)
@@ -3176,7 +3183,8 @@ void asset_browser_window()
                             ctx->style.button.hover = nk_style_item_color(nk_rgb(button.hover.data.color.r * 1.25f, button.hover.data.color.g * 1.25f, button.hover.data.color.b * 1.25f));
                             act = BEE_TRUE;
                         }
-                        struct nk_image img = nk_image_id(textures[i].handle);
+                        // use texture or icon
+                        struct nk_image img = nk_image_id(textures[i].icon_handle);
                         if (nk_group_begin(ctx, "", NK_WINDOW_NO_SCROLLBAR))
                         {
                             nk_layout_row_static(ctx, 90, 90, 1);
@@ -3430,7 +3438,7 @@ void asset_browser_window()
                         {
                             nk_layout_row_static(ctx, 90, 90, 1);
                             // struct nk_image img = nk_image_id(textures[i].handle);
-                            if (nk_button_image(ctx, nk_image_id(materials[i].dif_tex.handle)))
+                            if (nk_button_image(ctx, nk_image_id(materials[i].dif_tex.icon_handle)))
                             {
                                 if (selected_material == i) { selected_material = 9999; }
                                 else { selected_material = i; }
@@ -3597,7 +3605,7 @@ void asset_browser_window()
                             struct nk_image img = internal_type == TEXTURE_ASSET ? icons.logged_texture : internal_type == MESH_ASSET ? icons.mesh : icons.shader;
                             if (internal_type == TEXTURE_ASSET && check_asset_loaded(internals[i]))
                             {
-                                img = nk_image_id( (get_texture(internals[i])).handle );
+                                img = nk_image_id( (get_texture(internals[i])).icon_handle );
                             }
                             if (nk_button_image(ctx, img))
                             {
@@ -3658,7 +3666,7 @@ void asset_browser_window()
                         // properties of selected asset
                         float ratio_x = (float)textures[selected_img].size_y / (float)textures[selected_img].size_x;
                         nk_layout_row_static(ctx, (145 * ratio_x), 145, 1);
-                        struct nk_image img = nk_image_id(textures[selected_img].handle);
+                        struct nk_image img = nk_image_id(textures[selected_img].icon_handle);
                         nk_image(ctx, img);
 
                         nk_layout_row_dynamic(ctx, 40, 1);
@@ -3668,7 +3676,7 @@ void asset_browser_window()
                         nk_layout_row_dynamic(ctx, 30, 1);
                         sprintf(buf, "Size: %dpx x %dpx", textures[selected_img].size_x, textures[selected_img].size_y);
                         nk_label_wrap(ctx, buf);
-                        sprintf(buf, "Handle: \"%d\"", textures[selected_img].handle);
+                        sprintf(buf, "Handle: \"%d\"", textures[selected_img].icon_handle);
                         nk_label_wrap(ctx, buf);
 
                     }
@@ -3764,9 +3772,9 @@ void asset_browser_window()
                     else
                     {
                         nk_layout_row_static(ctx, 75, 75, 2);
-                        struct nk_image img = nk_image_id(materials[selected_material].dif_tex.handle);
+                        struct nk_image img = nk_image_id(materials[selected_material].dif_tex.icon_handle);
                         nk_image(ctx, img);
-                        img = nk_image_id(materials[selected_material].spec_tex.handle);
+                        img = nk_image_id(materials[selected_material].spec_tex.icon_handle);
                         nk_image(ctx, img);
 
                         static char name_edit_buffer[64];
@@ -3865,7 +3873,7 @@ void asset_browser_window()
                         struct nk_image img = selected_internal_type == TEXTURE_ASSET ? icons.logged_texture : selected_internal_type == MESH_ASSET ? icons.mesh : icons.shader;
                         if (selected_internal_type == TEXTURE_ASSET && check_asset_loaded(internals[selected_internal]))
                         {
-                            img = nk_image_id((get_texture(internals[selected_internal])).handle);
+                            img = nk_image_id((get_texture(internals[selected_internal])).icon_handle);
                         }
                         nk_layout_row_static(ctx, 150, 150, 1);
                         nk_image(ctx, img);
@@ -3920,7 +3928,7 @@ void asset_browser_window()
                     if (asset_drag_type == TEXTURE_ASSET)
                     {
                         nk_layout_row_static(ctx, 100, 100, 1);
-                        struct nk_image img = nk_image_id(textures[asset_drag_popup_act].handle);
+                        struct nk_image img = nk_image_id(textures[asset_drag_popup_act].icon_handle);
                         nk_image(ctx, img);
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, textures[asset_drag_popup_act].name, NK_TEXT_LEFT);
@@ -3942,7 +3950,7 @@ void asset_browser_window()
                     else if (asset_drag_type == MATERIAL_ASSET)
                     {
                         nk_layout_row_static(ctx, 100, 100, 1);
-                        struct nk_image img = nk_image_id(materials[asset_drag_popup_act].dif_tex.handle);
+                        struct nk_image img = nk_image_id(materials[asset_drag_popup_act].dif_tex.icon_handle);
                         nk_image(ctx, img);
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, materials[asset_drag_popup_act].name, NK_TEXT_LEFT);

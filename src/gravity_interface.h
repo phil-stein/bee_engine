@@ -15,7 +15,7 @@
 void set_cur_script(gravity_script* script);
 gravity_script* get_cur_script();
 
-void check_for_level_load();
+void gravity_check_for_pending_actions();
 void mouse_movement_callback();
 
 void setup_entity_class(gravity_vm* vm);
@@ -28,6 +28,13 @@ static bee_bool get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs,
 static bee_bool get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
+static bee_bool rot_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool rot_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool rot_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+
+static bee_bool get_ent_x_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool get_ent_y_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool get_ent_z_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 void setup_game_class(gravity_vm* vm);
 
@@ -39,6 +46,7 @@ static bee_bool game_load_level(gravity_vm* vm, gravity_value_t* args, uint16_t 
 void setup_world_class(gravity_vm* vm);
 
 static bee_bool world_get_entity(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_get_camera(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 static bee_bool world_move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool world_move_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
@@ -245,14 +253,14 @@ static bee_bool get_key_down_WIN_MAC_SYMBOL(gravity_vm* vm, gravity_value_t* arg
 static bee_bool get_key_down_MENU(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 
-void setup_camera_class(gravity_vm* vm);
+// void setup_camera_class(gravity_vm* vm);
 
-static bee_bool move_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
-static bee_bool move_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
-static bee_bool move_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
-static bee_bool get_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
-static bee_bool get_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
-static bee_bool get_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+// static bee_bool move_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+// static bee_bool move_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+// static bee_bool move_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+// static bee_bool get_cam_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+// static bee_bool get_cam_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+// static bee_bool get_cam_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 
 #endif

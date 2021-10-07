@@ -196,7 +196,8 @@ void renderer_init()
 	// set default return if key doesn't exist
 	entity e; 
 	e.has_trans = 0; e.has_model = 0; e.has_cam = 0;  e.has_light = 0;
-	e.name = "x"; e.scripts_len = 0; e.children_len = 0; e.id = -1; e.id_idx = -1;
+	e.name = "x"; e.id = -1; e.id_idx = -1;
+	e.scripts_len = 0; e.children_len = 0; e.parent = 9999;
 	hmdefault(entities, e);
 }
 
@@ -413,7 +414,7 @@ void renderer_update()
 	{
 		update_entity(get_entity(entity_ids[i]));
 	}
-	check_for_level_load(); // check if one of the run scripts requested to change scene
+	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene
 
 	// ------------------------------------------------------------------------
 
@@ -790,8 +791,11 @@ int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material,
 }
 int add_entity_direct(entity e) 
 {
-	// need to set any values before putting in hm
-	e.id = entities_len;
+	add_entity_direct_id(e, entities_len);
+}
+int add_entity_direct_id(entity e, int id)
+{
+	e.id = id == -858993460 ? entities_len : id;
 	e.id_idx = entity_ids_len;
 
 	if (e.has_model && e._material != NULL && e._material->is_transparent)
@@ -802,7 +806,6 @@ int add_entity_direct(entity e)
 
 	if (e.has_light)
 	{
-		printf(" -> registered light id: %d, entity: %s\n", entities_len -1, e.name);
 		switch (e._light.type)
 		{
 		case DIR_LIGHT:
@@ -825,9 +828,11 @@ int add_entity_direct(entity e)
 		camera_ent_idx = entities_len;
 	}
 
-	hmput(entities, entities_len, e);
-	printf("added entity: \"%s\", idx: %d\n", e.name, entities_len);
-	arrput(entity_ids, entities_len);
+	// hmput(entities, entities_len, e);
+	hmput(entities, id, e);
+	// printf("added entity: \"%s\", idx: %d\n", e.name, entities_len);
+	// arrput(entity_ids, entities_len);
+	arrput(entity_ids, id);
 	entities_len++;
 	entity_ids_len++;
 
@@ -868,6 +873,7 @@ int duplicate_entity(int id)
 	{
 		e._light = original->_light;
 	}
+
 	for (int i = 0; i < e.children_len; ++i)
 	{
 		e.children[i] = 0;
@@ -875,7 +881,12 @@ int duplicate_entity(int id)
 	e.children_len = 0;
 	e.parent = 9999;
 
-	// @TODO: scripts prob should be copied as well
+	e.scripts = NULL;
+	for (int i = 0; i < original->scripts_len; ++i)
+	{
+		arrput(e.scripts, original->scripts[i]);
+		e.scripts_len++;
+	}
 
 	return add_entity_direct(e);
 }
@@ -1169,6 +1180,14 @@ void entity_remove(int entity_idx)
 	entities_len--;
 	arrdel(entity_ids, id_idx);
 	entity_ids_len--;
+
+	// update the id_idx
+	int ids_len = 0;
+	int* ids = get_entity_ids(&ids_len);
+	for (int i = id_idx; i < ids_len; ++i)
+	{
+		get_entity(ids[i])->id_idx = i;
+	}
 }
 
 void get_entity_len(int* _entities_len)
@@ -1194,7 +1213,7 @@ int get_entity_id_by_name(char* name)
 	{
 		if (strcmp(get_entity(entity_ids[i])->name, name) == 0)
 		{
-			return i;
+			return entity_ids[i];
 		}
 	}
 	assert(0); // no entity with given name

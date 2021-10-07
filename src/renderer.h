@@ -43,6 +43,7 @@ void renderer_clear_scene();
 // the transform of the entity with the parents transforms, calculated recursively 
 void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
 
+int add_entity_direct_id(entity e, int id);
 int add_entity_direct(entity e);
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name);
 int duplicate_entity(int id);
@@ -62,6 +63,7 @@ bee_bool* renderer_get(render_setting setting);
 void entity_set_parent(int child, int parent);
 void entity_remove_child(int parent, int child);
 void entity_remove(int entity_idx);
+void entity_change_id_idx(int entity_id, int new_id_idx);
 
 void add_entity_cube();
 

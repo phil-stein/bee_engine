@@ -123,11 +123,10 @@ void ui_update();
 
 void ui_cleanup();
 
-void demo_window();
+// void demo_window();
+// void overview_window();
 
-void overview_window();
-
-void properties_window(int ent_len);
+void properties_window();
 void draw_entity_hierachy_entity(int idx, int offset, int pos);
 void pause_button_window();
 

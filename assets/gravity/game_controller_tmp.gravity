@@ -28,11 +28,11 @@ func update()
 	{
 		if (original_level)
 		{
-			game.load_level("test");
+			game.load_level("default");
 		}
 		else
 		{
-			game.load_level("big");
+			game.load_level("good");
 		}
 		original_level = !original_level;
 	}

@@ -5,7 +5,8 @@
 #include "renderer.h" // tmp
 #include "scene_manager.h" // tmp
 
-const f32 version = 0.1f;
+const f32 version = 0.2f;
+f32 current_version = 0.2f;
 
 
 void test_serialization()
@@ -91,9 +92,9 @@ void serialize_scene(char* buffer, int* offset, scene* s)
 
 void serialize_entity(char* buffer, int* offset, entity* ent)
 {
-	// id & id_idx dont need to get serialized
-
+	// id_idx dont need to get serialized
 	serialize_str(buffer, offset, ent->name);
+	serialize_int(buffer, offset, ent->id);
 
 	serialize_enum(buffer, offset, ent->has_trans);
 	if (ent->has_trans)
@@ -306,15 +307,16 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 {
 	// serialization version number
 	f32 ver = deserialize_float(buffer, offset);
-
-	if (ver != version)
-	{
-		printf("[ERROR] scene serialization out of date\n");
-		// assert(0);
-		scene s; s.entities_len = 0;
-		*success = BEE_ERROR;
-		return s;
-	}
+	current_version = ver;
+	printf("deserializing scene using version: %f\n", ver);
+	// if (ver != version)
+	// {
+	// 	printf("[ERROR] scene serialization out of date\n");
+	// 	// assert(0);
+	// 	scene s; s.entities_len = 0;
+	// 	*success = BEE_ERROR;
+	// 	return s;
+	// }
 
 	// deserialize assets that arent defined in their own files
 	int shaders_len = deserialize_int(buffer, offset);
@@ -349,6 +351,10 @@ entity deserialize_entity(char* buffer, int* offset)
 	entity e;
 
 	e.name = deserialize_str(buffer, offset);
+	if (current_version > 0.1f)
+	{
+		e.id = deserialize_int(buffer, offset);
+	}
 	e.has_trans = deserialize_enum(buffer, offset);
 	if (e.has_trans)
 	{
@@ -487,7 +493,11 @@ texture deserialize_texture(char* buffer, int* offset)
 gravity_script* deserialize_script(char* buffer, int* offset)
 {
 	char* name = deserialize_str(buffer, offset);
-	return get_script(name);
+	gravity_script* s = get_script(name);
+	// s->init_closure_assigned = BEE_FALSE;
+	// s->closure = NULL;
+	// s->vm = NULL;
+	return s;
 }
 
 // ---- base types ----

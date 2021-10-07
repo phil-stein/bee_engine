@@ -39,7 +39,7 @@ void load_scene(char* name)
 
 	for (int i = 0; i < s.entities_len; ++i)
 	{
-		add_entity_direct(s.entities[i]);
+		add_entity_direct_id(s.entities[i], s.entities[i].id);
 	}
 
 	strcpy_s(active_scene, NAME_SIZE, name);
@@ -105,7 +105,7 @@ void load_scene_state()
 
 	for (int i = 0; i < s.entities_len; ++i)
 	{
-		add_entity_direct(s.entities[i]);
+		add_entity_direct_id(s.entities[i], s.entities[i].id);
 	}
 
 	strcpy_s(active_scene, NAME_SIZE, scene_name_before_state_change);

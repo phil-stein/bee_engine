@@ -274,6 +274,13 @@ texture texture_create_from_path(const char* file_path, const char* name, bee_bo
     // tex.name = malloc(strlen(name) * sizeof(char));
     // strcpy(tex.name, name);
     tex.path = file_path;
+#ifdef EDITOR_ACT
+    if (gamma_correct)
+    {
+        tex.icon_handle = texture_create_from_path(file_path, name, flip_vertical, BEE_FALSE).handle;
+    }
+    else { tex.icon_handle = handle; }
+#endif
 
     // printf("loaded texture: '%s' from '%s', handle: '%d'\n", name, file_path, handle);
 

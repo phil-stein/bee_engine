@@ -206,9 +206,6 @@ rtn_code gravity_run_update(gravity_script* script, int entity_index)
         script->update_closure_assigned = BEE_TRUE;
     }
 
-    // prepare parameters
-    // gravity_value_t delta_t = VALUE_FROM_FLOAT(get_delta_time());
-
     // execute init closure
     gravity_vm_runclosure(script->vm, script->closure, VALUE_FROM_NULL, NULL, 0); // &delta_t, 1
 

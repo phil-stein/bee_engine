@@ -397,12 +397,12 @@ void update_entity(entity* ent)
 			printf("[started run_init] for %s\n", ent->scripts[i]->name);
 			ent->scripts[i]->source = read_text_file(ent->scripts[i]->path);
 			assert(ent->scripts[i]->source != NULL);
-			gravity_run_init(ent->scripts[i], ent->scripts[i]->source, ent->id); // get_entity_id_by_name(ent->name)
+			gravity_run_init(ent->scripts[i], ent->scripts[i]->source, ent->id);
 		}
 		else 
 		{
 			assert(ent->scripts[i]->vm != NULL);
-			gravity_run_update(ent->scripts[i], get_entity_id_by_name(ent->name));
+			gravity_run_update(ent->scripts[i], ent->id);
 		}
 	}
 }
