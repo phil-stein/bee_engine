@@ -2317,7 +2317,7 @@ void properties_window()
                     }
 
                     selected_shader = nk_combo(ctx, shaders_names, shaders_len, selected_shader, 25, nk_vec2(200, 200));
-
+                    if (selected_shader == -1) { selected_shader = selected_shader_old; }
                     if (selected_shader_old != selected_shader) { ent->_material->shader = &shaders[selected_shader]; }
                     
                     material_bounds.h += 25; // the combobox + label
@@ -2629,7 +2629,7 @@ void properties_window()
                         // switched types
                         submit_txt_console("switched light types");
                         light_type new_type = selected_type == 0 ? POINT_LIGHT : selected_type == 1 ? SPOT_LIGHT : selected_type == 2 ? DIR_LIGHT : POINT_LIGHT;
-                        entity_switch_light_type(get_entity_id_by_name(ent->name), new_type);
+                        entity_switch_light_type(ent->id, new_type);
                     }
 
                     nk_layout_row_dynamic(ctx, 25, 1);

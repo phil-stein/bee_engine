@@ -8,10 +8,12 @@
     out vec3 Normal;
     out vec3 FragPos; 
     out vec2 TexCoord;
+    out vec4 frag_pos_light_space;
     
     uniform mat4 proj;          // matrix for camera projection
     uniform mat4 view;          // matrix for view transformation
     uniform mat4 model;         // matrix for applying the objects transform
+    uniform mat4 light_space;
     
     void main() 
     {
@@ -20,6 +22,8 @@
 
         FragPos = vec3(model * vec4(aPosition.xyz, 1.0));
         TexCoord = aTexCoords;
+
+        frag_pos_light_space = light_space * vec4(FragPos, 1.0);
 
         // the MVP matrix model view projection
         // don't change the order in the multiplication!

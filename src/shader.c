@@ -10,7 +10,7 @@
 
 // generate a shader-program from a vertex- and fragment-shader
 // returns: a pointer to the opengl shader program as a "unsigned int" aka. "u32"
-u32 create_shader(char* vert_shader_src, char* frag_shader_src)
+u32 create_shader(char* vert_shader_src, char* frag_shader_src, char* name)
 {
 	// build and compile our shader program
 	// ------------------------------------
@@ -27,7 +27,7 @@ u32 create_shader(char* vert_shader_src, char* frag_shader_src)
 	if (!success)
 	{
 		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		fprintf(stderr, "-!!!-> ERROR_VERTEX_COMPILATION: \n -> %s\n", infoLog);
+		fprintf(stderr, "%s-!!!-> ERROR_VERTEX_COMPILATION: [%s]\n -> %s\n", vert_shader_src, name, infoLog);
 	}
 
 	// fragment shader
@@ -40,7 +40,7 @@ u32 create_shader(char* vert_shader_src, char* frag_shader_src)
 	if (!success)
 	{
 		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-		fprintf(stderr, "%s\n-!!!-> ERROR_FRAGMENT_COMPILATION: \n -> %s\n", vert_shader_src, infoLog);
+		fprintf(stderr, "%s\n-!!!-> ERROR_FRAGMENT_COMPILATION: [%s]\n -> %s\n", frag_shader_src, name, infoLog);
 	}
 
 	// link shaders
@@ -133,7 +133,7 @@ u32 create_shader_from_file_handle(const char* vert_path, const char* frag_path)
 	// printf("\n---- vert shader ---- \n%s\n", vert_shader_src);
 	// printf("\n---- frag shader ---- \n%s\n\n", frag_shader_src);
 
-	u32 shader = create_shader(vert_src, frag_src); // vert_shader_src, frag_shader_src_shaded
+	u32 shader = create_shader(vert_src, frag_src, ""); // vert_shader_src, frag_shader_src_shaded
 
 	// remember to free the memory allocated by read_text_file()
 	free(vert_src); 
@@ -208,7 +208,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 
 	// --------------
 
-	u32 handle = create_shader(vert_src, frag_src);
+	u32 handle = create_shader(vert_src, frag_src, name);
 
 	shader s;
 	s.handle = handle;

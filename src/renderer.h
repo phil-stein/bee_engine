@@ -35,6 +35,10 @@ void renderer_update();
 
 void renderer_cleanup();
 
+void render_scene_shadows();
+void render_scene_normal();
+void render_scene_skybox();
+void render_scene_screen();
 // renderes a single mesh, amounting in one draw-call
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global);
 void set_shader_uniforms(material* mat);

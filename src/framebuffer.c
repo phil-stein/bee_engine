@@ -6,10 +6,12 @@
 
 
 // ---- vars ----
-u32 fbo_ms; // multisample fbo
-u32 rbo_ms; // multisample rbo
 u32 fbo;    // color texture fbo
 u32 rbo;	// color texture rbo
+u32 fbo_ms; // multisample fbo
+u32 rbo_ms; // multisample rbo
+u32 fbo_sh; // shadow map fbo
+// u32 rbo_sh;	// shadow map rbo
 
 
 void create_framebuffer_multisampled(u32* tex_buffer)
@@ -101,15 +103,46 @@ void create_framebuffer(u32* tex_buffer)
 	// glDeleteFramebuffers(1, &fbo);
 }
 
-void bind_framebuffer(bee_bool multisampled)
+void create_framebuffer_shadowmap(u32* tex_buffer, int width, int height)
 {
-	if (multisampled)
+	// create framebuffer object
+	glGenFramebuffers(1, &fbo_sh);
+	// set fbo to be the active framebuffer to be modified
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	// gen texture
+	glGenTextures(1, tex_buffer);
+	glBindTexture(GL_TEXTURE_2D, *tex_buffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); ;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_sh);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *tex_buffer, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	// unbind the framebuffer, opengl now renders to the default buffer again
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void bind_framebuffer(framebuffer_type type)
+{
+	switch (type)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo_ms);
-	}
-	else
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		case COLOR_BUFFER:
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+			break;
+		case MSAA_BUFFER:
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo_ms);
+			break;
+		case SHADOW_BUFFER:
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo_sh);
+			break;
 	}
 }
 void unbind_framebuffer()

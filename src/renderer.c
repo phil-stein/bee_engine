@@ -16,6 +16,7 @@
 #include "gravity_interface.h"
 
 
+#define F32_PER_VERT 11
 #define BLEND_SORT_DEPTH 3
 
 
@@ -66,19 +67,28 @@ vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
 shader* modes_shader;
 #endif
 
-// framebuffer
-mesh m;
+// post processing
 shader* screen_shader;
-u32 tex_aa_buffer;
-u32 tex_col_buffer;
 u32 quad_vao, quad_vbo;
-bee_bool use_msaa = BEE_TRUE;
 
 // skybox
 u32 cube_map;
 shader* skybox_shader;
 u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
+
+// msaa
+u32 tex_aa_buffer;
+u32 tex_col_buffer;
+bee_bool use_msaa = BEE_TRUE;
+
+// shadow mapping
+#define SHADOW_MAP_SIZE_X 1024
+#define SHADOW_MAP_SIZE_Y 1024
+u32 shadow_buffer;
+shader* shadow_shader;
+const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
+mat4 light_space;
 
 
 void renderer_init()
@@ -88,8 +98,13 @@ void renderer_init()
 	// create_shader_from_file used before
 	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer");
 
+	vec2 tile = { 1, 1 };
+	vec3 tint = { 1, 1, 1 };
+	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow");
+
 	create_framebuffer_multisampled(&tex_aa_buffer);
 	create_framebuffer(&tex_col_buffer);
+	create_framebuffer_shadowmap(&shadow_buffer, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
 	set_framebuffer_to_update(&tex_aa_buffer);  // updates framebuffer on window resize
 	set_framebuffer_to_update(&tex_col_buffer); // updates framebuffer on window resize
 
@@ -103,6 +118,7 @@ void renderer_init()
 	 1.0f, -1.0f,  1.0f, 0.0f,
 	 1.0f,  1.0f,  1.0f, 1.0f
 	};
+
 	// screen quad VAO
 	glGenVertexArrays(1, &quad_vao);
 	glGenBuffers(1, &quad_vbo);
@@ -203,8 +219,93 @@ void renderer_init()
 
 void renderer_update()
 {
+	render_scene_shadows();
+	render_scene_normal();
+	render_scene_screen();
+
+	// entities ---------------------------------------------------------------
+
+	for (int i = 0; i < entity_ids_len; ++i)
+	{
+		update_entity(get_entity(entity_ids[i]));
+	}
+	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene / etc
+
+	// ------------------------------------------------------------------------
+
+}
+
+void render_scene_shadows()
+{
+	glEnable(GL_DEPTH_TEST);
+	glViewport(0, 0, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
+	bind_framebuffer(SHADOW_BUFFER);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	mat4 proj; //  = GLM_MAT4_IDENTITY_INIT
+	glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadow_near_plane, shadow_far_plane, proj);
+
+	mat4 view; //  = GLM_MAT4_IDENTITY_INIT
+	vec3 eye	= { -2.0f, 4.0f, -1.0f };
+	vec3 center = { 0.0f,  0.0f,  0.0f };
+	vec3 up		= { 0.0f,  1.0f,  0.0f };
+	glm_lookat(eye, center, up, view);
+
+	glm_mat4_mul(proj, view, light_space);
+
+	shader_use(shadow_shader);
+	shader_set_mat4(shadow_shader, "light_space", light_space);
+			
+	// cycle all objects
+	int entity_ids_len = 0;
+	int* entity_ids = get_entity_ids(&entity_ids_len);
+	for (int i = 0; i < entity_ids_len; ++i)
+	{
+		entity* ent = get_entity(entity_ids[i]);
+		if (ent->has_model)
+		{
+			// draw mesh
+
+			vec3 pos = { 0.0f, 0.0f, 0.0f };
+			vec3 rot = { 0.0f, 0.0f, 0.0f };
+			vec3 scale = { 0.0f, 0.0f, 0.0f };
+			get_entity_global_transform(entity_ids[i], pos, rot, scale);
+
+			mat4 model = GLM_MAT4_IDENTITY_INIT;
+			f32 x = rot[0];  glm_make_rad(&x);
+			f32 y = rot[1];  glm_make_rad(&y);
+			f32 z = rot[2];  glm_make_rad(&z);
+
+			glm_rotate_x(model, x, model);
+			glm_rotate_y(model, y, model);
+			glm_rotate_z(model, z, model);
+			glm_translate(model, pos);
+			glm_scale(model, scale);
+
+			shader_set_mat4(shadow_shader, "model", model);
+
+			glBindVertexArray(ent->_mesh.vao);
+			if (ent->_mesh.indexed == BEE_TRUE)
+			{
+				glDrawElements(GL_TRIANGLES, (ent->_mesh.indices_len), GL_UNSIGNED_INT, 0);
+			}
+			else
+			{
+				glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh.vertices_len / F32_PER_VERT));
+			}
+		}
+	}
+
+	unbind_framebuffer();
+}
+
+void render_scene_normal()
+{
 	// first pass
-	bind_framebuffer(use_msaa); // bind multisampled fbo or color texture fbo
+	int w, h;
+	get_window_size(&w, &h);
+	glViewport(0, 0, w, h);
+	bind_framebuffer(use_msaa ? MSAA_BUFFER : COLOR_BUFFER); // bind multisampled fbo or color texture fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
 	// need to restore the opengl state after calling nuklear
@@ -216,9 +317,6 @@ void renderer_update()
 	glEnable(GL_CULL_FACE); 
 	glEnable(GL_DEPTH_TEST); // enable the z-buffer
 #endif
-
-	int entity_ids_len = 0;
-	int* entity_ids = get_entity_ids(&entity_ids_len);
 
 #ifdef EDITOR_ACT
 	if (wireframe_mode_enabled == BEE_FALSE)
@@ -235,6 +333,8 @@ void renderer_update()
 #endif
  
 	// draw opaque objects
+	int entity_ids_len = 0;
+	int* entity_ids = get_entity_ids(&entity_ids_len);
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		// skip transparent objects
@@ -306,6 +406,43 @@ void renderer_update()
 		}
 	}
 
+	// skybox
+	render_scene_skybox();
+
+	// draw transparent objects -----------------------------------------------
+#ifdef EDITOR_ACT
+	// change back after skybox
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+#endif
+	// doing this after the skyboy so the skybox can be seen through the transparent objects
+	for (int n = 0; n < transparent_ents_len; ++n)
+	{
+		int i = transparent_ents[n];
+		entity* ent = get_entity(i);
+		if (ent->has_model)
+		{
+			vec3 pos = { 0.0f, 0.0f, 0.0f };
+			vec3 rot = { 0.0f, 0.0f, 0.0f };
+			vec3 scale = { 0.0f, 0.0f, 0.0f };
+			get_entity_global_transform(i, pos, rot, scale);
+			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global);
+		}
+	}
+	// ------------------------------------------------------------------------
+
+#ifdef EDITOR_ACT
+	// do this so the nuklear gui is always drawn in solid-mode
+	// enable solid-mode in case wireframe-mode is on
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
+#endif
+}
+
+void render_scene_skybox()
+{
 	// skybox -----------------------------------------------------------------
 #ifdef EDITOR_ACT
 	// draw in solid-mode for skybox
@@ -326,7 +463,7 @@ void renderer_update()
 		{
 			get_camera_view_mat(get_entity(camera_ent_idx), &view[0]);
 		}
-		else 
+		else
 		{
 			get_editor_camera_view_mat(&view[0]);
 		}
@@ -354,31 +491,10 @@ void renderer_update()
 		glDepthFunc(GL_LESS); // set depth function back to default
 	}
 	// ------------------------------------------------------------------------
+}
 
-	// draw transparent objects -----------------------------------------------
-#ifdef EDITOR_ACT
-	// change back after skybox
-	if (wireframe_mode_enabled == BEE_TRUE)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	}
-#endif
-	// doing this after the skyboy so the skybox can be seen through the transparent objects
-	for (int n = 0; n < transparent_ents_len; ++n)
-	{
-		int i = transparent_ents[n];
-		entity* ent = get_entity(i);
-		if (ent->has_model)
-		{
-			vec3 pos = { 0.0f, 0.0f, 0.0f };
-			vec3 rot = { 0.0f, 0.0f, 0.0f };
-			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(i, pos, rot, scale);
-			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global);
-		}
-	}
-	// ------------------------------------------------------------------------
-
+void render_scene_screen()
+{
 	// framebuffer ------------------------------------------------------------
 #ifdef EDITOR_ACT
 	// draw in solid-mode for fbo
@@ -401,29 +517,12 @@ void renderer_update()
 	glDisable(GL_DEPTH_TEST);
 	glUseProgram(screen_shader->handle);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex_col_buffer);
+	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? shadow_buffer : tex_col_buffer); // shadow_buffer
 	shader_set_int(screen_shader, "tex", 0);
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glEnable(GL_DEPTH_TEST);
 	// ------------------------------------------------------------------------
-
-	// entities ---------------------------------------------------------------
-
-	for (int i = 0; i < entity_ids_len; ++i)
-	{
-		update_entity(get_entity(entity_ids[i]));
-	}
-	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene / etc
-
-	// ------------------------------------------------------------------------
-
-#ifdef EDITOR_ACT
-	// do this so the nuklear gui is always drawn in solid-mode
-	// enable solid-mode in case wireframe-mode is on
-	if (wireframe_mode_enabled == BEE_TRUE)
-	{ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
-#endif
 }
 
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global)
@@ -536,9 +635,13 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		shader_use(mat->shader);
 
 		// set shader matrices ------------------------------
-		shader_set_mat4(mat->shader, "model", &model[0]);
-		shader_set_mat4(mat->shader, "view", &view[0]);
-		shader_set_mat4(mat->shader, "proj", &proj[0]);
+		shader_set_mat4(mat->shader, "model", model);
+		shader_set_mat4(mat->shader, "view", view);
+		shader_set_mat4(mat->shader, "proj", proj);
+		shader_set_mat4(mat->shader, "light_space", light_space);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, shadow_buffer);
+		shader_set_int(mat->shader, "shadow_map", 0);
 
 		if (gamestate) // in play-mode
 		{
@@ -556,7 +659,6 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 	}
 #endif
 
-	// shader_use(mat->shader);
 	glBindVertexArray(_mesh->vao); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
 	if (_mesh->indexed == BEE_TRUE)
 	{
@@ -564,7 +666,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 	}
 	else
 	{
-		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / 8)); // each vertices consist of 8 floats
+		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / F32_PER_VERT)); // each vertices consist of 8 floats
 	}
 
 	if (mat->draw_backfaces == BEE_TRUE)
@@ -672,7 +774,7 @@ void set_shader_uniforms(material* mat)
 		}
 	}
 
-	int texture_index = 0;
+	int texture_index = 1; // 0 is the shadow map
 	// set shader material ------------------------------
 	if (mat->shader->use_lighting)
 	{
@@ -951,12 +1053,15 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 		case DIR_LIGHT:
 			arrdel(dir_lights, ent->_light.id);
 			dir_lights_len--;
+			break;
 		case POINT_LIGHT:
 			arrdel(point_lights, ent->_light.id);
 			point_lights_len--;
+			break;
 		case SPOT_LIGHT:
 			arrdel(spot_lights, ent->_light.id);
 			spot_lights_len--;
+			break;
 	}
 
 	// add to new type categorisation
@@ -965,12 +1070,15 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 		case DIR_LIGHT:
 			arrput(dir_lights, entity_id);
 			dir_lights_len++;
+			break;
 		case POINT_LIGHT:
 			arrput(point_lights, entity_id);
 			point_lights_len++;
+			break;
 		case SPOT_LIGHT:
 			arrput(spot_lights, entity_id);
 			spot_lights_len++;
+			break;
 	}
 
 	ent->_light.type = new_type;
@@ -1060,7 +1168,7 @@ void renderer_set(render_setting setting, bee_bool value)
 {
 	if (value == BEE_SWITCH)
 	{
-		renderer_set(setting, !renderer_get(setting));
+		renderer_set(setting, !*renderer_get(setting));
 		return;
 	}
 	switch (setting)

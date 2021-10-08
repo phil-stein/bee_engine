@@ -63,9 +63,10 @@ void main()
 	//}
 
 	float inv_gamma = 0.4545454545454545; // 1/2.2
-	col = texture(tex, TexCoord).xyz;
+	col = texture(tex, TexCoord).rgb;
 	col = pow(col, vec3(inv_gamma)); // gamma correction
-    	FragColor = vec4(col, 1.0);
+	// float bw = texture(tex, TexCoord).r;
+	FragColor = vec4(col, 1.0);
 
 }
 

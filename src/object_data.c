@@ -300,6 +300,9 @@ light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, 
 	_light.linear = linear;
 	_light.quadratic = quadratic;
 
+	vec3 dir = { 0.2f, -1.0f, 0.2f };
+	glm_vec3_copy(dir, _light.direction);
+
 	return _light;
 }
 light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
@@ -313,6 +316,10 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 	glm_vec3_copy(specular, _light.specular);
 		
 	glm_vec3_copy(direction, _light.direction);
+	
+	_light.constant	 = 1.0f;
+	_light.linear	 = 0.14f;
+	_light.quadratic = 0.13;
 
 	return _light;
 }

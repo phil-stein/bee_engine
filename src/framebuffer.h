@@ -4,10 +4,13 @@
 
 #include "global.h"
 
+typedef enum framebuffer_type { COLOR_BUFFER, MSAA_BUFFER, SHADOW_BUFFER }framebuffer_type;
+
 void create_framebuffer(u32* tex_buffer);
 void create_framebuffer_multisampled(u32* tex_buffer);
+void create_framebuffer_shadowmap(u32* tex_buffer, int width, int height);
 
-void bind_framebuffer(bee_bool multisampled);
+void bind_framebuffer(framebuffer_type type);
 void unbind_framebuffer();
 
 void resize_frame_buffer_to_window(u32* tex_buffer);
