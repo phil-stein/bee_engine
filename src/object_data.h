@@ -25,10 +25,16 @@ typedef struct texture
 }texture;
 
 typedef enum uniform_type { UNIFORM_INT, UNIFORM_F32, UNIFORM_VEC2, UNIFORM_VEC3, UNIFORM_TEX }uniform_type;
-typedef struct uniform
+typedef struct uniform_definition
 {
 	char* name;
 	uniform_type type;
+}uniform_def;
+typedef struct uniform
+{
+	// char* name;
+	// uniform_type type;
+	uniform_def* def;
 	union
 	{
 		int int_val;
@@ -47,8 +53,8 @@ typedef struct shader
 	char* name;
 
 	bee_bool use_lighting;
-	uniform* uniforms;
-	int uniforms_len;
+	uniform_def* uniform_defs;
+	int uniform_defs_len;
 
 }shader;
 
@@ -57,7 +63,10 @@ typedef struct shader
 
 typedef struct material
 {
-	shader shader;
+	shader* shader;
+
+	uniform* uniforms;
+	int uniforms_len;
 
 	texture dif_tex;
 	texture spec_tex;
@@ -69,7 +78,6 @@ typedef struct material
 	vec3 tint;
 
 	bee_bool draw_backfaces;
-
 	char* name;
 }material;
 
@@ -193,7 +201,7 @@ typedef struct scene
 }scene;
 
 // creates a material struct
-material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name);
+material make_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
 // creates a mesh struct 
 // dont do this manually
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name);

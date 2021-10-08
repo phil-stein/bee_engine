@@ -5,7 +5,7 @@
 #include "renderer.h" // tmp
 #include "scene_manager.h" // tmp
 
-#define VERSION 0.4f
+#define VERSION 0.8f
 f32 current_version = VERSION;
 
 
@@ -64,6 +64,7 @@ void serialize_scene(char* buffer, int* offset, scene* s)
 	
 	int shaders_len = 0;
 	shader* shaders = get_all_shaders(&shaders_len);
+	printf("shaders len: %d\n", shaders_len);
 
 	serialize_int(buffer, offset, shaders_len);
 
@@ -144,7 +145,7 @@ void serialize_material(char* buffer, int* offset, material* m)
 {
 	// serialize_shader(buffer, offset, &m->shader);
 	serialize_str(buffer, offset, m->name);
-	serialize_str(buffer, offset, m->shader.name);
+	serialize_str(buffer, offset, m->shader->name);
 	serialize_texture(buffer, offset, &m->dif_tex);
 	serialize_texture(buffer, offset, &m->spec_tex);
 
@@ -154,6 +155,21 @@ void serialize_material(char* buffer, int* offset, material* m)
 	serialize_vec3(buffer, offset, m->tint);
 
 	serialize_enum(buffer, offset, m->draw_backfaces);
+
+	serialize_int(buffer, offset, m->uniforms_len);
+	for (int i = 0; i < m->uniforms_len; ++i)
+	{
+		int idx = 0;
+		for (int n = 0; n < m->shader->uniform_defs_len; ++n)
+		{
+			if (m->uniforms[n].def = &m->shader->uniform_defs[n].name)
+			{
+				idx = n;
+				break;
+			}
+		}
+		serialize_uniform(buffer, offset, &m->uniforms[i], idx);
+	}
 }
 
 void serialize_mesh(char* buffer, int* offset, mesh* m)
@@ -186,7 +202,7 @@ void serialize_camera(char* buffer, int* offset, camera* c)
 void serialize_light(char* buffer, int* offset, light* l)
 {
 	// id doesnt have to be serialized
-	// @TODO: enabled still has to be serialized
+	serialize_enum(buffer, offset, l->enabled); // v0.5
 	serialize_enum(buffer, offset, l->type);
 
 	serialize_vec3(buffer, offset, l->ambient);
@@ -212,11 +228,12 @@ void serialize_shader(char* buffer, int* offset, shader* s)
 	serialize_str(buffer, offset, s->frag_name);
 	serialize_str(buffer, offset, s->name);
 
+	// v0.6
 	serialize_enum(buffer, offset, s->use_lighting);
-	serialize_int(buffer, offset, s->uniforms_len);
-	for (int i = 0; i < s->uniforms_len; ++i)
+	serialize_int(buffer, offset, s->uniform_defs_len);
+	for (int i = 0; i < s->uniform_defs_len; ++i)
 	{
-		serialize_uniform(buffer, offset, &s->uniforms[i]);
+		serialize_uniform_def(buffer, offset, &s->uniform_defs[i]);
 	}
 }
 
@@ -235,11 +252,10 @@ void serialize_script(char* buffer, int* offset, gravity_script* s)
 	serialize_str(buffer, offset, s->name);
 }
 
-void serialize_uniform(char* buffer, int* offset, uniform* u)
+void serialize_uniform(char* buffer, int* offset, uniform* u, int idx)
 {
-	serialize_str(buffer, offset, u->name);
-	serialize_enum(buffer, offset, u->type);
-	switch (u->type)
+	serialize_int(buffer, offset, idx);
+	switch (u->def->type)
 	{
 		case UNIFORM_INT:
 			serialize_int(buffer, offset, u->int_val);
@@ -260,6 +276,12 @@ void serialize_uniform(char* buffer, int* offset, uniform* u)
 
 }
 
+void serialize_uniform_def(char* buffer, int* offset, uniform_def* u)
+{
+	serialize_str(buffer, offset, u->name);
+	serialize_enum(buffer, offset, u->type);
+}
+
 // ---- base types ----
 
 void serialize_int(char* buffer, int* offset, int val)
@@ -275,11 +297,14 @@ void serialize_int(char* buffer, int* offset, int val)
 void serialize_float(char* buffer, int* offset, f32 val)
 {
 	// write to buffer
-	// printf("serialize f32: %f\n", val);
-	sprintf(buffer + *offset, "%f", val);
+	char buf[20];
+	sprintf_s(buf, 20, "%f", val);
+	int len = strlen(buf);
+	serialize_int(buffer, offset, len);
+	sprintf(buffer + *offset, "%s", buf);
 
 	// move the offset to after the newly written data
-	*offset += sizeof(f32);
+	*offset += len;
 }
 
 void serialize_u32(char* buffer, int* offset, u32 val)
@@ -340,17 +365,10 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 	f32 ver = deserialize_float(buffer, offset);
 	current_version = ver;
 	printf("deserializing scene using version: %f\n", ver);
-	// if (ver != version)
-	// {
-	// 	printf("[ERROR] scene serialization out of date\n");
-	// 	// assert(0);
-	// 	scene s; s.entities_len = 0;
-	// 	*success = BEE_ERROR;
-	// 	return s;
-	// }
 
 	// deserialize assets that arent defined in their own files
 	int shaders_len = deserialize_int(buffer, offset);
+	printf("shaders len: %d\n", shaders_len);
 
 	for (int i = 0; i < shaders_len; ++i)
 	{
@@ -440,13 +458,14 @@ entity deserialize_entity(char* buffer, int* offset)
 
 material* deserialize_material(char* buffer, int* offset)
 {
-	// shader s = deserialize_shader(buffer, offset);
 	char* name = NULL;
 	if (current_version >= 0.4f)
 	{
 		name = deserialize_str(buffer, offset);
+		printf("deserialized material %s\n", name);
 	}
-	char* shader = deserialize_str(buffer, offset);
+	char* shader_name = deserialize_str(buffer, offset);
+	shader* s = get_shader(shader_name);
 	texture dif  = deserialize_texture(buffer, offset);
 	texture spec = deserialize_texture(buffer, offset);
 
@@ -456,11 +475,24 @@ material* deserialize_material(char* buffer, int* offset)
 	vec3 tint; deserialize_vec3(buffer, offset, tint);
 
 	bee_bool backfaces = deserialize_enum(buffer, offset);
+	int uniforms_len = 0;
+	uniform* uniforms = NULL;
+	if (current_version >= 0.6f)
+	{
+		uniforms_len = deserialize_int(buffer, offset);
+		if (uniforms_len > 0) { printf(" -> with %d uniforms\n", uniforms_len); }
+		for (int i = 0; i < uniforms_len; ++i)
+		{
+			uniform u = deserialize_uniform(buffer, offset, s);
+			arrput(uniforms, u);
+
+		}
+	}
 	if (current_version <= 0.3f)
 	{
 		name = deserialize_str(buffer, offset);
 	}
-	return add_material(get_shader(shader), dif, spec, is_trans, shininess, tile, tint, backfaces, name, BEE_TRUE);
+	return add_material_specific(s, dif, spec, is_trans, shininess, tile, tint, backfaces, uniforms_len, uniforms, name, BEE_TRUE);
 }
 
 mesh* deserialize_mesh(char* buffer, int* offset)
@@ -488,6 +520,10 @@ camera deserialize_camera(char* buffer, int* offset)
 light deserialize_light(char* buffer, int* offset)
 {
 	light l;
+	if (current_version >= 0.5f)
+	{
+		l.enabled = deserialize_enum(buffer, offset);
+	}
 	l.type = deserialize_enum(buffer, offset);
 
 	deserialize_vec3(buffer, offset, l.ambient);
@@ -508,7 +544,7 @@ light deserialize_light(char* buffer, int* offset)
 
 // ---- internal structs ----
 
-shader deserialize_shader(char* buffer, int* offset)
+shader* deserialize_shader(char* buffer, int* offset)
 {
 	// shader s;
 	// s.handle	= deserialize_u32(buffer, offset);
@@ -516,18 +552,36 @@ shader deserialize_shader(char* buffer, int* offset)
 	char* frag_name = deserialize_str(buffer, offset);
 	char* name		= deserialize_str(buffer, offset);
 	printf("deserialized shader %s\n", name);
-	if (current_version >= 0.3f)
+	if (current_version >= 0.7f)
 	{
 		bee_bool use_lighting = deserialize_enum(buffer, offset);
+		int uniform_defs_len = deserialize_int(buffer, offset);
+		if (uniform_defs_len > 0) { printf(" -> with %d uniform types\n", uniform_defs_len); }
+		uniform_def* uniform_defs = NULL;
+		for (int i = 0; i < uniform_defs_len; ++i)
+		{
+			uniform_def def = deserialize_uniform_def(buffer, offset);
+			arrput(uniform_defs, def);
+		}
+		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniform_defs_len, uniform_defs);
+	}
+	else if (current_version >= 0.6f)
+	{
+		deserialize_enum(buffer, offset);
+		int uniform_types_len = deserialize_int(buffer, offset);
+		for (int i = 0; i < uniform_types_len; ++i)
+		{
+			deserialize_enum(buffer, offset);
+		}
+	}
+	else if (current_version >= 0.3f)
+	{
+		deserialize_enum(buffer, offset);
 		int uniforms_len = deserialize_int(buffer, offset);
-		if (uniforms_len > 0) { printf(" -> with %d uniforms\n", uniforms_len); }
-		uniform* uniforms = NULL;
 		for (int i = 0; i < uniforms_len; ++i)
 		{
-			uniform u = deserialize_uniform(buffer, offset);
-			arrput(uniforms, u);
+			deserialize_uniform(buffer, offset, get_shader(name));
 		}
-		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniforms_len, uniforms); 
 	}
 	return add_shader(vert_name, frag_name, name); 
 }
@@ -553,29 +607,55 @@ gravity_script* deserialize_script(char* buffer, int* offset)
 	return s;
 }
 
-uniform deserialize_uniform(char* buffer, int* offset)
+uniform deserialize_uniform(char* buffer, int* offset, shader* s)
 {
 	uniform u;
+	if (current_version >= 0.8f)
+	{
+		int idx = deserialize_int(buffer, offset);
+		u.def = &s->uniform_defs[idx];
+		printf("deserialized uniform_def idx: %d\n", idx);
+	}
+	else if (current_version >= 0.7f || 1) // tmp
+	{
+		u.def = NULL;
+		deserialize_int(buffer, offset);
+	}
+	else
+	{
+		u.def = NULL;
+		char* n = deserialize_str(buffer, offset);
+		char  t = deserialize_enum(buffer, offset);
+		return u;
+	}
+	switch (u.def->type)
+	{
+		case UNIFORM_INT:
+			u.int_val = deserialize_int(buffer, offset);
+			break;
+		case UNIFORM_F32:
+			u.f32_val = deserialize_float(buffer, offset);
+			break;
+		case UNIFORM_VEC2:
+			deserialize_vec2(buffer, offset, u.vec2_val);
+			break;
+		case UNIFORM_VEC3:
+			deserialize_vec3(buffer, offset, u.vec3_val);
+			break;
+		case UNIFORM_TEX:
+			u.tex_val = deserialize_texture(buffer, offset);
+			break;
+	}
+	printf("deserialized uniform: def[\"%s\", %d]\n", u.def->name, u.def->type);
+	return u;
+}
+
+uniform_def deserialize_uniform_def(char* buffer, int* offset)
+{
+	uniform_def u;
 	u.name = deserialize_str(buffer, offset);
 	u.type = deserialize_enum(buffer, offset);
-	switch (u.type)
-	{
-	case UNIFORM_INT:
-		u.int_val = deserialize_int(buffer, offset);
-		break;
-	case UNIFORM_F32:
-		u.f32_val = deserialize_float(buffer, offset);
-		break;
-	case UNIFORM_VEC2:
-		deserialize_vec2(buffer, offset, u.vec2_val);
-		break;
-	case UNIFORM_VEC3:
-		deserialize_vec3(buffer, offset, u.vec3_val);
-		break;
-	case UNIFORM_TEX:
-		u.tex_val = deserialize_texture(buffer, offset);
-		break;
-	}
+	printf("deserialized uniform_def: \"%s\", type: %d\n", u.name, u.type);
 	return u;
 }
 
@@ -594,12 +674,23 @@ int deserialize_int(char* buffer, int* offset)
 
 f32 deserialize_float(char* buffer, int* offset)
 {
-	// @TODO: strtof() prob. reads the next floats numbers
-	//		  -> limit it to only reading the needed amount of bytes
-	char bytes[sizeof(f32)];
-	memcpy(bytes, buffer + *offset, sizeof(f32));
-	f32 result = strtof(bytes, NULL); // buffer + *offset
-	*offset += sizeof(f32);
+	f32 result;
+	if (current_version >= 0.8f)
+	{
+		int len = deserialize_int(buffer, offset);
+		char* bytes = malloc(len * sizeof(char));
+		memcpy(bytes, buffer + *offset, len);
+		result = strtof(bytes, NULL); // buffer + *offset
+		free(bytes);
+		*offset += len;
+	}
+	else
+	{
+		char bytes[sizeof(f32)];
+		memcpy(bytes, buffer + *offset, sizeof(f32));
+		result = strtof(bytes, NULL); // buffer + *offset
+		*offset += sizeof(f32);
+	}
 	// printf("deserialized f32:  %f\n", result);
 	return result;
 }

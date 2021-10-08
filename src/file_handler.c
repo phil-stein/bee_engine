@@ -336,7 +336,7 @@ mesh load_mesh(char* file_path)
 {
     //const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
     const struct aiScene* scene = aiImportFile(file_path,
-        // aiProcess_CalcTangentSpace      |
+        aiProcess_CalcTangentSpace         |
         aiProcess_FlipUVs                  |
         aiProcess_Triangulate           // |
         // aiProcess_JoinIdenticalVertices |
@@ -434,20 +434,23 @@ mesh process_mesh(struct aiMesh* m_assimp, struct aiScene* scene, const char* na
             // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
             arrput(verts, m_assimp->mTextureCoords[0][i].x); verts_len++;
             arrput(verts, m_assimp->mTextureCoords[0][i].y); verts_len++;
-            // // tangent
-            // vector.x = mesh->mTangents[i].x;
-            // vector.y = mesh->mTangents[i].y;
-            // vector.z = mesh->mTangents[i].z;
-            // vertex.Tangent = vector;
-            // // bitangent
-            // vector.x = mesh->mBitangents[i].x;
-            // vector.y = mesh->mBitangents[i].y;
-            // vector.z = mesh->mBitangents[i].z;
-            // vertex.Bitangent = vector;
         }
         else
         {
             printf("-!!!-> loaded mesh did not contain uv-coordinates\n");
+            arrput(verts, 0.0f); verts_len++;
+            arrput(verts, 0.0f); verts_len++;
+        }
+        if (m_assimp->mTangents != NULL)
+        {
+            // tangent
+            arrput(verts, m_assimp->mTangents[i].x); verts_len++;
+            arrput(verts, m_assimp->mTangents[i].y); verts_len++;
+            arrput(verts, m_assimp->mTangents[i].z); verts_len++;
+        }
+        else
+        {
+            arrput(verts, 0.0f); verts_len++;
             arrput(verts, 0.0f); verts_len++;
             arrput(verts, 0.0f); verts_len++;
         }

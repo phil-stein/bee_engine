@@ -1485,7 +1485,14 @@ void properties_window()
             nk_layout_row_dynamic(ctx, 25, 1);
             if (nk_menu_item_label(ctx, "Save", NK_TEXT_LEFT))
             {
-                save_scene(get_active_scene_name());
+                if (str_find_last_of(get_active_scene_name(), ".scene") == NULL)
+                {
+                    scene_context_act = BEE_TRUE;
+                }
+                else
+                {
+                    save_scene(get_active_scene_name());
+                }
             }
             if (nk_menu_item_label(ctx, "Save As", NK_TEXT_LEFT))
             {
@@ -1528,9 +1535,8 @@ void properties_window()
             {
                 vec3 zero      = { 0.0f, 0.0f, 0.0f };
                 vec3 one       = { 1.0f, 1.0f, 1.0f };
-                vec3 point_one = { 0.1f, 0.1f, 0.1f };
                 light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
-                add_entity(zero, zero, point_one, get_mesh("lightbulb.obj") , get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
+                add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, "point_light");	// mat_blank_unlit
             }
             nk_menu_end(ctx);
         }
@@ -1893,7 +1899,7 @@ void properties_window()
                     // recursively handle child-parent relation between the entities
                     for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
                     {
-                        draw_entity_hierachy_entity(entity_ids[upper_hierarchy_ents[i]], 0, upper_hierarchy_ents[i]); // start with 0 offset
+                        draw_entity_hierachy_entity(entity_ids[upper_hierarchy_ents[i]], 0); // start with 0 offset
                     }
                     // assign the dropped entity detected in draw_entity_hierachy_entity()
                     if (dropped_entity.handled == BEE_TRUE && dropped_entity.assigned == BEE_FALSE)
@@ -2031,11 +2037,10 @@ void properties_window()
                 }
             }
 
-            if (is_selected == nk_false || selected_entity == -999 || selected_entity >= ent_len || selected_entity < 0)
+            if (is_selected == nk_false || selected_entity == -999 || selected_entity < 0) // || selected_entity >= ent_len 
             {
                 // nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
                 // nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);
-
             }
             else 
             {
@@ -2290,7 +2295,7 @@ void properties_window()
                     }
 
                     selected_material = nk_combo(ctx, material_names, materials_len, selected_material, 25, nk_vec2(200, 200));
-
+                    if (selected_material = -1) { selected_material = selected_material_old; }
                     if (selected_material_old != selected_material) { ent->_material = &materials[selected_material]; }
 
                     material_bounds.h += 25; // the combobox + label
@@ -2300,7 +2305,7 @@ void properties_window()
                     int shaders_len = 0;
                     shaders = get_all_shaders(&shaders_len);
                     static int selected_shader = 0;
-                    selected_shader = get_shader_idx(ent->_material->shader.name);
+                    selected_shader = get_shader_idx(ent->_material->shader->name);
                     int selected_shader_old = selected_shader;
                     char** shaders_names = malloc(shaders_len * sizeof(char*));
                     assert(shaders_names != NULL);
@@ -2313,14 +2318,14 @@ void properties_window()
 
                     selected_shader = nk_combo(ctx, shaders_names, shaders_len, selected_shader, 25, nk_vec2(200, 200));
 
-                    if (selected_shader_old != selected_shader) { ent->_material->shader = shaders[selected_shader]; }
+                    if (selected_shader_old != selected_shader) { ent->_material->shader = &shaders[selected_shader]; }
                     
                     material_bounds.h += 25; // the combobox + label
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_checkbox_label(ctx, " draw backfaces", &ent->_material->draw_backfaces);
                     
-                    if (ent->_material->shader.use_lighting)
+                    if (ent->_material->shader->use_lighting)
                     {
                         nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 32.0f, 0.1f, 0.002f);
                         nk_layout_row_dynamic(ctx, 25, 2);
@@ -2393,8 +2398,12 @@ void properties_window()
                     nk_spacing(ctx, 1);
                     material_bounds.h += 10; // spacing
 
+                    nk_layout_row_dynamic(ctx, 25, 2);
+                    nk_label(ctx, "Use Lighting: ", NK_TEXT_LEFT);
+                    nk_label(ctx, ent->_material->shader->use_lighting == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
+
                     // not including this in the bounds for drag and dropping materials and shaders
-                    if (ent->_material->shader.use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
+                    if (ent->_material->shader->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
                     {
                         nk_layout_row_dynamic(ctx, 25, 2);
                         nk_label(ctx, "Is transparent: ", NK_TEXT_LEFT);
@@ -2468,49 +2477,35 @@ void properties_window()
                         nk_tree_pop(ctx);
                     }    
 
-                    if (ent->_material->shader.uniforms_len > 0 && nk_tree_push(ctx, NK_TREE_NODE, "Uniforms", NK_MINIMIZED))
+                    if (ent->_material->uniforms_len > 0 && nk_tree_push(ctx, NK_TREE_NODE, "Uniforms", NK_MINIMIZED))
                     {
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        nk_label(ctx, "Use Lighting: ", NK_TEXT_LEFT);
-                        nk_label(ctx, ent->_material->shader.use_lighting == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
-
-
-                        for (int i = 0; i < ent->_material->shader.uniforms_len; ++i)
+                        for (int i = 0; i < ent->_material->uniforms_len; ++i)
                         {
-                            uniform* u = &ent->_material->shader.uniforms[i];
+                            uniform* u = &ent->_material->uniforms[i];
                             char buf[35] = "";
                             struct nk_rect img_bounds_uniform;
                             
                             nk_layout_row_dynamic(ctx, 25, 1);
 
-                            if (u->type == UNIFORM_INT)
+                            if (u->def->type == UNIFORM_INT)
                             {
-                                // sprintf_s(buf, 30, "int: %d", u->int_val);
-                                // nk_label(ctx, buf, NK_TEXT_LEFT);
-                                nk_property_int(ctx, u->name, 0, &u->int_val, 100, 1, 1);
+                                nk_property_int(ctx, u->def->name, 0, &u->int_val, 100, 1, 1);
                             }
-                            else if (u->type == UNIFORM_F32)
+                            else if (u->def->type == UNIFORM_F32)
                             {
-                                // sprintf_s(buf, 30, "f32: %f", u->f32_val);
-                                // nk_label(ctx, buf, NK_TEXT_LEFT);
-                                nk_property_float(ctx, u->name, 0.0f, &u->f32_val, 100.0f, 0.1f, 0.1f);
+                                nk_property_float(ctx, u->def->name, 0.0f, &u->f32_val, 100.0f, 0.1f, 0.1f);
                             }
-                            else if (u->type == UNIFORM_VEC2)
+                            else if (u->def->type == UNIFORM_VEC2)
                             {
-                                // sprintf(buf, "vec2: %f, %f", u->vec2_val[0], u->vec2_val[1]);
-                                // nk_label(ctx, buf, NK_TEXT_LEFT);
-
-                                sprintf(buf, "%s X", u->name);
+                                sprintf(buf, "%s X", u->def->name);
                                 nk_layout_row_dynamic(ctx, 25, 2);
                                 nk_property_float(ctx, buf, 0.0f, &u->vec2_val[0], 100.0f, 0.1f, 0.1f);
-                                sprintf(buf, "%s X", u->name);
+                                sprintf(buf, "%s X", u->def->name);
                                 nk_property_float(ctx, buf, 0.0f, &u->vec2_val[1], 100.0f, 0.1f, 0.1f);
                             }
-                            else if (u->type == UNIFORM_VEC3)
+                            else if (u->def->type == UNIFORM_VEC3)
                             {
-                                // sprintf(buf, "vec3: %f, %f, %f", u->vec3_val[0], u->vec3_val[1], u->vec3_val[2]);
-                                // nk_label(ctx, buf, NK_TEXT_LEFT);
-                                nk_label(ctx, u->name, NK_TEXT_LEFT);
+                                nk_label(ctx, u->def->name, NK_TEXT_LEFT);
                                 struct nk_colorf tint = { u->vec3_val[0], u->vec3_val[1], u->vec3_val[2] };
                                 if (nk_combo_begin_color(ctx, nk_rgb_cf(tint), nk_vec2(200, 400)))
                                 {
@@ -2546,9 +2541,9 @@ void properties_window()
                                     u->vec3_val[2] = tint.b;
                                 }
                             }
-                            else if (u->type == UNIFORM_TEX)
+                            else if (u->def->type == UNIFORM_TEX)
                             {
-                                nk_label(ctx, u->name, NK_TEXT_LEFT);
+                                nk_label(ctx, u->def->name, NK_TEXT_LEFT);
                                 float ratio_x = (float)u->tex_val.size_y / (float)u->tex_val.size_x;
                                 struct nk_image img = nk_image_id(u->tex_val.icon_handle);
                                 nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
@@ -2558,7 +2553,7 @@ void properties_window()
 
 
                             // check for assets dropped from the asset browser
-                            if (u->type == UNIFORM_TEX && dropped_asset.type == TEXTURE_ASSET && dropped_asset.handled == BEE_FALSE)
+                            if (u->def->type == UNIFORM_TEX && dropped_asset.type == TEXTURE_ASSET && dropped_asset.handled == BEE_FALSE)
                             {
                                 // collision 
                                 if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], img_bounds_uniform.x, img_bounds_uniform.y, img_bounds_uniform.w, img_bounds_uniform.h))
@@ -2591,7 +2586,7 @@ void properties_window()
                             else if (dropped_asset.type == SHADER_ASSET)
                             {
                                 printf("dropped asset dropped over material\n");
-                                ent->_material->shader = shaders[dropped_asset.asset_idx];
+                                ent->_material->shader = &shaders[dropped_asset.asset_idx];
                             }
                             dropped_asset.handled = BEE_TRUE;
                         }
@@ -2926,7 +2921,7 @@ void properties_window()
     nk_end(ctx);
 }
 
-void draw_entity_hierachy_entity(int idx, int offset, int pos)
+void draw_entity_hierachy_entity(int idx, int offset)
 {
     // right-click popup
     struct nk_rect bounds = nk_widget_bounds(ctx);
@@ -2964,13 +2959,13 @@ void draw_entity_hierachy_entity(int idx, int offset, int pos)
     nk_spacing(ctx, 1);
     nk_layout_row_push(ctx, 150 - (25 * offset));
 
-    char buf[24]; sprintf(buf, "%d| %s", ent->id_idx, ent->name);
-    nk_selectable_label(ctx, buf, NK_TEXT_LEFT, &selected_entities[pos]);
+    char buf[24]; sprintf(buf, "%d| %s %d", ent->id_idx, ent->name, ent->id);
+    nk_selectable_label(ctx, buf, NK_TEXT_LEFT, &selected_entities[ent->id_idx]);
 
     // draw its children
     for (int i = 0; i < ent->children_len; ++i)
     {
-        draw_entity_hierachy_entity(ent->children[i], offset +1, get_entity(ent->children[i])->id_idx);
+        draw_entity_hierachy_entity(ent->children[i], offset +1);
     }
 
 }
@@ -3925,14 +3920,13 @@ void asset_browser_window()
                             // materials[selected_material].name = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
                             // assert(materials[selected_material].name != NULL);
                             // strcpy(materials[selected_material].name, name_edit_buffer);
-                            
                             change_material_name(materials[selected_material].name, name_edit_buffer);
                             event = NK_EDIT_INACTIVE;
                         }
 
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
-                        sprintf(buf, "Shader: \"%s\"", materials[selected_material].shader.name);
+                        sprintf(buf, "Shader: \"%s\"", materials[selected_material].shader->name);
                         nk_label_wrap(ctx, buf);
                         sprintf(buf, "Draw Backfaces: \"%s\"", materials[selected_material].draw_backfaces == BEE_TRUE ? "true" : "false");
                         nk_label_wrap(ctx, buf);
@@ -4352,7 +4346,7 @@ void edit_asset_window()
 
     // less height because the window bar on top and below
     const float w_ratio = 500.0f / 1920.0f;
-    const float h_ratio = tall ? 700.0f / 1020.0f : 300.0f / 1020.0f;
+    const float h_ratio = 700.0f / 1020.0f;
     const float x_ratio = 710.0f / 1920.0f;
     const float y_ratio = 10.0f / 1020.0f;
 
@@ -4377,8 +4371,8 @@ void edit_asset_window()
 
             static bee_bool add_uniform = BEE_FALSE;
             static int selected_type = 0;
-            static char name[24];
-            if (nk_button_label(ctx, add_uniform ? "Ok" : "Add Uniform"))
+            static char name[28];
+            if (nk_button_label(ctx, add_uniform ? "Add" : "Add Uniform"))
             {
                 add_uniform = !add_uniform;
                 if (add_uniform)
@@ -4388,38 +4382,14 @@ void edit_asset_window()
                 }
                 else
                 {
-                    uniform u;
-                    u.type = selected_type - 1; // -1 because of the "select" at index 0
+                    uniform_type type = selected_type - 1; // -1 because of the "select" at index 0
                     char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
                     assert(name_cpy != NULL);
                     strcpy(name_cpy, name);
-                    u.name = name_cpy;
-                    
-                    if (u.type == UNIFORM_INT)
-                    {
-                        u.int_val = 0;
-                    }
-                    else if (u.type == UNIFORM_F32)
-                    {
-                        u.f32_val = 0;
-                    }
-                    else if (u.type == UNIFORM_VEC2)
-                    {
-                        vec2 val = { 0, 0 };
-                        glm_vec2_copy(val, u.vec2_val);
-                    }
-                    else if (u.type == UNIFORM_VEC3)
-                    {
-                        vec3 val = { 0, 0, 0 };
-                        glm_vec3_copy(val, u.vec2_val);
-                    }
-                    else if (u.type == UNIFORM_TEX)
-                    {
-                        u.tex_val = *get_texture_by_idx(0);
-                    }
+                    uniform_def d = { name_cpy, type};
 
-                    arrput(s->uniforms, u);
-                    s->uniforms_len++;
+                    arrput(s->uniform_defs, d);
+                    s->uniform_defs_len++;
                     
                 }
             }
@@ -4434,112 +4404,43 @@ void edit_asset_window()
 
             }
 
-            if (s->uniforms_len > 0 && nk_tree_push(ctx, NK_TREE_NODE, "Uniforms", NK_MINIMIZED))
+            if (s->uniform_defs_len > 0 && nk_tree_push(ctx, NK_TREE_NODE, "Uniforms", NK_MINIMIZED))
             {
-                tall = BEE_TRUE;
-
-                for (int i = 0; i < s->uniforms_len; ++i)
+                for (int i = 0; i < s->uniform_defs_len; ++i)
                 {
-                    uniform* u = &s->uniforms[i];
-                    char buf[35] = "";
+                    uniform_def d = s->uniform_defs[i];
                     struct nk_rect img_bounds_uniform;
 
-                    nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_layout_row_dynamic(ctx, 25, 2);
 
-                    if (u->type == UNIFORM_INT)
+                    if (d.type == UNIFORM_INT)
                     {
-                        // sprintf_s(buf, 30, "int: %d", u->int_val);
-                        // nk_label(ctx, buf, NK_TEXT_LEFT);
-                        nk_property_int(ctx, u->name, 0, &u->int_val, 100, 1, 1);
+                        nk_label(ctx, "Integer", NK_TEXT_LEFT);
                     }
-                    else if (u->type == UNIFORM_F32)
+                    else if (d.type == UNIFORM_F32)
                     {
-                        // sprintf_s(buf, 30, "f32: %f", u->f32_val);
-                        // nk_label(ctx, buf, NK_TEXT_LEFT);
-                        nk_property_float(ctx, u->name, 0.0f, &u->f32_val, 100.0f, 0.1f, 0.1f);
+                        nk_label(ctx, "Float", NK_TEXT_LEFT);
+                        nk_label(ctx, d.name, NK_TEXT_LEFT);
                     }
-                    else if (u->type == UNIFORM_VEC2)
+                    else if (d.type == UNIFORM_VEC2)
                     {
-                        // sprintf(buf, "vec2: %f, %f", u->vec2_val[0], u->vec2_val[1]);
-                        // nk_label(ctx, buf, NK_TEXT_LEFT);
-
-                        sprintf(buf, "%s X", u->name);
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        nk_property_float(ctx, buf, 0.0f, &u->vec2_val[0], 100.0f, 0.1f, 0.1f);
-                        sprintf(buf, "%s X", u->name);
-                        nk_property_float(ctx, buf, 0.0f, &u->vec2_val[1], 100.0f, 0.1f, 0.1f);
+                        nk_label(ctx, "Vector2", NK_TEXT_LEFT);
+                        nk_label(ctx, d.name, NK_TEXT_LEFT);
                     }
-                    else if (u->type == UNIFORM_VEC3)
+                    else if (d.type == UNIFORM_VEC3)
                     {
-                        // sprintf(buf, "vec3: %f, %f, %f", u->vec3_val[0], u->vec3_val[1], u->vec3_val[2]);
-                        // nk_label(ctx, buf, NK_TEXT_LEFT);
-                        nk_label(ctx, u->name, NK_TEXT_LEFT);
-                        struct nk_colorf tint = { u->vec3_val[0], u->vec3_val[1], u->vec3_val[2] };
-                        if (nk_combo_begin_color(ctx, nk_rgb_cf(tint), nk_vec2(200, 400)))
-                        {
-                            enum color_mode { COL_RGB, COL_HSV };
-                            static int col_mode = COL_RGB;
-
-                            nk_layout_row_dynamic(ctx, 120, 1);
-                            tint = nk_color_picker(ctx, tint, NK_RGB);
-
-                            nk_layout_row_dynamic(ctx, 25, 2);
-                            col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                            col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                            nk_layout_row_dynamic(ctx, 25, 1);
-                            if (col_mode == COL_RGB) {
-                                tint.r = nk_propertyf(ctx, "#R:", 0, tint.r, 1.0f, 0.01f, 0.005f);
-                                tint.g = nk_propertyf(ctx, "#G:", 0, tint.g, 1.0f, 0.01f, 0.005f);
-                                tint.b = nk_propertyf(ctx, "#B:", 0, tint.b, 1.0f, 0.01f, 0.005f);
-                            }
-                            else {
-                                float hsva[4];
-                                nk_colorf_hsva_fv(hsva, tint);
-                                hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                                hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                                hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                                tint = nk_hsva_colorfv(hsva);
-                            }
-                            nk_combo_end(ctx);
-
-                            // assign the altered color 
-                            u->vec3_val[0] = tint.r;
-                            u->vec3_val[1] = tint.g;
-                            u->vec3_val[2] = tint.b;
-                        }
+                        nk_label(ctx, "Vector3", NK_TEXT_LEFT);
+                        nk_label(ctx, d.name, NK_TEXT_LEFT);
                     }
-                    else if (u->type == UNIFORM_TEX)
+                    else if (d.type == UNIFORM_TEX)
                     {
-                        nk_label(ctx, u->name, NK_TEXT_LEFT);
-                        float ratio_x = (float)u->tex_val.size_y / (float)u->tex_val.size_x;
-                        struct nk_image img = nk_image_id(u->tex_val.icon_handle);
-                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
-                        img_bounds_uniform = nk_widget_bounds(ctx);
-                        nk_image(ctx, img);
-                    }
-
-
-                    // check for assets dropped from the asset browser
-                    if (u->type == UNIFORM_TEX && dropped_asset.type == TEXTURE_ASSET && dropped_asset.handled == BEE_FALSE)
-                    {
-                        // collision 
-                        if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], img_bounds_uniform.x, img_bounds_uniform.y, img_bounds_uniform.w, img_bounds_uniform.h))
-                        {
-                            texture* textures = NULL;
-                            int textures_len = 0;
-                            textures = get_all_textures(&textures_len);
-
-                            printf("dropped asset dropped over uniform texture\n");
-                            u->tex_val = textures[dropped_asset.asset_idx];
-                            dropped_asset.handled = BEE_TRUE;
-                        }
+                        nk_label(ctx, "Texture", NK_TEXT_LEFT);
+                        nk_label(ctx, d.name, NK_TEXT_LEFT);
                     }
                 }
 
                 nk_tree_pop(ctx);
             }
-            else { tall = BEE_FALSE; }
         }
         else if (edit_asset_window_type == MATERIAL_ASSET)
         {
@@ -4549,13 +4450,33 @@ void edit_asset_window()
             nk_label(ctx, "Name", NK_TEXT_LEFT);
             nk_label(ctx, m->name, NK_TEXT_LEFT);
 
+            // nk_label(ctx, "Shader", NK_TEXT_LEFT);
+            // nk_label(ctx, m->shader->name, NK_TEXT_LEFT);
             nk_label(ctx, "Shader", NK_TEXT_LEFT);
-            nk_label(ctx, m->shader.name, NK_TEXT_LEFT);
+            shader* shaders = NULL;
+            int shaders_len = 0;
+            shaders = get_all_shaders(&shaders_len);
+            static int selected_shader = 0;
+            selected_shader = get_shader_idx(m->shader->name);
+            int selected_shader_old = selected_shader;
+            char** shaders_names = malloc(shaders_len * sizeof(char*));
+            assert(shaders_names != NULL);
+
+            for (int i = 0; i < shaders_len; ++i)
+            {
+                shaders_names[i] = malloc((strlen(shaders[i].name) + 1) * sizeof(char));
+                strcpy(shaders_names[i], shaders[i].name);
+            }
+
+            selected_shader = nk_combo(ctx, shaders_names, shaders_len, selected_shader, 25, nk_vec2(200, 200));
+
+            if (selected_shader_old != selected_shader) { m->shader = &shaders[selected_shader]; }
+
 
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_checkbox_label(ctx, " draw backfaces", &m->draw_backfaces);
 
-            if (m->shader.use_lighting)
+            if (m->shader->use_lighting)
             {
                 nk_property_float(ctx, "Shininess", 0.0f, &m->shininess, 32.0f, 0.1f, 0.002f);
                 nk_layout_row_dynamic(ctx, 25, 2);
@@ -4600,30 +4521,14 @@ void edit_asset_window()
                     m->tint[2] = tint.b;
                 }
             }
-
-
-            // spacing
-            nk_layout_row_static(ctx, 5, 10, 1);
-            nk_spacing(ctx, 1);
-
-            nk_layout_row_dynamic(ctx, 25, 2);
-            if (nk_button_label(ctx, "Vert Source Code"))
-            {
-                char* src = "\n\r\tNot Implemented lol\n...\r";
-                set_source_code_window(src);
-            }
-            if (nk_button_label(ctx, "Frag Source Code"))
-            {
-                char* src = "\n\r\tNot Implemented lol\n...\r";
-                set_source_code_window(src);
-            }
+            
 
             // spacing
             nk_layout_row_static(ctx, 5, 10, 1);
             nk_spacing(ctx, 1);
 
             // not including this in the bounds for drag and dropping materials and shaders
-            if (m->shader.use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
+            if (m->shader->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
             {
                 tall = BEE_TRUE;
                 nk_layout_row_dynamic(ctx, 25, 2);
@@ -4697,13 +4602,198 @@ void edit_asset_window()
 
                 nk_tree_pop(ctx);
             }
-            else { tall = BEE_FALSE; }
+
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Edit Uniforms", NK_MINIMIZED))
+            {
+                
+                static bee_bool add_uniform = BEE_FALSE;
+                static int selected_def = 0;
+                // struct nk_style_item item;
+                // item.type = NK_STYLE_ITEM_COLOR;
+                // item.data.color = nk_rgb(80, 80, 80);
+                // struct nk_style_button style;
+                // style.active = item;
+                // style.normal = item;
+                // style.hover  = item;
+                char buf[24]; sprintf_s(buf, 24, "uniform defs: %d", m->shader->uniform_defs_len);
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                if (nk_button_label(ctx, add_uniform ? "Add" : "Add Uniform") && m->shader->uniform_defs_len > 0)
+                {
+                    add_uniform = !add_uniform;
+                    if (add_uniform)
+                    {
+                        selected_def = 0;
+                        char buf[24];
+                        sprintf_s(buf, 24, "uniform defs: %d", m->shader->uniform_defs_len);
+                        nk_label(ctx, buf, NK_TEXT_LEFT);
+                        printf("uniform defs: %d", m->shader->uniform_defs_len);
+                    }
+                    else
+                    {
+                        uniform_def* u_def = &m->shader->uniform_defs[selected_def];
+                        uniform u;
+                        u.def = u_def;
+
+                        // default values
+                        if (u_def->type == UNIFORM_INT)
+                        {
+                            u.int_val = 0;
+                        }
+                        else if (u_def->type == UNIFORM_F32)
+                        {
+                            u.f32_val = 0;
+                        }
+                        else if (u_def->type == UNIFORM_VEC2)
+                        {
+                            vec2 val = { 0, 0 };
+                            glm_vec2_copy(val, u.vec2_val);
+                        }
+                        else if (u_def->type == UNIFORM_VEC3)
+                        {
+                            vec3 val = { 0, 0, 0 };
+                            glm_vec3_copy(val, u.vec2_val);
+                        }
+                        else if (u_def->type == UNIFORM_TEX)
+                        {
+                            u.tex_val = *get_texture_by_idx(0);
+                        }
+
+                        arrput(m->uniforms, u);
+                        m->uniforms_len++;
+
+                    }
+                }
+                if (add_uniform && m->shader->uniform_defs_len > 0)
+                {
+                    char** uniform_def_names = malloc((m->shader->uniform_defs_len) * sizeof(char*));
+                    assert(uniform_def_names != NULL);
+                    for (int i = 0; i < m->shader->uniform_defs_len; ++i)
+                    {
+                        // uniform_def_names[i] = m->shader.uniform_defs[i -1].name;
+                        uniform_def_names[i] = malloc((strlen(m->shader->uniform_defs[i].name) + 1) * sizeof(char));
+                        strcpy(uniform_def_names[i], m->shader->uniform_defs[i].name);
+                        printf("uniform def name: %s\n", uniform_def_names[i]);
+                    }
+
+                    selected_def = nk_combo(ctx, uniform_def_names, m->shader->uniform_defs_len, selected_def, 25, nk_vec2(200, 200));
+
+                    free(uniform_def_names);
+                }
+
+                if (m->uniforms_len > 0 && nk_tree_push(ctx, NK_TREE_NODE, "Uniforms", NK_MINIMIZED))
+                {
+
+                    for (int i = 0; i < m->uniforms_len; ++i)
+                    {
+                        uniform* u = &m->uniforms[i];
+                        char buf[35] = "";
+                        struct nk_rect img_bounds_uniform;
+
+                        nk_layout_row_dynamic(ctx, 25, 1);
+
+                        if (u->def->type == UNIFORM_INT)
+                        {
+                            // sprintf_s(buf, 30, "int: %d", u->int_val);
+                            // nk_label(ctx, buf, NK_TEXT_LEFT);
+                            nk_property_int(ctx, u->def->name, 0, &u->int_val, 100, 1, 1);
+                        }
+                        else if (u->def->type == UNIFORM_F32)
+                        {
+                            // sprintf_s(buf, 30, "f32: %f", u->f32_val);
+                            // nk_label(ctx, buf, NK_TEXT_LEFT);
+                            nk_property_float(ctx, u->def->name, 0.0f, &u->f32_val, 100.0f, 0.1f, 0.1f);
+                        }
+                        else if (u->def->type == UNIFORM_VEC2)
+                        {
+                            // sprintf(buf, "vec2: %f, %f", u->vec2_val[0], u->vec2_val[1]);
+                            // nk_label(ctx, buf, NK_TEXT_LEFT);
+
+                            sprintf(buf, "%s X", u->def->name);
+                            nk_layout_row_dynamic(ctx, 25, 2);
+                            nk_property_float(ctx, buf, 0.0f, &u->vec2_val[0], 100.0f, 0.1f, 0.1f);
+                            sprintf(buf, "%s X", u->def->name);
+                            nk_property_float(ctx, buf, 0.0f, &u->vec2_val[1], 100.0f, 0.1f, 0.1f);
+                        }
+                        else if (u->def->type == UNIFORM_VEC3)
+                        {
+                            // sprintf(buf, "vec3: %f, %f, %f", u->vec3_val[0], u->vec3_val[1], u->vec3_val[2]);
+                            // nk_label(ctx, buf, NK_TEXT_LEFT);
+                            nk_label(ctx, u->def->name, NK_TEXT_LEFT);
+                            struct nk_colorf tint = { u->vec3_val[0], u->vec3_val[1], u->vec3_val[2] };
+                            if (nk_combo_begin_color(ctx, nk_rgb_cf(tint), nk_vec2(200, 400)))
+                            {
+                                enum color_mode { COL_RGB, COL_HSV };
+                                static int col_mode = COL_RGB;
+
+                                nk_layout_row_dynamic(ctx, 120, 1);
+                                tint = nk_color_picker(ctx, tint, NK_RGB);
+
+                                nk_layout_row_dynamic(ctx, 25, 2);
+                                col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+                                col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+                                nk_layout_row_dynamic(ctx, 25, 1);
+                                if (col_mode == COL_RGB) {
+                                    tint.r = nk_propertyf(ctx, "#R:", 0, tint.r, 1.0f, 0.01f, 0.005f);
+                                    tint.g = nk_propertyf(ctx, "#G:", 0, tint.g, 1.0f, 0.01f, 0.005f);
+                                    tint.b = nk_propertyf(ctx, "#B:", 0, tint.b, 1.0f, 0.01f, 0.005f);
+                                }
+                                else {
+                                    float hsva[4];
+                                    nk_colorf_hsva_fv(hsva, tint);
+                                    hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                                    hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                                    hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                                    tint = nk_hsva_colorfv(hsva);
+                                }
+                                nk_combo_end(ctx);
+
+                                // assign the altered color 
+                                u->vec3_val[0] = tint.r;
+                                u->vec3_val[1] = tint.g;
+                                u->vec3_val[2] = tint.b;
+                            }
+                        }
+                        else if (u->def->type == UNIFORM_TEX)
+                        {
+                            nk_label(ctx, u->def->name, NK_TEXT_LEFT);
+                            float ratio_x = (float)u->tex_val.size_y / (float)u->tex_val.size_x;
+                            struct nk_image img = nk_image_id(u->tex_val.icon_handle);
+                            nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                            img_bounds_uniform = nk_widget_bounds(ctx);
+                            nk_image(ctx, img);
+                        }
+
+
+                        // check for assets dropped from the asset browser
+                        if (u->def->type == UNIFORM_TEX && dropped_asset.type == TEXTURE_ASSET && dropped_asset.handled == BEE_FALSE)
+                        {
+                            // collision 
+                            if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], img_bounds_uniform.x, img_bounds_uniform.y, img_bounds_uniform.w, img_bounds_uniform.h))
+                            {
+                                texture* textures = NULL;
+                                int textures_len = 0;
+                                textures = get_all_textures(&textures_len);
+
+                                printf("dropped asset dropped over uniform texture\n");
+                                u->tex_val = textures[dropped_asset.asset_idx];
+                                dropped_asset.handled = BEE_TRUE;
+                            }
+                        }
+                    }
+
+                    nk_tree_pop(ctx);
+                }
+                
+                nk_tree_pop(ctx);
+            }
+
         }
 
-
+        nk_spacing(ctx, 1);
         nk_layout_row_dynamic(ctx, 30, 3);
         nk_spacing(ctx, 1);
-        if (nk_button_label(ctx, "Ok"))
+        if (nk_button_label(ctx, "Close"))
         {
             edit_asset_window_act = BEE_FALSE;
         }

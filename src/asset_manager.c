@@ -946,12 +946,19 @@ int get_material_idx(char* name)
 	return shget(materials, name);
 }
 
-material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, 
-					   vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
+material* add_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
+	vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
+{
+	return add_material_specific(s, dif_tex, spec_tex, is_transparent, shininess,
+								 tile, tint, draw_backfaces, 0, NULL, name, overwrite);
+}
+
+material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, 
+					   vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite)
 {
 	if (shget(materials, name) != -1) // check if already exist
 	{
-		printf("[ERROR] Material \"%s\" already exists\n", name);
+		// printf("[ERROR] Material \"%s\" already exists\n", name);
 		if (overwrite)
 		{
 			material* m = get_material(name);
@@ -963,7 +970,7 @@ material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_
 			glm_vec2_copy(tile, m->tile);
 			glm_vec2_copy(tint, m->tint);
 			m->draw_backfaces = draw_backfaces;
-			printf(" -> Material \"%s\" overwritten\n", name);
+			// printf(" -> Material \"%s\" overwritten\n", name);
 		}
 		return get_material(name);
 	}
@@ -972,7 +979,7 @@ material* add_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
-	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, name_cpy);
+	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
 
 	shput(materials, name_cpy, materials_data_len);
 	materials_len++;
@@ -1033,7 +1040,7 @@ int get_shader_idx(char* name)
 	return shget(shaders, name);
 }
 
-shader add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform* uniforms)
+shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs)
 {
 	if (shget(shaders, name) != -1) // check if already exist
 	{
@@ -1055,24 +1062,24 @@ shader add_shader_specific(const char* vert_name, const char* frag_name, const c
 	shader s = create_shader_from_file(vert_path, frag_path, name_cpy);
 	s.vert_name = vert_name;
 	s.frag_name = frag_name;
-	s.use_lighting = use_lighting;
-	s.uniforms_len = uniforms_len;
-	s.uniforms	   = uniforms;
+	s.use_lighting		= use_lighting;
+	s.uniform_defs_len  = uniform_defs_len;
+	s.uniform_defs		= uniform_defs;
 
 	shput(shaders, name_cpy, shaders_data_len);
 	shaders_len++;
 	arrput(shaders_data, s);
 	shaders_data_len++;
 
-	return shaders_data[shget(shaders, name)];
+	return &shaders_data[shget(shaders, name)];
 }
 
-shader add_shader(const char* vert_name, const char* frag_name, const char* name)
+shader* add_shader(const char* vert_name, const char* frag_name, const char* name)
 {
 	return add_shader_specific(vert_name, frag_name, name, BEE_TRUE, 0, NULL);
 }
 
-shader get_shader(char* name)
+shader* get_shader(char* name)
 {
 	// @TODO: add security check that the texture doesn't exist at all
 	//		  for example make the 0th texture allways be all pink etc.
@@ -1082,13 +1089,17 @@ shader get_shader(char* name)
 	}
 
 	// retrieve mesh from mesh_data array
-	return shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)];
+	return &shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)];
 }
 
 shader* get_all_shaders(int* shaders_len)
 {
 	*shaders_len = shaders_data_len;
 	return shaders_data;
+}
+int get_shaders_len()
+{
+	return shaders_data_len;
 }
 
 char** get_all_vert_file_names(int* vert_files_len)

@@ -12,7 +12,7 @@
 
 // ---- material ----
 
-material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile,vec3 tint, bee_bool draw_backfaces, const char* name)
+material make_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile,vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
 {
 	material mat;
 	mat.name		   = name;
@@ -24,6 +24,8 @@ material make_material(shader s, texture dif_tex, texture spec_tex, bee_bool is_
 	mat.draw_backfaces = draw_backfaces;
 	glm_vec2_copy(tile, mat.tile);
 	glm_vec3_copy(tint, mat.tint);
+	mat.uniforms	 = uniforms;
+	mat.uniforms_len = uniforms_len;
 
 	return mat;
 }
@@ -37,7 +39,7 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 	m.visible = BEE_TRUE;
 	// m.vertices = NULL;
 	m.vertices_len   = vertices_len;
-	m.vertices_elems = vertices_len / 8;
+	m.vertices_elems = vertices_len / 11;
 	// m.indices = NULL;
 	m.indices_len   = indices_len;	
 	m.indices_elems = indices_len / 3;	
@@ -56,14 +58,17 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 		glBufferData(GL_ARRAY_BUFFER, vertices_len * sizeof(f32), vertices, GL_STATIC_DRAW);
 
 		// vertex position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)0);
 		glEnableVertexAttribArray(0);
 		// vertex normals attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)(3 * sizeof(f32)));
 		glEnableVertexAttribArray(1);
 		// vertex texture-coord attribute
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)(6 * sizeof(f32)));
 		glEnableVertexAttribArray(2);
+		// vertex tangent attribute
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)(8 * sizeof(f32)));
+		glEnableVertexAttribArray(3);
 
 		// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -85,14 +90,17 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_len * sizeof(u32), indices, GL_STATIC_DRAW);
 
 		// vertex position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)0);
 		glEnableVertexAttribArray(0);
 		// vertex normals attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(3 * sizeof(f32)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)(3 * sizeof(f32)));
 		glEnableVertexAttribArray(1);
 		// vertex texture-coord attribute
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(f32), (void*)(6 * sizeof(f32)));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)(6 * sizeof(f32)));
 		glEnableVertexAttribArray(2);
+		// vertex tangent attribute
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(f32), (void*)(8 * sizeof(f32)));
+		glEnableVertexAttribArray(3);
 
 		// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -119,11 +127,11 @@ mesh make_plane_mesh()
 	// 	-0.5f, 0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 	// };
 	f32 verts[] = {
-		// positions		// normals		// texture coords
-		 0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f,   // top right
-		 0.5f, 0.0f,-0.5f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-		-0.5f, 0.0f,-0.5f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,   // bottom left
-		-0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+		// positions		// normals		// texture coords  // tangents
+		 0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,   1.0f, 1.0f,    1.0f, 0.0f, 0.0f,	// top right
+		 0.5f, 0.0f,-0.5f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,    1.0f, 0.0f, 0.0f,	// bottom right
+		-0.5f, 0.0f,-0.5f,  0.0f, 1.0f, 0.0f,   0.0f, 0.0f,    1.0f, 0.0f, 0.0f,	// bottom left
+		-0.5f, 0.0f, 0.5f,  0.0f, 1.0f, 0.0f,   0.0f, 1.0f,    1.0f, 0.0f, 0.0f		// top left 
 	};
 	u32 indices[] = {  // note that we start from 0!
 		0, 1, 3,  // first Triangle
@@ -138,6 +146,8 @@ mesh make_plane_mesh()
 
 mesh make_cube_mesh()
 {
+	assert(0); // meshes have tangets now
+
 	f32 vertices[] = {
 		// positions			// normals			  // texture coords
 		-0.5f, -0.5f, -0.5f,    0.0f,  0.0f, -1.0f,    0.0f, 0.0f,

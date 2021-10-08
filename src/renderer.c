@@ -63,12 +63,12 @@ bee_bool uv_mode_enabled		 = BEE_FALSE;
 vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
 
 #ifdef EDITOR_ACT
-shader modes_shader;
+shader* modes_shader;
 #endif
 
 // framebuffer
 mesh m;
-shader screen_shader;
+shader* screen_shader;
 u32 tex_aa_buffer;
 u32 tex_col_buffer;
 u32 quad_vao, quad_vbo;
@@ -76,7 +76,7 @@ bee_bool use_msaa = BEE_TRUE;
 
 // skybox
 u32 cube_map;
-shader skybox_shader;
+shader* skybox_shader;
 u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
 
@@ -399,7 +399,7 @@ void renderer_update()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);
-	glUseProgram(screen_shader.handle);
+	glUseProgram(screen_shader->handle);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex_col_buffer);
 	shader_set_int(screen_shader, "tex", 0);
@@ -521,7 +521,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		}
 		else if (normal_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(modes_shader, "mode", 1);
+			shader_set_int(&modes_shader, "mode", 1);
 		}
 		else if (uv_mode_enabled == BEE_TRUE)
 		{
@@ -576,7 +576,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 void set_shader_uniforms(material* mat)
 {
 	// set shader light ---------------------------------
-	if (mat->shader.use_lighting)
+	if (mat->shader->use_lighting)
 	{
 		char buffer[28]; // pointLights[i].quadratic is the longest str at 24
 		entity* light;
@@ -674,7 +674,7 @@ void set_shader_uniforms(material* mat)
 
 	int texture_index = 0;
 	// set shader material ------------------------------
-	if (mat->shader.use_lighting)
+	if (mat->shader->use_lighting)
 	{
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->dif_tex.handle);
@@ -692,26 +692,26 @@ void set_shader_uniforms(material* mat)
 	}
 
 	// set shader uniforms ------------------------------
-	for (int i = 0; i < mat->shader.uniforms_len; ++i)
+	for (int i = 0; i < mat->uniforms_len; ++i)
 	{
-		switch (mat->shader.uniforms[i].type)
+		switch (mat->uniforms[i].def->type)
 		{
 			case UNIFORM_INT:
-				shader_set_int(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].int_val);
+				shader_set_int(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].int_val);
 				break;
 			case UNIFORM_F32:
-				shader_set_float(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].f32_val);
+				shader_set_float(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].f32_val);
 				break;
 			case UNIFORM_VEC2:
-				shader_set_vec2(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].vec2_val);
+				shader_set_vec2(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].vec2_val);
 				break;
 			case UNIFORM_VEC3:
-				shader_set_vec3(mat->shader, mat->shader.uniforms[i].name, mat->shader.uniforms[i].vec3_val);
+				shader_set_vec3(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].vec3_val);
 				break;
 			case UNIFORM_TEX:
 				glActiveTexture(GL_TEXTURE0 + texture_index);
-				glBindTexture(GL_TEXTURE_2D, mat->shader.uniforms[i].tex_val.handle);
-				shader_set_int(mat->shader, mat->shader.uniforms[i].name, texture_index);
+				glBindTexture(GL_TEXTURE_2D, mat->uniforms[i].tex_val.handle);
+				shader_set_int(mat->shader, mat->uniforms[i].def->name, texture_index);
 				texture_index++;
 				break;
 		}

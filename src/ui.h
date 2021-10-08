@@ -127,7 +127,7 @@ void ui_cleanup();
 // void overview_window();
 
 void properties_window();
-void draw_entity_hierachy_entity(int idx, int offset, int pos);
+void draw_entity_hierachy_entity(int idx, int offset);
 void pause_button_window();
 
 void asset_browser_window();

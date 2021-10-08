@@ -43,14 +43,20 @@ void init()
 
 	// ---- populate scene ----
 
-	/*
-	shader shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
+	shader* shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
-	shader shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
+	shader* shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
 						  
-	shader shader_cel     = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel");
+	shader* shader_cel     = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel");
 						  
-	shader shader_noise   = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
+	shader* shader_noise   = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
+
+	printf("shader_default name:	%s\n", shader_default->name);
+	printf("shader_default vert:	%s\n", shader_default->vert_name);
+	printf("shader_default frag:	%s\n", shader_default->frag_name);
+	printf("shader_default handle:	%d\n", shader_default->handle);
+	printf("shader_default use_l:	%d\n", shader_default->use_lighting);
+	printf("shader_default defs:	%d\n", shader_default->uniform_defs_len);
 	
 
 	vec2 tile = { 1.0f, 1.0f };
@@ -60,12 +66,13 @@ void init()
 	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
 	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
 	material* mat_cel		  = add_material(shader_cel, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
+	/*
 	material* mat_noise		  = add_material(shader_noise, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_noise", BEE_TRUE);
 	
 	// load texture
 	texture crate_dif_tex   = get_texture("crate01_dif.png");
 	texture crate_spec_tex  = get_texture("crate01_spec.png");
-	material* mat_crate = add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_crate", BEE_TRUE);
+	material* mat_crate		= add_material(get_shader("SHADER_default"), crate_dif_tex, crate_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_crate", BEE_TRUE);
 
 	texture grass_dif_tex  = get_texture("grass01_dif.png");
 	texture grass_spec_tex = get_texture("grass01_spec.png");
@@ -73,7 +80,7 @@ void init()
 	
 	texture barrel_dif_tex  = get_texture("barrel01_dif.png");
 	texture barrel_spec_tex = get_texture("barrel01_spec.png");
-	material* mat_barrel		= add_material(shader_default, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_barrel", BEE_TRUE);
+	material* mat_barrel	= add_material(shader_default, barrel_dif_tex, barrel_spec_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_barrel", BEE_TRUE);
 	
 	texture robot_dif_tex  = get_texture("robot01_dif.png");
 	texture robot_spec_tex = get_texture("robot01_spec.png");
@@ -85,7 +92,7 @@ void init()
 
 
 	texture glass_dif_tex = get_texture("window.png");
-	material* mat_glass = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass", BEE_TRUE);
+	material* mat_glass	  = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass", BEE_TRUE);
 
 	//
 	// @TODO: make the renderer use the right camera
@@ -196,7 +203,7 @@ void init()
 
 	*/
 
-	load_scene("good.scene");
+	// load_scene("good.scene");
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");

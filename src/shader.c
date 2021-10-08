@@ -214,8 +214,8 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 	s.handle = handle;
 	s.name = name;
 	s.use_lighting = BEE_TRUE;
-	s.uniforms = NULL;
-	s.uniforms_len = 0;
+	s.uniform_defs = NULL;
+	s.uniform_defs_len = 0;
 	// char* frag_name = str_find_last_of(frag_path, "blinn_phong_top.frag");
 	// if (frag_name != NULL)
 	// {
@@ -263,50 +263,50 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 }
 
 // activate / use the shader 
-void shader_use(shader s)
+void shader_use(shader* s)
 {
-	glUseProgram(s.handle);
+	glUseProgram(s->handle);
 }
 
 // set a bool in the shader 
 // the given int is used as the bool ( 0/1 )
-void shader_set_bool(shader s, const char* name, int value)
+void shader_set_bool(shader* s, const char* name, int value)
 {
-	glUniform1i(glGetUniformLocation(s.handle, name), value);
+	glUniform1i(glGetUniformLocation(s->handle, name), value);
 }
 // set an integer in the shader
-void shader_set_int(shader s, const char* name, int value)
+void shader_set_int(shader* s, const char* name, int value)
 {
-	glUniform1i(glGetUniformLocation(s.handle, name), value);
+	glUniform1i(glGetUniformLocation(s->handle, name), value);
 }
 // set a float in the shader
-void shader_set_float(shader s, const char* name, f32 value)
+void shader_set_float(shader* s, const char* name, f32 value)
 {
-	glUniform1f(glGetUniformLocation(s.handle, name), value);
+	glUniform1f(glGetUniformLocation(s->handle, name), value);
 }
 // set a vec2 in the shader
-void shader_set_vec2_f(shader s, const char* name, f32 x, f32 y)
+void shader_set_vec2_f(shader* s, const char* name, f32 x, f32 y)
 {
-	glUniform2f(glGetUniformLocation(s.handle, name), x, y);
+	glUniform2f(glGetUniformLocation(s->handle, name), x, y);
 }
 // set a vec2 in the shader
-void shader_set_vec2(shader s, const char* name, vec2 v)
+void shader_set_vec2(shader* s, const char* name, vec2 v)
 {
-	glUniform2f(glGetUniformLocation(s.handle, name), v[0], v[1]);
+	glUniform2f(glGetUniformLocation(s->handle, name), v[0], v[1]);
 }
 // set a vec3 in the shader
-void shader_set_vec3_f(shader s, const char* name, f32 x, f32 y, f32 z)
+void shader_set_vec3_f(shader* s, const char* name, f32 x, f32 y, f32 z)
 {
-	glUniform3f(glGetUniformLocation(s.handle, name), x, y, z);
+	glUniform3f(glGetUniformLocation(s->handle, name), x, y, z);
 }
 // set a vec3 in the shader
-void shader_set_vec3(shader s, const char* name, vec3 v)
+void shader_set_vec3(shader* s, const char* name, vec3 v)
 {
-	glUniform3f(glGetUniformLocation(s.handle, name), v[0], v[1], v[2]);
+	glUniform3f(glGetUniformLocation(s->handle, name), v[0], v[1], v[2]);
 }
 // set a matrix 4x4 in the shader
-void shader_set_mat4(shader s, const char* name, mat4 value)
+void shader_set_mat4(shader* s, const char* name, mat4 value)
 {
-	unsigned int transformLoc = glGetUniformLocation(s.handle, name);
+	unsigned int transformLoc = glGetUniformLocation(s->handle, name);
 	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, value[0]);
 }

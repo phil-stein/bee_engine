@@ -30,21 +30,7 @@ Todo
   
 - [ ] scene system
   - [ ] serialization
-    - [x] integer, float, u32, bool
-    - [x] string (integer length & char's)
-    - [x] texture, shader
-    - [x] components
-    - [x] entities
-    - [ ] scene
-      - [x] make scene struct
-      - [x] shader & material serialization
-      - [x] entities
-      - [ ] add cubemap & use_msaa to scene header
-  - [x] saving scenes
-  - [x] loading scenes
-  - [x] shaders still get duplicated on deserialization
-  - [x] switching
-  - [x] make scene deserialization check if material / shader already exists 
+    - [ ] add cubemap & use_msaa to scene header
   - [ ] ui
     - [x] saving & loading
     - [ ] better saving & loading ui (double click for loading scene / instancing mesh)
@@ -96,54 +82,46 @@ Todo
   
 - editor
   - [ ] asset manager
-    - [x] register all assets
-    - [x] load & store on demand
     - internal assets
       -  [x] default assets (missing texture, ...)
       -  [ ] automate the internal asset recognition
+      
     - [ ] make assets on import be put in the right folder
-    -  [x] use shdefault() & hmdefault() to check if the requested asset exists
-    -  [ ] add ui for drag&drop importing
-    -  [ ] removing assets
     
-  - [x] use different datastructure for entities, with GUID's  
-  
+    - [x] use shdefault() & hmdefault() to check if the requested asset exists
+    
+    - [ ] add ui for drag&drop importing
+    
+    - [ ] removing assets
+    
+      
+    
   - [ ] !!! warn when adding f.e. a material with a name that already exists
-  
+
   - [ ] search function in asset manager ui
-  
+
   - [ ] editor cam v. game cam (camera component)
-    - [x] switching between editor / in-game camera
-    - [x] camera gizmo
-    - [x] getting the view-matrix
+
     - [ ] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
-    
-  - [x] make the gizmos be drawn in renderer separately instead of mesh components
-  
-  - [x] make the scene get serialized before playing and then reset when stopped 
-  
-  - [x] add entity
-  
-  - [x] deselect entities
-  
+
   - [ ] visualize normal-direction
-  
+
   - [ ] material / asset editor in asset manager
-  
+
   - [ ] show shader source
-  
+
   - [ ] transform gizmos
-  
+
   - [ ] structures (prefabs)
-  
+
     - [ ] serialize entity tree
     - [ ] save & load
     - [ ] asset manager
     - [ ] ui
-  
+
     
-  
+
 - [ ] input 
   - [x] mouse input 
   - [ ] controller input
@@ -151,20 +129,7 @@ Todo
   
   
 - [ ] gravity scripting
-  - [x] game is slow as h***
-  
-  - [x] camera interface
-  
-  - make it not crash when
-    - [x] .gravity file not found
-    - [x] .gravity file has errors
-    - [x] wrong argument passed to function
-    - [x] wrong argument amount
-    
-  - [x] this entity interface (`Entity -> this.rot_x()`)
-  
-  - [x] other entity interface (`World -> world.get_entity("name")`)
-  
+
   - [ ] finish input interface
     - [x] all keys
     - [x] get_key() & get_key_down()
@@ -173,36 +138,26 @@ Todo
     - [ ] actions like unity ???
     
   - [ ] load_file delegate for #import 
-  
+
   - [ ] delegate for 'System.print()'
-  
+
   - [ ] 'reset' script when pausing game-mode, i.e. rerun the init func each time you press play
-  
+
   - [ ] interface to instance objects 
-  
+
   - [ ] interface to create meshes / other components to create models etc in gravity
-  
+
     
-  
+
 - [ ] in-engine text editor
   - [x] view source
-  
-  - [x] viewability
   
   - [ ] syntax highlighting
   
   - [ ] edit source ???
   
-    
   
-- [x] play-mode
-  - [x] make it not be clear-color
   
-  - [x] pause / start scripts
-  
-  - [x] ui
-  
-    
   
 - [ ] physics-system
 
@@ -228,3 +183,4 @@ Todo
 - [ ] optimization
   - [ ] use uniform buffers for matrices and maybe lights
   - [ ] use proper sorting algorithm for transparent objects
+  - [ ] take a look at normal-mapping chapter again and use better option 

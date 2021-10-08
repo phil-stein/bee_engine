@@ -23,24 +23,24 @@ u32 create_shader(char* vert_shader_src, char* frag_shader_src);
 
 
 // activate / use the shader 
-void shader_use(shader s);
+void shader_use(shader* s);
 
 // set a bool in the shader 
 // the given int is used as the bool ( 0/1 )
-void shader_set_bool(shader s, const char* name, int value);
+void shader_set_bool(shader* s, const char* name, int value);
 // set an integer in the shader
-void shader_set_int(shader s, const char* name, int value);
+void shader_set_int(shader* s, const char* name, int value);
 // set a float in the shader
-void shader_set_float(shader s, const char* name, f32 value);
+void shader_set_float(shader* s, const char* name, f32 value);
 // set a vec2 in the shader
-void shader_set_vec2_f(shader s, const char* name, f32 x, f32 y);
+void shader_set_vec2_f(shader* s, const char* name, f32 x, f32 y);
 // set a vec2 in the shader
-void shader_set_vec2(shader s, const char* name, vec2 v);
+void shader_set_vec2(shader* s, const char* name, vec2 v);
 // set a vec3 in the shader
-void shader_set_vec3_f(shader s, const char* name, f32 x, f32 y, f32 z);
+void shader_set_vec3_f(shader* s, const char* name, f32 x, f32 y, f32 z);
 // set a vec3 in the shader
-void shader_set_vec3(shader s, const char* name, vec3 v);
+void shader_set_vec3(shader* s, const char* name, vec3 v);
 // set a matrix 4x4 in the shader
-void shader_set_mat4(shader s, const char* name, mat4 value);
+void shader_set_mat4(shader* s, const char* name, mat4 value);
 
 #endif
