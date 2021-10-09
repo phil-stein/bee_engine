@@ -3,9 +3,10 @@
 #include "stb/stb_ds.h"
 
 #include "renderer.h" // tmp
+#include "framebuffer.h"
 #include "scene_manager.h" // tmp
 
-#define VERSION 0.8f
+#define VERSION 1.0f
 f32 current_version = VERSION;
 
 
@@ -148,6 +149,7 @@ void serialize_material(char* buffer, int* offset, material* m)
 	serialize_str(buffer, offset, m->shader->name);
 	serialize_texture(buffer, offset, &m->dif_tex);
 	serialize_texture(buffer, offset, &m->spec_tex);
+	serialize_texture(buffer, offset, &m->norm_tex);
 
 	serialize_enum(buffer, offset, m->is_transparent);
 	serialize_float(buffer, offset, m->shininess);
@@ -203,6 +205,7 @@ void serialize_light(char* buffer, int* offset, light* l)
 {
 	// id doesnt have to be serialized
 	serialize_enum(buffer, offset, l->enabled); // v0.5
+	serialize_enum(buffer, offset, l->cast_shadow); // v1.0
 	serialize_enum(buffer, offset, l->type);
 
 	serialize_vec3(buffer, offset, l->ambient);
@@ -468,6 +471,11 @@ material* deserialize_material(char* buffer, int* offset)
 	shader* s = get_shader(shader_name);
 	texture dif  = deserialize_texture(buffer, offset);
 	texture spec = deserialize_texture(buffer, offset);
+	texture norm = get_texture("blank.png");
+	if (current_version >= 0.9f)
+	{
+		norm = deserialize_texture(buffer, offset);;
+	}
 
 	bee_bool is_trans = deserialize_enum(buffer, offset);
 	f32 shininess = deserialize_float(buffer, offset);
@@ -492,7 +500,7 @@ material* deserialize_material(char* buffer, int* offset)
 	{
 		name = deserialize_str(buffer, offset);
 	}
-	return add_material_specific(s, dif, spec, is_trans, shininess, tile, tint, backfaces, uniforms_len, uniforms, name, BEE_TRUE);
+	return add_material_specific(s, dif, spec, norm, is_trans, shininess, tile, tint, backfaces, uniforms_len, uniforms, name, BEE_TRUE);
 }
 
 mesh* deserialize_mesh(char* buffer, int* offset)
@@ -524,6 +532,13 @@ light deserialize_light(char* buffer, int* offset)
 	{
 		l.enabled = deserialize_enum(buffer, offset);
 	}
+	else { l.enabled = BEE_TRUE; }
+	if (current_version >= 1.0f)
+	{
+		l.cast_shadow = deserialize_enum(buffer, offset);
+	}
+	else { l.cast_shadow = BEE_TRUE; }
+
 	l.type = deserialize_enum(buffer, offset);
 
 	deserialize_vec3(buffer, offset, l.ambient);
@@ -538,6 +553,8 @@ light deserialize_light(char* buffer, int* offset)
 
 	l.cut_off		= deserialize_float(buffer, offset);
 	l.outer_cut_off = deserialize_float(buffer, offset);
+
+	create_framebuffer_shadowmap(&l.shadow_map, &l.shadow_fbo, 2048, 2048);
 
 	return l;
 }

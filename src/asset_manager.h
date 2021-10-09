@@ -60,14 +60,14 @@ void create_script(const char* path, const char* name);
 bee_bool check_material_exists(const char* name);
 int get_material_idx(char* name);
 material* add_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite);
-material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite);
+material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite);
 material* get_material(char* name);
 material* get_all_materials(int* materials_len);
 void change_material_name(char* old_name, char* new_name);
 
 bee_bool check_shader_exists(const char* name);
 int get_shader_idx(char* name);
-shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform* uniforms);
+shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform_def* uniforms);
 shader* add_shader(const char* vert_name, const char* frag_name, const char* name);
 shader* get_shader(char* name);
 shader* get_all_shaders(int* shaders_len);

@@ -56,6 +56,11 @@ int duplicate_entity(int id);
 void entity_switch_light_type(int entity_id, light_type new_type);
 void entity_add_script(int entity_index, const char* name);
 void entity_remove_script(int entity_index, int script_index);
+
+void entity_set_rot(int entity_id, vec3 rot);
+// @TODO: not completely working
+void entity_set_dir_vec(int entity_id, vec3 dir);
+
 // set play / pause used for editor
 void set_gamestate(bee_bool play, bee_bool _hide_gizmos);
 bee_bool get_gamestate();

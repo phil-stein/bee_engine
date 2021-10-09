@@ -83,12 +83,12 @@ u32 tex_col_buffer;
 bee_bool use_msaa = BEE_TRUE;
 
 // shadow mapping
-#define SHADOW_MAP_SIZE_X 4096
-#define SHADOW_MAP_SIZE_Y 4096
-u32 shadow_buffer;
+#define SHADOW_MAP_SIZE_X 2048
+#define SHADOW_MAP_SIZE_Y 2048
+// u32 shadow_buffer;
 shader* shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
-mat4 light_space;
+// mat4 light_space;
 
 
 void renderer_init()
@@ -104,7 +104,7 @@ void renderer_init()
 
 	create_framebuffer_multisampled(&tex_aa_buffer);
 	create_framebuffer(&tex_col_buffer);
-	create_framebuffer_shadowmap(&shadow_buffer, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
+	// create_framebuffer_shadowmap(&shadow_buffer, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
 	set_framebuffer_to_update(&tex_aa_buffer);  // updates framebuffer on window resize
 	set_framebuffer_to_update(&tex_col_buffer); // updates framebuffer on window resize
 
@@ -215,6 +215,10 @@ void renderer_init()
 	e.name = "x"; e.id = -1; e.id_idx = -1;
 	e.scripts_len = 0; e.children_len = 0; e.parent = 9999;
 	hmdefault(entities, e);
+
+
+	// light* l = &get_entity(dir_lights[0])->_light;
+	// create_framebuffer_shadowmap(&l->shadow_map, &l->shadow_fbo, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
 }
 
 void renderer_update()
@@ -222,6 +226,15 @@ void renderer_update()
 	render_scene_shadows();
 	render_scene_normal();
 	render_scene_screen();
+
+#ifdef EDITOR_ACT
+	// do this so the nuklear gui is always drawn in solid-mode
+	// enable solid-mode in case wireframe-mode is on
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+#endif
 
 	// entities ---------------------------------------------------------------
 
@@ -238,73 +251,86 @@ void renderer_update()
 void render_scene_shadows()
 {
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
-	bind_framebuffer(SHADOW_BUFFER);
-	glClear(GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y); // @TODO: this might not be the same on all lights
 	glCullFace(GL_FRONT);
 
 	mat4 proj; //  = GLM_MAT4_IDENTITY_INIT
 	glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadow_near_plane, shadow_far_plane, proj);
 
-	mat4 view; //  = GLM_MAT4_IDENTITY_INIT
-	vec3 eye	= { -2.0f, 4.0f, -1.0f };
+	// mat4 view; //  = GLM_MAT4_IDENTITY_INIT
+	// vec3 eye = { -2.0f, 4.0f, -1.0f };
 	vec3 center = { 0.0f,  0.0f,  0.0f };
-	vec3 up		= { 0.0f,  1.0f,  0.0f };
-	glm_lookat(eye, center, up, view);
-	if (dir_lights_len > 0)
-	{
-		glm_vec3_add(get_entity(dir_lights[0])->pos, get_entity(dir_lights[0])->_light.direction, center);
-		glm_lookat(get_entity(dir_lights[0])->pos, center, up, view);
-	}
+	vec3 up = { 0.0f,  1.0f,  0.0f };
+	// glm_lookat(eye, center, up, view);
 
-	glm_mat4_mul(proj, view, light_space);
-
-	shader_use(shadow_shader);
-	shader_set_mat4(shadow_shader, "proj", proj);
-	shader_set_mat4(shadow_shader, "view", view);
-	shader_set_mat4(shadow_shader, "light_space", light_space);
-			
-	// cycle all objects
-	int entity_ids_len = 0;
-	int* entity_ids = get_entity_ids(&entity_ids_len);
-	for (int i = 0; i < entity_ids_len; ++i)
+	for (int n = 0; n < dir_lights_len; ++n)
 	{
-		entity* ent = get_entity(entity_ids[i]);
-		if (ent->has_model)
+		entity* l = get_entity(dir_lights[n]);
+		if (!l->_light.cast_shadow)
 		{
-			// draw mesh
+			continue;
+		}
+		bind_framebuffer(l->_light.shadow_fbo);
+		glClear(GL_DEPTH_BUFFER_BIT);
 
-			vec3 pos = { 0.0f, 0.0f, 0.0f };
-			vec3 rot = { 0.0f, 0.0f, 0.0f };
-			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(entity_ids[i], pos, rot, scale);
+		mat4 view;
+		glm_vec3_add(l->pos, l->_light.direction, center);
+		glm_lookat(l->pos, center, up, view);
 
-			mat4 model = GLM_MAT4_IDENTITY_INIT;
-			f32 x = rot[0];  glm_make_rad(&x);
-			f32 y = rot[1];  glm_make_rad(&y);
-			f32 z = rot[2];  glm_make_rad(&z);
+		mat4 light_space;
+		glm_mat4_mul(proj, view, light_space);
+		glm_mat4_copy(light_space, l->_light.light_space);
 
-			glm_rotate_x(model, x, model);
-			glm_rotate_y(model, y, model);
-			glm_rotate_z(model, z, model);
-			glm_translate(model, pos);
-			glm_scale(model, scale);
-
-			shader_set_mat4(shadow_shader, "model", model);
-
-			glBindVertexArray(ent->_mesh.vao);
-			if (ent->_mesh.indexed == BEE_TRUE)
+		// cycle all objects
+		int entity_ids_len = 0;
+		int* entity_ids = get_entity_ids(&entity_ids_len);
+		for (int i = 0; i < entity_ids_len; ++i)
+		{
+			entity* ent = get_entity(entity_ids[i]);
+			if (ent->has_model)
 			{
-				glDrawElements(GL_TRIANGLES, (ent->_mesh.indices_len), GL_UNSIGNED_INT, 0);
-			}
-			else
-			{
-				glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh.vertices_len / F32_PER_VERT));
+				// MVP for mesh
+				vec3 pos = { 0.0f, 0.0f, 0.0f };
+				vec3 rot = { 0.0f, 0.0f, 0.0f };
+				vec3 scale = { 0.0f, 0.0f, 0.0f };
+				get_entity_global_transform(entity_ids[i], pos, rot, scale);
+
+				mat4 model = GLM_MAT4_IDENTITY_INIT;
+				f32 x = rot[0];  glm_make_rad(&x);
+				f32 y = rot[1];  glm_make_rad(&y);
+				f32 z = rot[2];  glm_make_rad(&z);
+
+				const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
+				const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
+				const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
+				glm_rotate_at(model, pos, x, x_axis);
+				glm_rotate_at(model, pos, y, y_axis);
+				glm_rotate_at(model, pos, z, z_axis);
+				glm_translate(model, pos);
+				glm_scale(model, scale);
+
+				shader_use(shadow_shader);
+				shader_set_mat4(shadow_shader, "model", model);
+				// shader_set_mat4(shadow_shader, "view", view);
+				// shader_set_mat4(shadow_shader, "proj", proj);
+				shader_set_mat4(shadow_shader, "light_space", light_space);
+
+				glBindVertexArray(ent->_mesh.vao);
+				if (ent->_mesh.indexed == BEE_TRUE)
+				{
+					glDrawElements(GL_TRIANGLES, (ent->_mesh.indices_len), GL_UNSIGNED_INT, 0);
+				}
+				else
+				{
+					glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh.vertices_len / F32_PER_VERT));
+				}
+
 			}
 		}
+
+		unbind_framebuffer();
 	}
 
-	unbind_framebuffer();
 
 	glCullFace(GL_BACK);
 }
@@ -315,7 +341,7 @@ void render_scene_normal()
 	int w, h;
 	get_window_size(&w, &h);
 	glViewport(0, 0, w, h);
-	bind_framebuffer(use_msaa ? MSAA_BUFFER : COLOR_BUFFER); // bind multisampled fbo or color texture fbo
+	bind_framebuffer_type(use_msaa ? MSAA_BUFFER : COLOR_BUFFER); // bind multisampled fbo or color texture fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
 	// need to restore the opengl state after calling nuklear
@@ -443,12 +469,13 @@ void render_scene_normal()
 	}
 	// ------------------------------------------------------------------------
 
-#ifdef EDITOR_ACT
-	// do this so the nuklear gui is always drawn in solid-mode
-	// enable solid-mode in case wireframe-mode is on
-	if (wireframe_mode_enabled == BEE_TRUE)
-	{ glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
-#endif
+	// prepare for second pass
+	if (use_msaa)
+	{
+		blit_multisampled_framebuffer(); // convert multisampled buffer to normal texture
+	}
+	unbind_framebuffer();
+
 }
 
 void render_scene_skybox()
@@ -514,20 +541,13 @@ void render_scene_screen()
 	}
 #endif
 
-	// second pass
-	if (use_msaa)
-	{
-		blit_multisampled_framebuffer(); // convert multisampled buffer to normal texture
-	}
-	unbind_framebuffer();
-
 	// glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);
 	glUseProgram(screen_shader->handle);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? shadow_buffer : tex_col_buffer); // shadow_buffer
+	glBindTexture(GL_TEXTURE_2D, tex_col_buffer); // shadow_buffer
 	shader_set_int(screen_shader, "tex", 0);
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -648,10 +668,6 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		shader_set_mat4(mat->shader, "model", model);
 		shader_set_mat4(mat->shader, "view", view);
 		shader_set_mat4(mat->shader, "proj", proj);
-		shader_set_mat4(mat->shader, "light_space", light_space);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, shadow_buffer);
-		shader_set_int(mat->shader, "shadow_map", 0);
 
 		if (gamestate) // in play-mode
 		{
@@ -687,6 +703,8 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 
 void set_shader_uniforms(material* mat)
 {
+	int texture_index = 0;
+
 	// set shader light ---------------------------------
 	if (mat->shader->use_lighting)
 	{
@@ -716,6 +734,17 @@ void set_shader_uniforms(material* mat)
 			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
 			sprintf(buffer, "dirLights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
+
+			sprintf(buffer, "dirLights[%d].use_shadow", idx);
+			shader_set_int(mat->shader, buffer, light->_light.cast_shadow);
+			sprintf(buffer, "dirLights[%d].shadow_map", idx);
+			glActiveTexture(GL_TEXTURE0 + texture_index);
+			glBindTexture(GL_TEXTURE_2D, light->_light.shadow_map);
+			shader_set_int(mat->shader, buffer, texture_index);
+			texture_index++;
+			sprintf(buffer, "dirLights[%d].light_space", idx);
+			shader_set_mat4(mat->shader, buffer, light->_light.light_space);
+
 		}
 		shader_set_int(mat->shader, "Num_PointLights", point_lights_len);
 		disabled_lights = 0;
@@ -784,7 +813,6 @@ void set_shader_uniforms(material* mat)
 		}
 	}
 
-	int texture_index = 1; // 0 is the shadow map
 	// set shader material ------------------------------
 	if (mat->shader->use_lighting)
 	{
@@ -795,6 +823,10 @@ void set_shader_uniforms(material* mat)
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->spec_tex.handle);
 		shader_set_int(mat->shader, "material.specular", texture_index);
+		texture_index++;
+		glActiveTexture(GL_TEXTURE0 + texture_index);
+		glBindTexture(GL_TEXTURE_2D, mat->norm_tex.handle);
+		shader_set_int(mat->shader, "material.normal", texture_index);
 		texture_index++;
 
 		shader_set_float(mat->shader, "material.shininess", mat->shininess);
@@ -828,6 +860,7 @@ void set_shader_uniforms(material* mat)
 				break;
 		}
 	}
+
 }
 
 void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale)
@@ -980,6 +1013,7 @@ int add_entity_direct_id(entity e, int id)
 	{
 		camera_ent_idx = entities_len;
 	}
+	
 
 	// hmput(entities, entities_len, e);
 	hmput(entities, id, e);
@@ -988,6 +1022,9 @@ int add_entity_direct_id(entity e, int id)
 	arrput(entity_ids, id);
 	entities_len++;
 	entity_ids_len++;
+
+	// sets dir & front vec in light & cam
+	entity_set_rot(id, e.rot);
 
 	return entities_len - 1;
 }
@@ -1080,6 +1117,7 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 		case DIR_LIGHT:
 			arrput(dir_lights, entity_id);
 			dir_lights_len++;
+			create_framebuffer_shadowmap(&ent->_light.shadow_map, &ent->_light.shadow_fbo, 2048, 2048);
 			break;
 		case POINT_LIGHT:
 			arrput(point_lights, entity_id);
@@ -1111,6 +1149,49 @@ void entity_remove_script(int entity_index, int script_index)
 	free_script(ent->scripts[script_index]);
 	arrdel(ent->scripts, script_index);
 	ent->scripts_len--;
+}
+
+void entity_set_rot(int entity_id, vec3 rot)
+{
+	entity* e = get_entity(entity_id);
+	glm_vec3_copy(rot, e->rot);
+
+	if (e->has_light)
+	{
+		// vec3 dir = { rot[0] / 360, rot[1] / 360, rot[2] / 360 };
+		vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
+		glm_vec3_normalize(dir);
+		glm_vec3_copy(dir, e->_light.direction);
+	}
+	if (e->has_cam)
+	{
+		// vec3 dir = { rot[0] / 360, rot[1] / 360, rot[2] / 360 };
+		vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
+		glm_vec3_normalize(dir);
+		glm_vec3_copy(dir, e->_camera.front);
+	}
+}
+void entity_set_dir_vec(int entity_id, vec3 dir)
+{
+	entity* e = get_entity(entity_id);
+	// vec3 dir_val = { dir[0] * 360, dir[1] * 360, dir[2] * 360 };
+	vec3 dir_val = GLM_VEC3_ZERO_INIT; 
+	glm_vec3_copy(dir, dir_val);
+	// vec3 mul = { 360, 360, 360 };
+	// vec3 mul = { 180, 180, 180 };
+	vec3 mul = { 360 / 3.0f, 360 / 3.0f, 360 / 3.0f };
+	glm_vec3_normalize(dir_val);
+	glm_vec3_mul(dir_val, mul, dir_val);
+	glm_vec3_copy(dir_val, e->rot);
+
+	if (e->has_light)
+	{
+		glm_vec3_copy(dir, e->_light.direction);
+	}
+	if (e->has_cam)
+	{
+		glm_vec3_copy(dir, e->_camera.front);
+	}
 }
 
 #ifdef EDITOR_ACT

@@ -949,11 +949,11 @@ int get_material_idx(char* name)
 material* add_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
 	vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
 {
-	return add_material_specific(s, dif_tex, spec_tex, is_transparent, shininess,
+	return add_material_specific(s, dif_tex, spec_tex, get_texture("blank.png"), is_transparent, shininess,
 								 tile, tint, draw_backfaces, 0, NULL, name, overwrite);
 }
 
-material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, 
+material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, 
 					   vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite)
 {
 	if (shget(materials, name) != -1) // check if already exist
@@ -965,6 +965,7 @@ material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, be
 			m->shader = s;
 			m->dif_tex = dif_tex;
 			m->spec_tex = spec_tex;
+			m->norm_tex = norm_tex;
 			m->is_transparent = is_transparent;
 			m->shininess = shininess;
 			glm_vec2_copy(tile, m->tile);
@@ -979,7 +980,7 @@ material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, be
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
-	material mat = make_material(s, dif_tex, spec_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
+	material mat = make_material(s, dif_tex, spec_tex, norm_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
 
 	shput(materials, name_cpy, materials_data_len);
 	materials_len++;

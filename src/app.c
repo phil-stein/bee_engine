@@ -42,7 +42,7 @@ void init()
 	window = get_window();
 
 	// ---- populate scene ----
-
+	/*
 	shader* shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
 
 	shader* shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
@@ -66,6 +66,7 @@ void init()
 	material* mat_blank		  = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
 	material* mat_blank_unlit = add_material(shader_unlit, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
 	material* mat_cel		  = add_material(shader_cel, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
+	*/
 	/*
 	material* mat_noise		  = add_material(shader_noise, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_noise", BEE_TRUE);
 	
@@ -203,7 +204,7 @@ void init()
 
 	*/
 
-	// load_scene("good.scene");
+	load_scene("shadow10.scene");
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");

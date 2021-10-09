@@ -6,11 +6,11 @@
 
 
 // ---- vars ----
-u32 fbo;    // color texture fbo
+u32 fbo_col;    // color texture fbo
 u32 rbo;	// color texture rbo
 u32 fbo_ms; // multisample fbo
 u32 rbo_ms; // multisample rbo
-u32 fbo_sh; // shadow map fbo
+// u32 fbo_sh; // shadow map fbo
 // u32 rbo_sh;	// shadow map rbo
 
 
@@ -64,9 +64,9 @@ void create_framebuffer_multisampled(u32* tex_buffer)
 void create_framebuffer(u32* tex_buffer)
 {
 	// create framebuffer object
-	glGenFramebuffers(1, &fbo);
+	glGenFramebuffers(1, &fbo_col);
 	// set fbo to be the active framebuffer to be modified
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo_col);
 
 	int w, h; get_window_size(&w, &h);
 	// generate texture
@@ -103,12 +103,12 @@ void create_framebuffer(u32* tex_buffer)
 	// glDeleteFramebuffers(1, &fbo);
 }
 
-void create_framebuffer_shadowmap(u32* tex_buffer, int width, int height)
+void create_framebuffer_shadowmap(u32* tex_buffer, u32* fbo, int width, int height)
 {
 	// create framebuffer object
-	glGenFramebuffers(1, &fbo_sh);
+	glGenFramebuffers(1, fbo);
 	// set fbo to be the active framebuffer to be modified
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	bind_framebuffer(*fbo);
 
 	// gen texture
 	glGenTextures(1, tex_buffer);
@@ -122,30 +122,33 @@ void create_framebuffer_shadowmap(u32* tex_buffer, int width, int height)
 	f32 border_col[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_col);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo_sh);
+	bind_framebuffer(*fbo);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *tex_buffer, 0);
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 
 	// unbind the framebuffer, opengl now renders to the default buffer again
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	unbind_framebuffer();
 }
 
-
-void bind_framebuffer(framebuffer_type type)
+void bind_framebuffer_type(framebuffer_type type)
 {
 	switch (type)
 	{
 		case COLOR_BUFFER:
-			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo_col);
 			break;
 		case MSAA_BUFFER:
 			glBindFramebuffer(GL_FRAMEBUFFER, fbo_ms);
 			break;
 		case SHADOW_BUFFER:
-			glBindFramebuffer(GL_FRAMEBUFFER, fbo_sh);
+			// glBindFramebuffer(GL_FRAMEBUFFER, fbo_sh);
 			break;
 	}
+}
+void bind_framebuffer(u32 fbo)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 void unbind_framebuffer()
 {
@@ -165,7 +168,7 @@ void blit_multisampled_framebuffer()
 	int w, h;
 	get_window_size(&w, &h);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo_ms);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo_col);
 	glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 

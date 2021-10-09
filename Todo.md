@@ -7,6 +7,9 @@ Todo
   
   - [ ] turn dir vec into rotation and reverse
   
+    - [x]  rot -> dir
+    - [ ] dir -> rot (kinda works)
+    
     
   
 - buggs
@@ -21,6 +24,8 @@ Todo
 
   - [ ] dark areas look weird since adding gamma correction
 
+  - [ ] added entities assume taken id's
+
     
 
 - unfinished
@@ -28,24 +33,16 @@ Todo
   
   - [x] entity_switch_light_type() in renderer.c
   
+    
+  
 - [ ] scene system
   - [ ] serialization
-    - [ ] add cubemap & use_msaa to scene header
+    - [ ] add cubemap & settings to scene header
   - [ ] ui
     - [x] saving & loading
     - [ ] better saving & loading ui (double click for loading scene / instancing mesh)
     - [x] add scenes to the asset manager
   - [x] gravity interface
-
-
-
-- [ ] material / shader system
-
-  - allow for different shaders to get passed their own needed uniform values
-  - [x] save uniform in shader
-  - [x] uniform array in material that gets send one after another
-  - [ ] @UNCLEAR: move uniforms to material
-    - save the allowed uniforms in shader and the values in material
 
 
 
@@ -62,11 +59,11 @@ Todo
   
   - [ ] shadows
   
-    - [ ] shadow mapping
+    - [x] shadow mapping
     - [ ] point shadows
     - [ ] cascaded shadow mapping
     
-  - [ ] normal mapping
+  - [x] normal mapping
   
   - [ ] parallax mapping
   
@@ -85,29 +82,25 @@ Todo
     - internal assets
       -  [x] default assets (missing texture, ...)
       -  [ ] automate the internal asset recognition
-      
     - [ ] make assets on import be put in the right folder
-    
     - [x] use shdefault() & hmdefault() to check if the requested asset exists
-    
     - [ ] add ui for drag&drop importing
-    
     - [ ] removing assets
     
-      
-    
+  - [ ] hot-reload assets (especially shaders)
+  
   - [ ] !!! warn when adding f.e. a material with a name that already exists
-
+  
   - [ ] search function in asset manager ui
-
+  
   - [ ] editor cam v. game cam (camera component)
 
     - [ ] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
-
+  
   - [ ] visualize normal-direction
-
-  - [ ] material / asset editor in asset manager
+  
+  - [x] material / asset editor in asset manager
 
   - [ ] show shader source
 
@@ -119,9 +112,9 @@ Todo
     - [ ] save & load
     - [ ] asset manager
     - [ ] ui
-
+  
     
-
+  
 - [ ] input 
   - [x] mouse input 
   - [ ] controller input
@@ -155,7 +148,6 @@ Todo
   - [ ] syntax highlighting
   
   - [ ] edit source ???
-  
   
   
   

@@ -2141,13 +2141,22 @@ void properties_window()
                         static int trans_space;
                         trans_space = nk_option_label(ctx, "global", trans_space == 0) ? 0 : trans_space;
                         trans_space = nk_option_label(ctx, "local",  trans_space == 1) ? 1 : trans_space;
+                        
+                        vec3 rot = GLM_VEC3_ZERO_INIT; 
+                        glm_vec3_copy(ent->rot, rot);
 
                         nk_layout_row_dynamic(ctx, 20, 1);
-                        nk_property_float(ctx, "Rot X:", -1024.0f, &ent->rot[0], 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Rot X:", -1024.0f, &rot[0], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Rot Y:", -1024.0f, &ent->rot[1], 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Rot Y:", -1024.0f, &rot[1], 1024.0f, 0.1f, 0.2f);
                         
-                        nk_property_float(ctx, "Rot Z:", -1024.0f, &ent->rot[2], 1024.0f, 0.1f, 0.2f);
+                        nk_property_float(ctx, "Rot Z:", -1024.0f, &rot[2], 1024.0f, 0.1f, 0.2f);
+
+                        if (rot[0] != ent->rot[0] || rot[1] != ent->rot[1] || rot[2] != ent->rot[2])
+                        {
+                            printf("changed rot\n");
+                            entity_set_rot(selected_entity, rot);
+                        }
 
                         nk_tree_pop(ctx);
                     }
@@ -2454,6 +2463,16 @@ void properties_window()
                         struct nk_rect img_bounds_spec = nk_widget_bounds(ctx);
                         nk_image(ctx, img);
 
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_label(ctx, "Normal Texture: ", NK_TEXT_LEFT);
+                        nk_label(ctx, ent->_material->norm_tex.name, NK_TEXT_LEFT);
+
+                        ratio_x = (float)ent->_material->norm_tex.size_y / (float)ent->_material->norm_tex.size_x;
+                        img = nk_image_id(ent->_material->norm_tex.icon_handle);
+                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                        struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
+                        nk_image(ctx, img);
+
                         // check for assets dropped from the asset browser
                         if (dropped_asset.type == TEXTURE_ASSET && dropped_asset.handled == BEE_FALSE)
                         {
@@ -2468,6 +2487,12 @@ void properties_window()
                             {
                                 printf("dropped asset dropped over spec_tex\n");
                                 ent->_material->spec_tex = textures[dropped_asset.asset_idx];
+                                dropped_asset.handled = BEE_TRUE;
+                            }
+                            if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], img_bounds_norm.x, img_bounds_norm.y, img_bounds_norm.w, img_bounds_norm.h))
+                            {
+                                printf("dropped asset dropped over norm_tex\n");
+                                ent->_material->norm_tex = textures[dropped_asset.asset_idx];
                                 dropped_asset.handled = BEE_TRUE;
                             }
                         }
@@ -2619,6 +2644,8 @@ void properties_window()
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Type: ", NK_TEXT_LEFT);
                     nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
+                    char buf[16]; sprintf_s(buf, 12, "Light-ID: ", ent->_light.id);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
                     
                     int selected_type = ent->_light.type == POINT_LIGHT ? 0 : ent->_light.type == SPOT_LIGHT ? 1 : ent->_light.type == DIR_LIGHT ? 2 : 0;
                     int selected_type_old = selected_type;
@@ -2634,6 +2661,7 @@ void properties_window()
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_checkbox_label(ctx, " enabled", &ent->_light.enabled);
+                    nk_checkbox_label(ctx, " cast shadows", &ent->_light.cast_shadow);
 
                     // ambient, diffuse, specular
                     nk_layout_row_dynamic(ctx, 25, 1);
@@ -2758,15 +2786,38 @@ void properties_window()
                             option = nk_option_label(ctx, "global", option == 0) ? 0 : option;
                             option = nk_option_label(ctx, "local", option == 1) ? 1 : option;
 
+                            vec3 dir = GLM_VEC2_ZERO_INIT;
+                            glm_vec3_copy(ent->_light.direction, dir);
+
                             nk_layout_row_dynamic(ctx, 20, 1);
-                            nk_property_float(ctx, "Dir X:", -1024.0f, &ent->_light.direction[0], 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir X:", -1024.0f, &dir[0], 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir Y:", -1024.0f, &dir[1], 1024.0f, 0.1f, 0.2f);
+                            nk_property_float(ctx, "Dir Z:", -1024.0f, &dir[2], 1024.0f, 0.1f, 0.2f);
 
-                            nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_light.direction[1], 1024.0f, 0.1f, 0.2f);
 
-                            nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_light.direction[2], 1024.0f, 0.1f, 0.2f);
+                            if (dir[0] != ent->_light.direction[0] || dir[1] != ent->_light.direction[1] || dir[2] != ent->_light.direction[2])
+                            {
+                                printf("changed dir\n");
+                                entity_set_dir_vec(selected_entity, dir);
+                            }
 
                             nk_tree_pop(ctx);
                         }
+                    }
+
+                    if (ent->_light.cast_shadow == BEE_TRUE && nk_tree_push(ctx, NK_TREE_NODE, "Shadow Map", NK_MINIMIZED))
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_label(ctx, "Shadow Map: ", NK_TEXT_LEFT);
+
+                        // @TODO: save the shadow map size in the light
+                        f32 ratio_x = (float)2048 / (float)2048;
+                        struct nk_image img = nk_image_id(ent->_light.shadow_map);
+                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                        // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
+                        nk_image(ctx, img);
+
+                        nk_tree_pop(ctx);
                     }
 
                     // spacing

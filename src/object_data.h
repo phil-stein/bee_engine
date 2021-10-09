@@ -70,6 +70,7 @@ typedef struct material
 
 	texture dif_tex;
 	texture spec_tex;
+	texture norm_tex;
 
 	bee_bool is_transparent;
 
@@ -120,6 +121,10 @@ typedef struct light
 	// ---- general ----
 	int id;
 	bee_bool enabled;
+	bee_bool cast_shadow;
+	u32  shadow_map;
+	u32  shadow_fbo;
+	mat4 light_space;
 
 	light_type type;
 
@@ -201,7 +206,7 @@ typedef struct scene
 }scene;
 
 // creates a material struct
-material make_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
+material make_material(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
 // creates a mesh struct 
 // dont do this manually
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name);

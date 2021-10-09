@@ -4,6 +4,7 @@
 
 #include "file_handler.h"
 #include "object_data.h"
+#include "framebuffer.h"
 #include "renderer.h"
 #include "shader.h"
 #include "camera.h"
@@ -12,13 +13,14 @@
 
 // ---- material ----
 
-material make_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile,vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
+material make_material(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
 {
 	material mat;
 	mat.name		   = name;
 	mat.shader		   = s;
 	mat.dif_tex		   = dif_tex;
 	mat.spec_tex	   = spec_tex;
+	mat.norm_tex	   = norm_tex;
 	mat.is_transparent = is_transparent;
 	mat.shininess	   = shininess;
 	mat.draw_backfaces = draw_backfaces;
@@ -290,6 +292,7 @@ light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, 
 {
 	light _light;
 	_light.enabled = BEE_TRUE;
+	_light.cast_shadow = BEE_TRUE;
 	_light.type = POINT_LIGHT;
 	
 	glm_vec3_copy(ambient, _light.ambient);
@@ -309,6 +312,8 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 {
 	light _light;
 	_light.enabled = BEE_TRUE;
+	_light.cast_shadow = BEE_TRUE;
+	create_framebuffer_shadowmap(&_light.shadow_map, &_light.shadow_fbo, 2048, 2048);
 	_light.type = DIR_LIGHT;
 
 	glm_vec3_copy(ambient, _light.ambient);
@@ -327,6 +332,7 @@ light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction,
 {
 	light _light;
 	_light.enabled = BEE_TRUE;
+	_light.cast_shadow = BEE_TRUE;
 	_light.type = SPOT_LIGHT;
 
 	glm_vec3_copy(ambient, _light.ambient);

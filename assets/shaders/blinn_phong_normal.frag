@@ -3,6 +3,7 @@
     struct Material {
         sampler2D diffuse;
         sampler2D specular;
+        sampler2D normal;
         float shininess;
         vec2 tile;
 	vec3 tint;
@@ -51,12 +52,11 @@
         vec2 tex_coords;
         vec3 frag_pos;
         mat3 TBN;
+        vec4 frag_pos_light_space;
     } fs_in;
 
     //uniforms
     uniform Material material;
-
-    uniform sampler2D normal_tex;
 
     uniform int Num_DirLights;
     uniform DirectionalLight dirLights[4];
@@ -82,7 +82,7 @@
 
         //get surface normal and the dir the light is coming from
         // vec3 norm = normalize(Normal);
-        vec3 normal = texture(normal_tex, normTexCoords).rgb;
+        vec3 normal = texture(material.normal, normTexCoords).rgb;
         normal = normalize(normal * 2.0 - 1.0);
         normal = normalize(fs_in.TBN * normal);
 

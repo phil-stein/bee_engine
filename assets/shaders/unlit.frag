@@ -2,9 +2,15 @@
 
 	out vec4 FragColor;
 	
-	in vec3 Normal;
-	in vec3 FragPos; 
-	in vec2 TexCoord;
+	//passed from vertex-shader
+    in VS_OUT
+    {
+        vec2 tex_coords;
+        vec3 frag_pos;
+        vec3 normal;
+        mat3 TBN;
+        // vec4 frag_pos_light_space;
+    } _in;
 	
 	struct Material
 	{
@@ -17,5 +23,5 @@
 	void main()
 	{
 		// FragColor = vec4(material.tint, 1.0);
-		FragColor = texture(material.diffuse, TexCoord);
+		FragColor = texture(material.diffuse, _in.tex_coords);
 	}

@@ -2,9 +2,15 @@
 
 	out vec4 FragColor;
 	
-	in vec3 Normal;
-	in vec3 FragPos; 
-	in vec2 TexCoord;
+    //passed from vertex-shader
+    in VS_OUT
+    {
+        vec2 tex_coords;
+        vec3 frag_pos;
+        vec3 normal;
+        mat3 TBN;
+        // vec4 frag_pos_light_space;
+    } _in;
 	
 	uniform sampler2D tex;
 	
@@ -37,7 +43,7 @@
 
 
 	float rand(float n) { return fract(sin(n) * 43758.5453123); }
-	float noise_a(int resolution) { return (rand(round(TexCoord.x * resolution)) + rand(round(TexCoord.y * resolution))) * 0.5; }
+	float noise_a(int resolution) { return (rand(round(_in.tex_coords.x * resolution)) + rand(round(_in.tex_coords.y * resolution))) * 0.5; }
 	float noise_b(float p)
 	{  
 	 	float fl = floor(p);   

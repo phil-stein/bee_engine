@@ -8,9 +8,10 @@ typedef enum framebuffer_type { COLOR_BUFFER, MSAA_BUFFER, SHADOW_BUFFER }frameb
 
 void create_framebuffer(u32* tex_buffer);
 void create_framebuffer_multisampled(u32* tex_buffer);
-void create_framebuffer_shadowmap(u32* tex_buffer, int width, int height);
+void create_framebuffer_shadowmap(u32* tex_buffer, u32* fbo, int width, int height);
 
-void bind_framebuffer(framebuffer_type type);
+void bind_framebuffer_type(framebuffer_type type);
+void bind_framebuffer(u32 fbo);
 void unbind_framebuffer();
 
 void resize_frame_buffer_to_window(u32* tex_buffer);
