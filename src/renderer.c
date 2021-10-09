@@ -83,8 +83,8 @@ u32 tex_col_buffer;
 bee_bool use_msaa = BEE_TRUE;
 
 // shadow mapping
-#define SHADOW_MAP_SIZE_X 1024
-#define SHADOW_MAP_SIZE_Y 1024
+#define SHADOW_MAP_SIZE_X 4096
+#define SHADOW_MAP_SIZE_Y 4096
 u32 shadow_buffer;
 shader* shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
@@ -241,6 +241,7 @@ void render_scene_shadows()
 	glViewport(0, 0, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
 	bind_framebuffer(SHADOW_BUFFER);
 	glClear(GL_DEPTH_BUFFER_BIT);
+	glCullFace(GL_FRONT);
 
 	mat4 proj; //  = GLM_MAT4_IDENTITY_INIT
 	glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadow_near_plane, shadow_far_plane, proj);
@@ -250,10 +251,17 @@ void render_scene_shadows()
 	vec3 center = { 0.0f,  0.0f,  0.0f };
 	vec3 up		= { 0.0f,  1.0f,  0.0f };
 	glm_lookat(eye, center, up, view);
+	if (dir_lights_len > 0)
+	{
+		glm_vec3_add(get_entity(dir_lights[0])->pos, get_entity(dir_lights[0])->_light.direction, center);
+		glm_lookat(get_entity(dir_lights[0])->pos, center, up, view);
+	}
 
 	glm_mat4_mul(proj, view, light_space);
 
 	shader_use(shadow_shader);
+	shader_set_mat4(shadow_shader, "proj", proj);
+	shader_set_mat4(shadow_shader, "view", view);
 	shader_set_mat4(shadow_shader, "light_space", light_space);
 			
 	// cycle all objects
@@ -297,6 +305,8 @@ void render_scene_shadows()
 	}
 
 	unbind_framebuffer();
+
+	glCullFace(GL_BACK);
 }
 
 void render_scene_normal()

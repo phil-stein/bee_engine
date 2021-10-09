@@ -68,7 +68,7 @@
     uniform vec3 viewPos;
 
     //function prototypes (they need to be declared before being called like in c)
-    float calc_shadow();
+    float calc_shadow(vec3 normal);
     vec3 CalcDirectionalLight(DirectionalLight light, vec2 texCoords, vec3 normal, vec3 viewDir, float shadow);
     vec3 CalcPointLight(PointLight light, vec2 texCoords, vec3 normal, vec3 viewDir, float shadow);
     vec3 CalcSpotLight(SpotLight light, vec2 texCoords, vec3 normal, vec3 viewDir, float shadow);
@@ -88,7 +88,7 @@
         vec3 result = vec3(0.0);
         
         // calc the shadow, 0 = shadow, 1 = light
-        float shadow = calc_shadow();
+        float shadow = calc_shadow(norm);
 
         for(int i = 0; i < Num_DirLights; i++)
         {
@@ -114,7 +114,7 @@
         FragColor = vec4(result, transparency); //vec4(result, texture(material.diffuse, normTexCoords).w); //* ourTexture; //vec3(norm.xyz); 
     }
 
-    float calc_shadow()
+    float calc_shadow(vec3 normal)
     {
         // perspective divide
         vec3 proj_coord = frag_pos_light_space.xyz / frag_pos_light_space.w;
@@ -124,8 +124,11 @@
         // sample depth from shadow map
         float closest_depth = texture(shadow_map, proj_coord.xy).r;
         
+        vec3 light_dir = dirLights[0].direction;
+        float bias = max(0.05 * (1.0 - dot(normal, light_dir)), 0.005); // fighting shadow acne
         // proj_coord.z is the current depth
-        return proj_coord.z > closest_depth ? 0.0 : 1.0; // 1.0 : 0.0;
+        float result = proj_coord.z - bias > closest_depth ? 0.0 : 1.0;
+        return  proj_coord.z > 1.0 ? 1.0 : result; // discard frags outside the projected shadow map
     }
 
     vec3 CalcDirectionalLight(DirectionalLight light, vec2 texCoords, vec3 normal, vec3 viewDir, float shadow)
