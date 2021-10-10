@@ -76,6 +76,7 @@ void log_vert_file(const char* path, const char* name);
 void log_frag_file(const char* path, const char* name);
 char** get_all_vert_file_names(int* vert_files_len);
 char** get_all_frag_file_names(int* frag_files_len);
+void hot_reload_shader(const char* name);
 
 
 bee_bool check_scene_exists(const char* name);

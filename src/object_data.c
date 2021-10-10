@@ -293,11 +293,14 @@ light make_point_light(vec3 ambient, vec3 diffuse, vec3 specular, f32 constant, 
 	light _light;
 	_light.enabled = BEE_TRUE;
 	_light.cast_shadow = BEE_TRUE;
+	_light.shadow_map_x = 2048;
+	_light.shadow_map_y = 2048;
 	_light.type = POINT_LIGHT;
 	
 	glm_vec3_copy(ambient, _light.ambient);
 	glm_vec3_copy(diffuse, _light.diffuse);
 	glm_vec3_copy(specular, _light.specular);
+	_light.dif_intensity = 1.0f;
 
 	_light.constant = constant;
 	_light.linear = linear;
@@ -313,12 +316,14 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 	light _light;
 	_light.enabled = BEE_TRUE;
 	_light.cast_shadow = BEE_TRUE;
-	create_framebuffer_shadowmap(&_light.shadow_map, &_light.shadow_fbo, 2048, 2048);
+	_light.shadow_map_x = 2048;
+	_light.shadow_map_y = 2048;
 	_light.type = DIR_LIGHT;
 
 	glm_vec3_copy(ambient, _light.ambient);
 	glm_vec3_copy(diffuse, _light.diffuse);
 	glm_vec3_copy(specular, _light.specular);
+	_light.dif_intensity = 1.0f;
 		
 	glm_vec3_copy(direction, _light.direction);
 	
@@ -326,6 +331,7 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 	_light.linear	 = 0.14f;
 	_light.quadratic = 0.13;
 
+	create_framebuffer_shadowmap(&_light.shadow_map, &_light.shadow_fbo, _light.shadow_map, _light.shadow_map_y);
 	return _light;
 }
 light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction, f32 constant, f32 linear, f32 quadratic, f32 cut_off, f32 outer_cut_off)
@@ -333,11 +339,14 @@ light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction,
 	light _light;
 	_light.enabled = BEE_TRUE;
 	_light.cast_shadow = BEE_TRUE;
+	_light.shadow_map_x = 2048;
+	_light.shadow_map_y = 2048;
 	_light.type = SPOT_LIGHT;
 
 	glm_vec3_copy(ambient, _light.ambient);
 	glm_vec3_copy(diffuse, _light.diffuse);
 	glm_vec3_copy(specular, _light.specular);
+	_light.dif_intensity = 1.0f;
 	
 	glm_vec3_copy(direction, _light.direction);
 	

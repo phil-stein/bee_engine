@@ -1529,14 +1529,16 @@ void properties_window()
                 cam.front[2] = -1;
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, get_mesh("camera.obj"), get_material("MAT_cel"), &cam, NULL, "camera");
+                add_entity(zero, zero, one, NULL, NULL, &cam, NULL, "camera");
             }
             if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
             {
                 vec3 zero      = { 0.0f, 0.0f, 0.0f };
                 vec3 one       = { 1.0f, 1.0f, 1.0f };
+                vec3 dir       = { 0.0f, 1.0f, 0.0f };
                 light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
-                add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, "point_light");	// mat_blank_unlit
+                light spot_light = make_spot_light(zero, one, one, dir, 1.0f, 0.09f, 0.032f, 0.91f, 0.82f); // 0.09f, 0.032f);
+                add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, "light");	// mat_blank_unlit
             }
             nk_menu_end(ctx);
         }
@@ -1615,6 +1617,8 @@ void properties_window()
                 nk_layout_row_dynamic(ctx, 25, 1);
                 nk_label(ctx, "free-look mode", NK_TEXT_LEFT);
                 nk_property_float(ctx, "mosue sensitivity", -1.0f, _settings.free_look_mouse_sensitivity, 1.0f, 0.1f, 0.01f);
+
+                nk_property_float(ctx, "exposure", 0.001f, get_exposure(), 10.0f, 0.1f, 0.01f);
 
                 // spacing
                 nk_layout_row_static(ctx, 5, 10, 1);
@@ -1746,6 +1750,23 @@ void properties_window()
                     nk_combo_end(ctx);
                 }
 
+                if (nk_tree_push(ctx, NK_TREE_TAB, "Render Stages", NK_MINIMIZED))
+                {
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_label(ctx, "HDR Color Buffer: ", NK_TEXT_LEFT);
+
+                    int w, h; get_window_size(&w, &h);
+                    f32 ratio = (float)w / (float)h;
+                    struct nk_image img = nk_image_id(get_color_buffer());
+                    nk_layout_row_static(ctx, 150, 150 * ratio, 1);
+                    // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
+                    nk_image(ctx, img);
+
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_label(ctx, "Bloom, etc.", NK_TEXT_LEFT);
+
+                    nk_tree_pop(ctx);
+                }
 
                 if (nk_tree_push(ctx, NK_TREE_TAB, "FPS Diagnostics", NK_MINIMIZED))
                 {
@@ -1792,6 +1813,7 @@ void properties_window()
 
                     nk_tree_pop(ctx);
                 }
+
 
                 nk_tree_pop(ctx);
             }
@@ -2643,9 +2665,7 @@ void properties_window()
                 {
                     nk_layout_row_dynamic(ctx, 25, 2);
                     nk_label(ctx, "Type: ", NK_TEXT_LEFT);
-                    nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
-                    char buf[16]; sprintf_s(buf, 12, "Light-ID: ", ent->_light.id);
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
+                    // nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
                     
                     int selected_type = ent->_light.type == POINT_LIGHT ? 0 : ent->_light.type == SPOT_LIGHT ? 1 : ent->_light.type == DIR_LIGHT ? 2 : 0;
                     int selected_type_old = selected_type;
@@ -2659,7 +2679,11 @@ void properties_window()
                         entity_switch_light_type(ent->id, new_type);
                     }
 
+
                     nk_layout_row_dynamic(ctx, 25, 1);
+                    char buf[16]; sprintf_s(buf, 12, "Light-ID: %d", ent->_light.id);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+
                     nk_checkbox_label(ctx, " enabled", &ent->_light.enabled);
                     nk_checkbox_label(ctx, " cast shadows", &ent->_light.cast_shadow);
 
@@ -2701,6 +2725,7 @@ void properties_window()
                         ent->_light.ambient[1] = ambient.g;
                         ent->_light.ambient[2] = ambient.b;
                     }
+                    
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Diffuse", NK_TEXT_LEFT);
                     // ambient complex color combobox
@@ -2738,6 +2763,9 @@ void properties_window()
                         ent->_light.diffuse[1] = diffuse.g;
                         ent->_light.diffuse[2] = diffuse.b;
                     }
+                    nk_property_float(ctx, "Intensity: ", 0, &ent->_light.dif_intensity, 1024, 0.1f, 0.1f);
+
+
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Specular", NK_TEXT_LEFT);
                     // ambient complex color combobox
@@ -2810,12 +2838,16 @@ void properties_window()
                         nk_layout_row_dynamic(ctx, 25, 1);
                         nk_label(ctx, "Shadow Map: ", NK_TEXT_LEFT);
 
-                        // @TODO: save the shadow map size in the light
-                        f32 ratio_x = (float)2048 / (float)2048;
+                        f32 ratio_x = (f32)ent->_light.shadow_map_x / (f32)ent->_light.shadow_map_y;
                         struct nk_image img = nk_image_id(ent->_light.shadow_map);
                         nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
                         // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
                         nk_image(ctx, img);
+                        
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        char buf[36];
+                        sprintf_s(buf, 36, "%dpx x %dpx", ent->_light.shadow_map_x, ent->_light.shadow_map_y);
+                        nk_label(ctx, buf, NK_TEXT_LEFT);
 
                         nk_tree_pop(ctx);
                     }
@@ -3058,63 +3090,6 @@ void pause_button_window()
     }
     nk_end(ctx);
 }
-// old attach script popup
-/*
-                static int attach_popup_active;
-                nk_layout_row_dynamic(ctx, 25, 1);
-                if (nk_button_label(ctx, "Attach Script"))
-                {
-                    // attach_popup_active = 1;
-
-                }
-
-                if (attach_popup_active)
-                {
-                    // static struct nk_rect s = ;
-                    if (nk_popup_begin(ctx, NK_POPUP_DYNAMIC, "Attach Script", NK_WINDOW_CLOSABLE | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE, (struct nk_rect) { 600, 200, 500, 600 }))
-                    {
-                        static char text[64];
-                        static int text_len;
-                        char path_buffer[128];
-
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        nk_label(ctx, "Name", NK_TEXT_LEFT);
-                        nk_edit_string(ctx, NK_EDIT_SIMPLE, &text, &text_len, 64, nk_filter_default);
-
-                        sprintf(path_buffer, "C:\\Workspace\\C\\BeeEngine\\assets\\gravity\\%s.gravity\0", strlen(text) == 0 ? "[NAME]" : text);
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        nk_label(ctx, "Path", NK_TEXT_LEFT);
-                        nk_label(ctx, path_buffer, NK_TEXT_LEFT);
-
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        if (nk_button_label(ctx, "Attach"))
-                        {
-                            // @BUGG: doesnt work
-                            printf("path: %s\n", &path_buffer[0]);
-
-                            char* buf = NULL;
-                            buf = malloc(strlen(path_buffer));
-                            assert(buf != NULL);
-                            memcpy(buf, path_buffer, strlen(path_buffer));
-                            //buf[strlen(path_buffer)- 1] = '\0';
-                            printf("copied path: %s\n", buf);
-
-                            entity_add_script(selected_entity, buf);
-
-                            // free(buf);
-                            attach_popup_active = 0;
-                            nk_popup_close(ctx);
-                        }
-                        if (nk_button_label(ctx, "Close"))
-                        {
-                            attach_popup_active = 0;
-                            nk_popup_close(ctx);
-                        }
-                        nk_popup_end(ctx);
-                    }
-                    else attach_popup_active = nk_false;
-                }
-*/
 
 void console_window()
 {
@@ -4350,8 +4325,8 @@ void scene_context_window()
 
     // less height because the window bar on top and below
     const float w_ratio = 180.0f / 1920.0f;
-    const float h_ratio = 200.0f / 1020.0f;
-    const float x_ratio = 300.0f / 1920.0f;
+    const float h_ratio = 225.0f / 1020.0f;
+    const float x_ratio = 360.0f / 1920.0f;
     const float y_ratio = 10.0f / 1020.0f;
 
     // if (nk_begin(ctx, "Console", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h),
@@ -4371,14 +4346,19 @@ void scene_context_window()
         event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
         char save_name[64 + 6]; // +6 for .scene
         sprintf(save_name, "%s.scene", name_edit_buffer);
-        nk_layout_row_dynamic(ctx, 30, 2);
-        nk_label(ctx, "File Name: ", NK_TEXT_LEFT);
-        nk_label(ctx, save_name, NK_TEXT_LEFT);
-
         nk_layout_row_dynamic(ctx, 30, 1);
+        nk_label(ctx, "File Name: ", NK_TEXT_LEFT);
+        nk_layout_row_dynamic(ctx, 40, 1);
+        nk_label_wrap(ctx, save_name, NK_TEXT_LEFT);
+
+        nk_layout_row_dynamic(ctx, 30, 2);
         if (nk_button_label(ctx, "Save"))
         {
             save_scene(save_name);
+            scene_context_act = BEE_FALSE;
+        }
+        if (nk_button_label(ctx, "Cancel"))
+        {
             scene_context_act = BEE_FALSE;
         }
     }

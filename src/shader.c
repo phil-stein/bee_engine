@@ -155,7 +155,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 
 	FILE* f;
 	char* vert_src;
-	long len;
+	u64 len;
 
 	f = fopen(vert_path, "rb");
 	if (f == NULL) {
@@ -165,7 +165,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 
 	// get len of file
 	fseek(f, 0, SEEK_END);
-	len = ftell(f);
+	len = ftell(f); 
 	assert(len > 0);
 	fseek(f, 0, SEEK_SET);
 
@@ -174,7 +174,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 	assert(vert_src != NULL);
 
 	// fill text buffer
-	fread(vert_src, 1, len, f);
+	fread(vert_src, sizeof(char), len, f);
 	assert(strlen(vert_src) > 0);
 	fclose(f);
 
@@ -202,7 +202,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 	assert(frag_src != NULL);
 
 	// fill text buffer
-	fread(frag_src, 1, len, f);
+	fread(frag_src, sizeof(char), len -1, f);
 	assert(strlen(frag_src) > 0);
 	fclose(f);
 

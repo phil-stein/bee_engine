@@ -6,7 +6,7 @@
 #include "framebuffer.h"
 #include "scene_manager.h" // tmp
 
-#define VERSION 1.0f
+#define VERSION 1.2f
 f32 current_version = VERSION;
 
 
@@ -206,10 +206,13 @@ void serialize_light(char* buffer, int* offset, light* l)
 	// id doesnt have to be serialized
 	serialize_enum(buffer, offset, l->enabled); // v0.5
 	serialize_enum(buffer, offset, l->cast_shadow); // v1.0
+	serialize_int(buffer, offset, l->shadow_map_x); // v1.2
+	serialize_int(buffer, offset, l->shadow_map_y); // v1.2
 	serialize_enum(buffer, offset, l->type);
 
 	serialize_vec3(buffer, offset, l->ambient);
 	serialize_vec3(buffer, offset, l->diffuse);
+	serialize_float(buffer, offset, l->dif_intensity);
 	serialize_vec3(buffer, offset, l->specular);
 
 	serialize_vec3(buffer, offset, l->direction);
@@ -538,11 +541,26 @@ light deserialize_light(char* buffer, int* offset)
 		l.cast_shadow = deserialize_enum(buffer, offset);
 	}
 	else { l.cast_shadow = BEE_TRUE; }
+	if (current_version >= 1.2f)
+	{
+		l.shadow_map_x = deserialize_int(buffer, offset);
+		l.shadow_map_y = deserialize_int(buffer, offset);
+	}
+	else 
+	{
+		l.shadow_map_x = 2048;
+		l.shadow_map_y = 2048;
+	}
 
 	l.type = deserialize_enum(buffer, offset);
 
 	deserialize_vec3(buffer, offset, l.ambient);
 	deserialize_vec3(buffer, offset, l.diffuse);
+	if (current_version >= 1.1f)
+	{
+		l.dif_intensity  = deserialize_float(buffer, offset);
+	}
+	else { l.dif_intensity = 1.0f; }
 	deserialize_vec3(buffer, offset, l.specular);
 
 	deserialize_vec3(buffer, offset, l.direction);
@@ -554,7 +572,7 @@ light deserialize_light(char* buffer, int* offset)
 	l.cut_off		= deserialize_float(buffer, offset);
 	l.outer_cut_off = deserialize_float(buffer, offset);
 
-	create_framebuffer_shadowmap(&l.shadow_map, &l.shadow_fbo, 2048, 2048);
+	create_framebuffer_shadowmap(&l.shadow_map, &l.shadow_fbo, l.shadow_map_x, l.shadow_map_y);
 
 	return l;
 }

@@ -40,7 +40,7 @@ void render_scene_normal();
 void render_scene_skybox();
 void render_scene_screen();
 // renderes a single mesh, amounting in one draw-call
-void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global);
+void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col);
 void set_shader_uniforms(material* mat);
 
 void renderer_clear_scene();
@@ -69,6 +69,8 @@ void set_all_scripts(bee_bool act);
 
 void renderer_set(render_setting setting, bee_bool value);
 bee_bool* renderer_get(render_setting setting);
+f32* get_exposure();
+u32 get_color_buffer();
 
 void entity_set_parent(int child, int parent);
 void entity_remove_child(int parent, int child);
@@ -86,6 +88,7 @@ int* get_entity_ids(int* len);
 // get an entity by its id
 entity* get_entity(int id);
 entity* get_cam_entity();
+int get_cam_entity_id();
 // returns the index to the entity
 int get_entity_id_by_name(char* name);
 

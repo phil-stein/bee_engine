@@ -77,36 +77,36 @@ shader* skybox_shader;
 u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
 
-// msaa
+// msaa & color buffer
 u32 tex_aa_buffer;
+u32 tex_aa_fbo;
+u32 tex_aa_rbo;
 u32 tex_col_buffer;
+u32 tex_col_fbo;
+u32 tex_col_rbo;
 bee_bool use_msaa = BEE_TRUE;
 
 // shadow mapping
-#define SHADOW_MAP_SIZE_X 2048
-#define SHADOW_MAP_SIZE_Y 2048
-// u32 shadow_buffer;
 shader* shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
-// mat4 light_space;
+
+// hdr
+f32 exposure = 1.0f;
 
 
 void renderer_init()
 {
 	// framebuffer ----------------------------------------------------------------------------------
-	// m = make_plane_mesh();
-	// create_shader_from_file used before
+	
 	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer");
 
-	vec2 tile = { 1, 1 };
-	vec3 tint = { 1, 1, 1 };
 	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow");
 
-	create_framebuffer_multisampled(&tex_aa_buffer);
-	create_framebuffer(&tex_col_buffer);
+	create_framebuffer(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
+	create_framebuffer_multisampled(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
 	// create_framebuffer_shadowmap(&shadow_buffer, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
-	set_framebuffer_to_update(&tex_aa_buffer);  // updates framebuffer on window resize
-	set_framebuffer_to_update(&tex_col_buffer); // updates framebuffer on window resize
+	set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
+	set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 	// positions   // texCoords
@@ -251,8 +251,6 @@ void renderer_update()
 void render_scene_shadows()
 {
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y); // @TODO: this might not be the same on all lights
-	glCullFace(GL_FRONT);
 
 	mat4 proj; //  = GLM_MAT4_IDENTITY_INIT
 	glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadow_near_plane, shadow_far_plane, proj);
@@ -270,6 +268,8 @@ void render_scene_shadows()
 		{
 			continue;
 		}
+		glViewport(0, 0, l->_light.shadow_map_x, l->_light.shadow_map_y);
+		glCullFace(GL_FRONT);
 		bind_framebuffer(l->_light.shadow_fbo);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -287,7 +287,7 @@ void render_scene_shadows()
 		for (int i = 0; i < entity_ids_len; ++i)
 		{
 			entity* ent = get_entity(entity_ids[i]);
-			if (ent->has_model)
+			if (ent->has_model && ent->_mesh.visible)
 			{
 				// MVP for mesh
 				vec3 pos = { 0.0f, 0.0f, 0.0f };
@@ -341,7 +341,7 @@ void render_scene_normal()
 	int w, h;
 	get_window_size(&w, &h);
 	glViewport(0, 0, w, h);
-	bind_framebuffer_type(use_msaa ? MSAA_BUFFER : COLOR_BUFFER); // bind multisampled fbo or color texture fbo
+	bind_framebuffer(use_msaa ? tex_aa_fbo : tex_col_fbo); // bind multisampled fbo or color texture fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
 	// need to restore the opengl state after calling nuklear
@@ -387,8 +387,8 @@ void render_scene_normal()
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(entity_ids[i], pos, rot, scale);
-			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
+			get_entity_global_transform(entity_ids[i], pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
+			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 		#ifdef EDITOR_ACT
 		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam))
@@ -398,7 +398,11 @@ void render_scene_normal()
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(entity_ids[i], pos, rot, scale);
 			mesh* m = NULL;
-			if (ent->has_cam) { m = get_mesh("camera.obj"); }
+			vec3 tint = GLM_VEC3_ONE_INIT;
+			if (ent->has_cam) 
+			{
+				m = get_mesh("camera.obj");
+			}
 			else if (ent->has_light) 
 			{
 				switch (ent->_light.type)
@@ -413,9 +417,13 @@ void render_scene_normal()
 						m = get_mesh("flashlight.obj");
 						break;
 				}
+				// glm_vec3_copy(ent->_light.diffuse, tint);
+				// printf("tint: %f, %f, %f\n", tint[0], tint[1], tint[2]);
+				// printf("dif:  %f, %f, %f\n", ent->_light.diffuse[0], ent->_light.diffuse[1], ent->_light.diffuse[2]);
 			}
 			if (m == NULL) { continue; }
-			draw_mesh(m, get_material("MAT_cel"), pos, rot, scale, ent->rotate_global); // entities[i].pos, entities[i].rot, entities[i].scalef
+			material* mat = get_material("MAT_cel");
+			draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 		#endif
 	}
@@ -463,8 +471,8 @@ void render_scene_normal()
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(i, pos, rot, scale);
-			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global);
+			get_entity_global_transform(i, pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
+			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v);
 		}
 	}
 	// ------------------------------------------------------------------------
@@ -472,7 +480,7 @@ void render_scene_normal()
 	// prepare for second pass
 	if (use_msaa)
 	{
-		blit_multisampled_framebuffer(); // convert multisampled buffer to normal texture
+		blit_multisampled_framebuffer(tex_aa_fbo, tex_col_fbo); // convert multisampled buffer to normal texture
 	}
 	unbind_framebuffer();
 
@@ -545,7 +553,8 @@ void render_scene_screen()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);
-	glUseProgram(screen_shader->handle);
+	shader_use(screen_shader);
+	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, tex_col_buffer); // shadow_buffer
 	shader_set_int(screen_shader, "tex", 0);
@@ -555,7 +564,7 @@ void render_scene_screen()
 	// ------------------------------------------------------------------------
 }
 
-void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global)
+void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col)
 {
 	if (_mesh->visible == BEE_FALSE)
 	{
@@ -640,7 +649,7 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		{
 			get_editor_camera_pos(cam_pos);
 		}
-		shader_set_vec3(modes_shader, "viewPos", cam_pos);
+		shader_set_vec3(modes_shader, "view_pos", cam_pos);
 
 
 		if (wireframe_mode_enabled == BEE_TRUE)
@@ -669,17 +678,11 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		shader_set_mat4(mat->shader, "view", view);
 		shader_set_mat4(mat->shader, "proj", proj);
 
-		if (gamestate) // in play-mode
-		{
-			shader_set_vec3(mat->shader, "viewPos", get_entity(camera_ent_idx)->pos);
-		}
-		else 
-		{
-			vec3 cam_pos; get_editor_camera_pos(cam_pos);
-			shader_set_vec3(mat->shader, "viewPos", cam_pos);
-		}
-
 		set_shader_uniforms(mat);
+		if (is_gizmo)
+		{
+			shader_set_vec3(mat->shader, "material.tint", gizmo_col); // material because using cel_shader
+		}
 
 #ifdef EDITOR_ACT
 	}
@@ -703,6 +706,16 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 
 void set_shader_uniforms(material* mat)
 {
+	if (gamestate) // in play-mode
+	{
+		shader_set_vec3(mat->shader, "view_pos", get_entity(camera_ent_idx)->pos);
+	}
+	else
+	{
+		vec3 cam_pos; get_editor_camera_pos(cam_pos);
+		shader_set_vec3(mat->shader, "view_pos", cam_pos);
+	}
+
 	int texture_index = 0;
 
 	// set shader light ---------------------------------
@@ -713,7 +726,7 @@ void set_shader_uniforms(material* mat)
 		vec3 pos_l = { 0, 0, 0 };
 		vec3 rot_l = { 0, 0, 0 };
 		vec3 scale_l = { 0, 0, 0 };
-		shader_set_int(mat->shader, "Num_DirLights", dir_lights_len);
+		shader_set_int(mat->shader, "num_dir_lights", dir_lights_len);
 		int disabled_lights = 0;
 		for (int i = 0; i < dir_lights_len; ++i)
 		{
@@ -721,32 +734,36 @@ void set_shader_uniforms(material* mat)
 			if (!light->_light.enabled)
 			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "Num_DirLights", dir_lights_len - disabled_lights);
+				shader_set_int(mat->shader, "num_dir_lights", dir_lights_len - disabled_lights);
 				continue;
 			}
 			int idx = i - disabled_lights;
-			sprintf(buffer, "dirLights[%d].direction", idx);
+			sprintf(buffer, "dir_lights[%d].direction", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.direction);
 
-			sprintf(buffer, "dirLights[%d].ambient", idx);
+			vec3 dif;
+			vec3 intensity = { light->_light.dif_intensity, light->_light.dif_intensity , light->_light.dif_intensity };
+			glm_vec3_mul(light->_light.diffuse, intensity, dif);
+
+			sprintf(buffer, "dir_lights[%d].ambient", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
-			sprintf(buffer, "dirLights[%d].diffuse", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
-			sprintf(buffer, "dirLights[%d].specular", idx);
+			sprintf(buffer, "dir_lights[%d].diffuse", idx);
+			shader_set_vec3(mat->shader, buffer, dif);
+			sprintf(buffer, "dir_lights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
 
-			sprintf(buffer, "dirLights[%d].use_shadow", idx);
+			sprintf(buffer, "dir_lights[%d].use_shadow", idx);
 			shader_set_int(mat->shader, buffer, light->_light.cast_shadow);
-			sprintf(buffer, "dirLights[%d].shadow_map", idx);
+			sprintf(buffer, "dir_lights[%d].shadow_map", idx);
 			glActiveTexture(GL_TEXTURE0 + texture_index);
 			glBindTexture(GL_TEXTURE_2D, light->_light.shadow_map);
 			shader_set_int(mat->shader, buffer, texture_index);
 			texture_index++;
-			sprintf(buffer, "dirLights[%d].light_space", idx);
+			sprintf(buffer, "dir_lights[%d].light_space", idx);
 			shader_set_mat4(mat->shader, buffer, light->_light.light_space);
 
 		}
-		shader_set_int(mat->shader, "Num_PointLights", point_lights_len);
+		shader_set_int(mat->shader, "num_point_lights", point_lights_len);
 		disabled_lights = 0;
 		for (int i = 0; i < point_lights_len; ++i)
 		{
@@ -754,28 +771,32 @@ void set_shader_uniforms(material* mat)
 			if (!light->_light.enabled)
 			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "Num_PointLights", point_lights_len - disabled_lights);
+				shader_set_int(mat->shader, "num_point_lights", point_lights_len - disabled_lights);
 				continue;
 			}
 			int idx = i - disabled_lights;
 			get_entity_global_transform(point_lights[i], pos_l, rot_l, scale_l);
-			sprintf(buffer, "pointLights[%d].position", idx);
+			sprintf(buffer, "point_lights[%d].position", idx);
 			shader_set_vec3(mat->shader, buffer, pos_l);
 
-			sprintf(buffer, "pointLights[%d].ambient", idx);
+			vec3 dif;
+			vec3 intensity = { light->_light.dif_intensity, light->_light.dif_intensity , light->_light.dif_intensity };
+			glm_vec3_mul(light->_light.diffuse, intensity, dif);
+
+			sprintf(buffer, "point_lights[%d].ambient", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
-			sprintf(buffer, "pointLights[%d].diffuse", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
-			sprintf(buffer, "pointLights[%d].specular", idx);
+			sprintf(buffer, "point_lights[%d].diffuse", idx);
+			shader_set_vec3(mat->shader, buffer, dif);
+			sprintf(buffer, "point_lights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
-			sprintf(buffer, "pointLights[%d].constant", idx);
+			sprintf(buffer, "point_lights[%d].constant", idx);
 			shader_set_float(mat->shader, buffer, light->_light.constant);
-			sprintf(buffer, "pointLights[%d].linear", idx);
+			sprintf(buffer, "point_lights[%d].linear", idx);
 			shader_set_float(mat->shader, buffer, light->_light.linear);
-			sprintf(buffer, "pointLights[%d].quadratic", idx);
+			sprintf(buffer, "point_lights[%d].quadratic", idx);
 			shader_set_float(mat->shader, buffer, light->_light.quadratic);
 		}
-		shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len);
+		shader_set_int(mat->shader, "num_spot_lights", spot_lights_len);
 		disabled_lights = 0;
 		for (int i = 0; i < spot_lights_len; ++i)
 		{
@@ -783,32 +804,36 @@ void set_shader_uniforms(material* mat)
 			if (!light->_light.enabled)
 			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "Num_SpotLights", spot_lights_len - disabled_lights);
+				shader_set_int(mat->shader, "num_spot_lights", spot_lights_len - disabled_lights);
 				continue;
 			}
 			int idx = i - disabled_lights;
 			get_entity_global_transform(spot_lights[i], pos_l, rot_l, scale_l);
-			sprintf(buffer, "spotLights[%d].position", idx);
+			sprintf(buffer, "spot_lights[%d].position", idx);
 			shader_set_vec3(mat->shader, buffer, pos_l);
 
-			sprintf(buffer, "spotLights[%d].direction", idx);
+			sprintf(buffer, "spot_lights[%d].direction", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.direction);
 
-			sprintf(buffer, "spotLights[%d].ambient", idx);
+			vec3 dif;
+			vec3 intensity = { light->_light.dif_intensity, light->_light.dif_intensity , light->_light.dif_intensity };
+			glm_vec3_mul(light->_light.diffuse, intensity, dif);
+
+			sprintf(buffer, "spot_lights[%d].ambient", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
-			sprintf(buffer, "spotLights[%d].diffuse", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.diffuse);
-			sprintf(buffer, "spotLights[%d].specular", idx);
+			sprintf(buffer, "spot_lights[%d].diffuse", idx);
+			shader_set_vec3(mat->shader, buffer, dif);
+			sprintf(buffer, "spot_lights[%d].specular", idx);
 			shader_set_vec3(mat->shader, buffer, light->_light.specular);
-			sprintf(buffer, "spotLights[%d].constant", idx);
+			sprintf(buffer, "spot_lights[%d].constant", idx);
 			shader_set_float(mat->shader, buffer, light->_light.constant);
-			sprintf(buffer, "spotLights[%d].linear", idx);
+			sprintf(buffer, "spot_lights[%d].linear", idx);
 			shader_set_float(mat->shader, buffer, light->_light.linear);
-			sprintf(buffer, "spotLights[%d].quadratic", idx);
+			sprintf(buffer, "spot_lights[%d].quadratic", idx);
 			shader_set_float(mat->shader, buffer, light->_light.quadratic);
-			sprintf(buffer, "spotLights[%d].cutOff", idx);
+			sprintf(buffer, "spot_lights[%d].cutOff", idx);
 			shader_set_float(mat->shader, buffer, light->_light.cut_off);
-			sprintf(buffer, "spotLights[%d].outerCutOff", idx);
+			sprintf(buffer, "spot_lights[%d].outerCutOff", idx);
 			shader_set_float(mat->shader, buffer, light->_light.outer_cut_off);
 		}
 	}
@@ -818,21 +843,21 @@ void set_shader_uniforms(material* mat)
 	{
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->dif_tex.handle);
-		shader_set_int(mat->shader, "material.diffuse", texture_index);
+		shader_set_int(mat->shader, "mat.diffuse", texture_index);
 		texture_index++;
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->spec_tex.handle);
-		shader_set_int(mat->shader, "material.specular", texture_index);
+		shader_set_int(mat->shader, "mat.specular", texture_index);
 		texture_index++;
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->norm_tex.handle);
-		shader_set_int(mat->shader, "material.normal", texture_index);
+		shader_set_int(mat->shader, "mat.normal", texture_index);
 		texture_index++;
 
-		shader_set_float(mat->shader, "material.shininess", mat->shininess);
-		shader_set_vec2(mat->shader, "material.tile", mat->tile);
+		shader_set_float(mat->shader, "mat.shininess", mat->shininess);
+		shader_set_vec2(mat->shader, "mat.tile", mat->tile);
 
-		shader_set_vec3(mat->shader, "material.tint", mat->tint);
+		shader_set_vec3(mat->shader, "mat.tint", mat->tint);
 	}
 
 	// set shader uniforms ------------------------------
@@ -998,14 +1023,17 @@ int add_entity_direct_id(entity e, int id)
 			arrput(dir_lights, entities_len);
 			e._light.id = dir_lights_len;
 			dir_lights_len++;
+			break;
 		case POINT_LIGHT:
 			arrput(point_lights, entities_len);
 			e._light.id = point_lights_len;
 			point_lights_len++;
+			break;
 		case SPOT_LIGHT:
 			arrput(spot_lights, entities_len);
 			e._light.id = spot_lights_len;
 			spot_lights_len++;
+			break;
 		}
 	}
 
@@ -1156,7 +1184,7 @@ void entity_set_rot(int entity_id, vec3 rot)
 	entity* e = get_entity(entity_id);
 	glm_vec3_copy(rot, e->rot);
 
-	if (e->has_light)
+	if (e->has_light && e->_light.type == DIR_LIGHT)
 	{
 		// vec3 dir = { rot[0] / 360, rot[1] / 360, rot[2] / 360 };
 		vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
@@ -1166,9 +1194,10 @@ void entity_set_rot(int entity_id, vec3 rot)
 	if (e->has_cam)
 	{
 		// vec3 dir = { rot[0] / 360, rot[1] / 360, rot[2] / 360 };
-		vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
-		glm_vec3_normalize(dir);
-		glm_vec3_copy(dir, e->_camera.front);
+	
+		// vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
+		// glm_vec3_normalize(dir);
+		// glm_vec3_copy(dir, e->_camera.front);
 	}
 }
 void entity_set_dir_vec(int entity_id, vec3 dir)
@@ -1297,6 +1326,10 @@ bee_bool* renderer_get(render_setting setting)
 			return &use_msaa;
 	}
 }
+f32* get_exposure()
+{ return &exposure; }
+u32 get_color_buffer()
+{ return tex_col_buffer; }
 
 void entity_set_parent(int child, int parent)
 {
@@ -1446,6 +1479,10 @@ entity* get_entity(int id)
 entity* get_cam_entity()
 {
 	return get_entity(camera_ent_idx);
+}
+int get_cam_entity_id()
+{
+	return camera_ent_idx;
 }
 int get_entity_id_by_name(char* name)
 {

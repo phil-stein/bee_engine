@@ -541,4 +541,13 @@ void rotate_game_cam_by_mouse(f32 mouse_sensitivity)
 
     entity* cam = get_cam_entity();
     glm_vec3_copy(dir, cam->_camera.front);
+
+    // int id = get_cam_entity_id();
+    // vec3 rot;
+    // glm_vec3_copy(cam->rot, rot);
+    // 
+    // rot[0] += get_mouse_delta_x();
+    // rot[1] += get_mouse_delta_y();
+    // 
+    // entity_set_rot(id, rot);
 }

@@ -204,7 +204,19 @@ void init()
 
 	*/
 
-	load_scene("shadow10.scene");
+	load_scene("showcase01.scene");
+
+	int count_x = 0;
+	int count_y = 0;
+	for (float x = -1; x <= 1; x += 0.5)
+	{
+		count_x++;
+		for (float y = -1; y <= 1; y += 0.5)
+		{
+			count_y++;
+		}
+	}
+	printf("count x: %d, y: %d\n", count_x, count_y);
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
@@ -346,6 +358,7 @@ void process_input(GLFWwindow* window)
 		// printf("material 'MAT_rename' name: %s\n", mat->name);
 
 		submit_txt_console("pressed F10");
+		hot_reload_shader("SHADER_default");
 	}
 
 	// wireframe- / solid-mode switch on tab

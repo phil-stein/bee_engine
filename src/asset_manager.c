@@ -13,7 +13,8 @@
 
 // ---- vars ----
 // hashmaps & dyn.-arrays using stb_ds.h
-// prob. should replace these with something faster sometime [I mean maybe but it's actually pretty fast]
+#define ASSET_DIR_MAX_LEN 100
+char asset_dir_path[ASSET_DIR_MAX_LEN];
 
 // ---- textures ----
 // value: index of texture in 'tex', key: name of texture 
@@ -170,10 +171,22 @@ int internal_assets_names_len = 18;
 
 void assetm_init()
 {
-	char* dir_path = get_asset_dir();
+	// char* dir_path = get_asset_dir();
 
-	printf("dir path: \"%s\"\n", dir_path);
-	search_dir(dir_path, BEE_FALSE);
+	// ---- get asset dir ----
+	// load all assets in "proj\assets\"
+	char* cwd = _getcwd(NULL, 0);
+	// couldnt retrieve current working dir
+	assert(cwd != NULL);
+	char* dir_path = strcat(cwd, "\\assets");
+	// couldnt concat cwd
+	assert(dir_path != NULL);
+	assert(strlen(dir_path) < ASSET_DIR_MAX_LEN);
+	strcpy_s(asset_dir_path, ASSET_DIR_MAX_LEN, dir_path);
+
+
+	printf("dir path: \"%s\"\n", asset_dir_path);
+	search_dir(asset_dir_path, BEE_FALSE);
 
 	// set default return if key doesn't exist
 	shdefault(textures, -1);
@@ -186,15 +199,8 @@ void assetm_init()
 
 char* get_asset_dir()
 {
-	// load all assets in "proj\assets\"
-	char* cwd = _getcwd(NULL, 0);
-	// couldnt retrieve current working dir
-	assert(cwd != NULL);
-	char* dir_path = strcat(cwd, "\\assets");
-	// couldnt concat cwd
-	assert(dir_path != NULL);
 
-	return dir_path;
+	return asset_dir_path;
 }
 
 void search_dir(const char* dir_path)
@@ -1181,6 +1187,41 @@ bee_bool check_shader_exists(const char* name)
 }
 
 // @TODO: check_vert_file_exists & check_frag_file_exists
+
+void hot_reload_shader(const char* name)
+{
+	if (!check_shader_exists(name))
+	{
+		printf("[ERROR] Shader \"%s\" cant be reloaded it doesnt exist.\n");
+		return;
+	}
+
+	shader* s = get_shader(name);
+
+	// key for the path is the index of the file in the hashmap
+	int path_idx = shgeti(vert_files, s->vert_name);
+	char* vert_path = hmget(vert_files_paths, path_idx);
+	path_idx = shgeti(frag_files, s->frag_name);
+	char* frag_path = hmget(frag_files_paths, path_idx);
+
+	// make a persistent copy of the passed name
+	// char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
+	// assert(name_cpy != NULL);
+	// strcpy(name_cpy, name);
+
+	shader s_new = create_shader_from_file(vert_path, frag_path, s->name);
+	s_new.vert_name = s->vert_name;
+	s_new.frag_name = s->frag_name;
+	s_new.use_lighting = s->use_lighting;
+	s_new.uniform_defs_len = s->uniform_defs_len;
+	s_new.uniform_defs = NULL;
+	for (int i = 0; i < s_new.uniform_defs_len; ++i)
+	{
+		arrput(s_new.uniform_defs, s->uniform_defs[i]);
+	}
+
+	shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)] = s_new;
+}
 
 //
 // ---- scenes ----

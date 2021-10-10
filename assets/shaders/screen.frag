@@ -5,6 +5,8 @@
 	in vec2 TexCoord;
 	
 	uniform sampler2D tex;
+
+	uniform float exposure;
 	
 	const float offset = 1.0 / 300.0;
 
@@ -62,10 +64,16 @@ void main()
 	//	col = avg_color(col);
 	//}
 
-	float inv_gamma = 0.4545454545454545; // 1/2.2
-	col = texture(tex, TexCoord).rgb;
-	col = pow(col, vec3(inv_gamma)); // gamma correction
-	// float bw = texture(tex, TexCoord).r;
+	// reinhard tone mapping
+	vec3 col_hdr = texture(tex, TexCoord).rgb;
+	col = vec3(1.0) - exp(-col_hdr * exposure);
+	// col = col_hdr;
+
+	// gamma correction
+	// float inv_gamma = 0.4545454545454545; // 1/2.2
+	float gamma = 2.2;
+	col = pow(col, vec3(1 / gamma));
+	
 	FragColor = vec4(col, 1.0);
 
 }

@@ -7,8 +7,10 @@
 
 #define NAME_SIZE 25
 
+#ifdef EDITOR_ACT
 char scene_state_buffer[10000];
 char scene_name_before_state_change[NAME_SIZE];
+#endif
 
 char active_scene[NAME_SIZE] = "no_name";
 
@@ -30,6 +32,7 @@ void load_scene(char* name)
 	int offset = 0;
 	rtn_code rtn = BEE_OK;
 	scene s = deserialize_scene(txt, &offset, &rtn);
+	free(txt);
 
 	if (rtn == BEE_ERROR)
 	{
@@ -43,6 +46,7 @@ void load_scene(char* name)
 	}
 
 	strcpy_s(active_scene, NAME_SIZE, name);
+
 }
 
 void save_scene(char* name)
@@ -68,8 +72,14 @@ void save_scene(char* name)
 	write_text_file(path, buffer, offset);
 
 	strcpy_s(active_scene, NAME_SIZE, name);
+
+	arrfree(s.entities);
+
+	// check with asset managers
+	log_scene(path, name);
 }
 
+#ifdef EDITOR_ACT
 void save_scene_state()
 {
 	scene s;
@@ -110,4 +120,4 @@ void load_scene_state()
 
 	strcpy_s(active_scene, NAME_SIZE, scene_name_before_state_change);
 }
-
+#endif

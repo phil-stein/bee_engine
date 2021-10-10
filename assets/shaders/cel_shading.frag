@@ -6,6 +6,7 @@
         sampler2D specular;
         float shininess;
         vec2 tile;
+        vec3 tint;
     };
 
     struct DirectionalLight 
@@ -145,7 +146,7 @@
         //color = vec4(color.rgb * vec3(0.55, 0.25, 0.2), color.a);
         //color = vec4(color.rgb * vec3(0.4, 0.2, 0.2), color.a);
         //color = vec4(color.rgb * vec3(1.0, 0.75, 0.75), color.a);
-        FragColor = vec4(color.rgb * result, color.a); //vec4(color.rgb * result, color.a); //color.rgb * result, color.a
+        FragColor = vec4(color.rgb * result * material.tint, color.a); //vec4(color.rgb * result, color.a); //color.rgb * result, color.a
     }
 
     float CalcDirectionalLight(DirectionalLight light,vec2 texCoords, vec3 normal, vec3 viewDir)

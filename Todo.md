@@ -7,7 +7,7 @@ Todo
   
   - [ ] turn dir vec into rotation and reverse
   
-    - [x]  rot -> dir
+    - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
     
@@ -20,7 +20,7 @@ Todo
 
   - [x] 'upper_hierachy_ents' sometimes crashes the engine when sorting the hierarchy
 
-  - [ ] saving scenes corrupts the program, probably in write_text_file()
+  - [x] saving scenes corrupts the program, probably in write_text_file()
 
   - [ ] dark areas look weird since adding gamma correction
 
@@ -39,10 +39,7 @@ Todo
   - [ ] serialization
     - [ ] add cubemap & settings to scene header
   - [ ] ui
-    - [x] saving & loading
     - [ ] better saving & loading ui (double click for loading scene / instancing mesh)
-    - [x] add scenes to the asset manager
-  - [x] gravity interface
 
 
 
@@ -67,7 +64,7 @@ Todo
   
   - [ ] parallax mapping
   
-  - [ ] hdr
+  - [x] hdr
   
   - [ ] bloom
   

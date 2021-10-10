@@ -4,6 +4,7 @@
 
 #include "asset_manager.h"
 #include "framebuffer.h"
+#include "stb/stb_ds.h"
 #include "window.h"
 
 // ---- vars ----
@@ -13,7 +14,8 @@ char* window_title;
 bee_bool is_maximized = BEE_TRUE;;
 
 // framebuffer texture buffer ptr
-u32* tex_buffer = NULL;
+u32* resize_buffers = NULL;
+int  resize_buffers_len = 0;
 
 // intis glfw & glad, also creates the window
 // returns: <stddef.h> return_code
@@ -124,9 +126,10 @@ char* get_window_title()
 	return window_title;
 }
 
-void set_framebuffer_to_update(u32* texture_buffer)
+void set_framebuffer_to_update(u32 texture_buffer)
 {
-	tex_buffer = texture_buffer;
+	arrput(resize_buffers, texture_buffer);
+	resize_buffers_len++;
 }
 
 // ---- callbacks ----
@@ -141,9 +144,12 @@ void error_callback(int error, const char* description)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	if (tex_buffer != NULL)
-	{ 
-		resize_frame_buffer_to_window(tex_buffer);
+	for (int i = 0; i < resize_buffers_len; ++i)
+	{
+		if (resize_buffers[i] != NULL)
+		{
+			resize_frame_buffer_to_window(resize_buffers[i]);
+		}
 	}
 }
 

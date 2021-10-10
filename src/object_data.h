@@ -125,11 +125,13 @@ typedef struct light
 	u32  shadow_map;
 	u32  shadow_fbo;
 	mat4 light_space;
+	int shadow_map_x, shadow_map_y;
 
 	light_type type;
 
 	vec3 ambient;
 	vec3 diffuse;
+	f32  dif_intensity;
 	vec3 specular;
 
 	// -----------------
