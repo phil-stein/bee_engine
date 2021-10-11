@@ -50,13 +50,6 @@ void init()
 	shader* shader_cel     = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel");
 						  
 	shader* shader_noise   = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
-
-	printf("shader_default name:	%s\n", shader_default->name);
-	printf("shader_default vert:	%s\n", shader_default->vert_name);
-	printf("shader_default frag:	%s\n", shader_default->frag_name);
-	printf("shader_default handle:	%d\n", shader_default->handle);
-	printf("shader_default use_l:	%d\n", shader_default->use_lighting);
-	printf("shader_default defs:	%d\n", shader_default->uniform_defs_len);
 	
 
 	vec2 tile = { 1.0f, 1.0f };
@@ -113,9 +106,6 @@ void init()
 	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
 	entity_add_script(ent_empty, "game_controller_tmp.gravity");
 
-	mesh* m_lightbulb = get_mesh("lightbulb.obj");
-	mesh* m_flashlight = get_mesh("flashlight.obj");
-	mesh* m_arrow = get_mesh("arrow_down.obj");
 
 	vec3 ambient      = { 0.0f, 0.0f, 0.0f };
 	vec3 diffuse01    = { 1.0f, 1.0f, 1.0f };
@@ -204,19 +194,8 @@ void init()
 
 	*/
 
-	load_scene("showcase01.scene");
+	load_scene("showcase06.scene");
 
-	int count_x = 0;
-	int count_y = 0;
-	for (float x = -1; x <= 1; x += 0.5)
-	{
-		count_x++;
-		for (float y = -1; y <= 1; y += 0.5)
-		{
-			count_y++;
-		}
-	}
-	printf("count x: %d, y: %d\n", count_x, count_y);
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
 	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
@@ -358,7 +337,6 @@ void process_input(GLFWwindow* window)
 		// printf("material 'MAT_rename' name: %s\n", mat->name);
 
 		submit_txt_console("pressed F10");
-		hot_reload_shader("SHADER_default");
 	}
 
 	// wireframe- / solid-mode switch on tab

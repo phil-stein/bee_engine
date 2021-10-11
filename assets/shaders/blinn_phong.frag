@@ -152,7 +152,7 @@
         }
 
         // float bias = max(0.05 * (1.0 - dot(normal, light.direction)), 0.01); // fighting shadow acne
-        float bias = max(0.05 * (1.0 - dot(normal, light.direction)), 0.01); // fighting shadow acne
+        float bias = max(0.01 * (1.0 - dot(normal, light.direction)), 0.001); // fighting shadow acne
         // float bias = max(0.01 * (-dot(normal, light.direction)), 0.001); // fighting shadow acne
 
         float shadow = 0.0;

@@ -7,7 +7,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 ## current capabilities
 
-<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot10.png" alt="logo" width="1000">
+<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot12.png" alt="logo" width="1000">
 
 
 
@@ -15,48 +15,43 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 ### planned features
 
-- [x] basic 3d rendering
-- [x] mesh, model structs & funcs
-- [x] loading .obj file
-- [x] renderer, etc. architecture & api
-- [x] nuklear
-- [x] gravity scripting
-- [x] asset system
-  - [x] design
-  - [x] asset manager
-  - [x] asset browser ui
-  - [x] importing assets
-- [x] serialization
-- [x] scene management
 - [ ] parent-child relations
 - [ ] audio
 - [ ] first game test
-
-### possible features
-
-- [ ] physics engine
-- [ ] custom in-game gui
-  - [ ] text rendering
-  - [ ] quads with relations
 - [ ] advanced 3d
-	- [ ] shadows
-	- [ ] normals 
-	- [ ] hdr
+	- [x] shadows
+	- [x] normals 
+	- [x] hdr
 	- [ ] deferred rendering
 	- [ ] ssao
 	- [ ] pbr
 	- [ ] ibl
 	- [ ] hdri
 
+### possible features
+
+- [ ] physics engine
+  - [ ] sphere v. sphere
+  - [ ] aabb v. aabb
+  - [ ] sphere v. aabb
+- [ ] in-game gui
+  - [ ] text rendering
+  - [ ] quads with relations
+  - [ ] buttons
+
+
 ## assets in use
- - [container texture dif](https://learnopengl.com/img/textures/container2.png), [continer texture spec](https://learnopengl.com/img/textures/container2_specular.png)
- - [window texture](https://learnopengl.com/img/advanced/blending_transparent_window.png)
+
+- [LearnOpenGL](https://learnopengl.com) 
+
+      - [container texture dif](https://learnopengl.com/img/textures/container2.png), [continer texture spec](https://learnopengl.com/img/textures/container2_specular.png), [brick texture dif](https://learnopengl.com/img/textures/brickwall.jpg), [brick texture normal](https://learnopengl.com/img/textures/brickwall_normal.jpg), [window texture](https://learnopengl.com/img/advanced/blending_transparent_window.png), [cubemap](https://learnopengl.com/Advanced-OpenGL/Cubemaps)
+ - [textures.com](https://www.textures.com) 
+     - [grass texture](https://www.textures.com/download/Grass0130/38953), [barrel texture](https://www.textures.com/download/Barrels036/123202)
+
  - [stanford bunny](http://graphics.stanford.edu/data/3Dscanrep/)
- - [grass texture](https://www.textures.com/download/Grass0130/38953)
- - [barrel texture](https://www.textures.com/download/Barrels036/123202)
- - [cubemap](https://learnopengl.com/Advanced-OpenGL/Cubemaps)
-  
+
  *the rest are made by me*
- 
+
  - [eye demon](https://www.artstation.com/artwork/eaYLzZ)
  - [other demon](https://www.artstation.com/artwork/48YKYY)
+

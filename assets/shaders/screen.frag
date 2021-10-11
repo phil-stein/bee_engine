@@ -40,7 +40,8 @@
     	);
 
 
-// func declarrations
+// func declarations
+vec3 aces_tone_mapping(vec3 col);
 vec3 run_kernel(float kernel[9], vec3 col);
 vec3 avg_color(vec3 col);
 vec3 greater_than_col(vec3 col);
@@ -66,8 +67,8 @@ void main()
 
 	// reinhard tone mapping
 	vec3 col_hdr = texture(tex, TexCoord).rgb;
-	col = vec3(1.0) - exp(-col_hdr * exposure);
-	// col = col_hdr;
+	// col = vec3(1.0) - exp(-col_hdr * exposure);
+	col = aces_tone_mapping(col_hdr);
 
 	// gamma correction
 	// float inv_gamma = 0.4545454545454545; // 1/2.2
@@ -78,6 +79,17 @@ void main()
 
 }
 
+// taken from https://64.github.io/tonemapping/
+vec3 aces_tone_mapping(vec3 col)
+{
+	col *= 0.6 * exposure;
+	const float a = 2.51; 
+	const float b = 0.03; 
+	const float c = 2.43; 
+	const float d = 0.59; 
+	const float e = 0.14;
+	return clamp((col * (a * col + b)) / (col * (c * col + d) +e), 0.0, 1.0); 
+}
 
 vec3 run_kernel(float kernel[9], vec3 col)
 {

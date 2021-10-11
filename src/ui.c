@@ -1548,6 +1548,12 @@ void properties_window()
             nk_layout_row_dynamic(ctx, 25, 1);
             if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
             {
+                add_default_scene("new.scene");
+                load_scene("new.scene");
+            }
+
+            if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
+            {
                 printf("not yet implemented\n");
                 assert(0);
             }
@@ -2176,7 +2182,6 @@ void properties_window()
 
                         if (rot[0] != ent->rot[0] || rot[1] != ent->rot[1] || rot[2] != ent->rot[2])
                         {
-                            printf("changed rot\n");
                             entity_set_rot(selected_entity, rot);
                         }
 
@@ -2835,9 +2840,6 @@ void properties_window()
 
                     if (ent->_light.cast_shadow == BEE_TRUE && nk_tree_push(ctx, NK_TREE_NODE, "Shadow Map", NK_MINIMIZED))
                     {
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        nk_label(ctx, "Shadow Map: ", NK_TEXT_LEFT);
-
                         f32 ratio_x = (f32)ent->_light.shadow_map_x / (f32)ent->_light.shadow_map_y;
                         struct nk_image img = nk_image_id(ent->_light.shadow_map);
                         nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
@@ -3263,7 +3265,8 @@ void asset_browser_window()
                     nk_layout_row_static(ctx, 30, 100, 1);
                     if (nk_button_label(ctx, "Add Scene"))
                     {
-                        // @TODO: add scene 
+                        add_default_scene("new.scene");
+                        load_scene("new.scene");
                     }
                 }
                 else 
@@ -3703,7 +3706,7 @@ void asset_browser_window()
                     for (int i = 0; i < internals_len; ++i)
                     {
                         asset_type internal_type = get_asset_type(internals[i]);
-                        printf("internal asset type: %d for asset: \"%s\"\n", internal_type, internals[i]);
+                        // printf("internal asset type: %d for asset: \"%s\"\n", internal_type, internals[i]);
                         int internal_asset_idx = 0;
                         switch (internal_type)
                         {
@@ -3971,6 +3974,10 @@ void asset_browser_window()
                         if (nk_button_label(ctx, "Edit"))
                         {
                             set_edit_asset_window(SHADER_ASSET, &shaders[selected_shader]);
+                        }                        
+                        if (nk_button_label(ctx, "Recompile"))
+                        {
+                            hot_reload_shader(shaders[selected_shader].name);
                         }
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
@@ -5037,7 +5044,7 @@ void submit_txt_console(char* doesnt_show_up)
     return;
 }
 
-void set_error_popup(error_type type, char* msg)
+void set_error_popup(error_type type, char* doesnt_show_up)
 {
     return;
 }

@@ -251,6 +251,8 @@ void renderer_update()
 void render_scene_shadows()
 {
 	glEnable(GL_DEPTH_TEST);
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_FRONT);
 
 	mat4 proj; //  = GLM_MAT4_IDENTITY_INIT
 	glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, shadow_near_plane, shadow_far_plane, proj);
@@ -269,7 +271,6 @@ void render_scene_shadows()
 			continue;
 		}
 		glViewport(0, 0, l->_light.shadow_map_x, l->_light.shadow_map_y);
-		glCullFace(GL_FRONT);
 		bind_framebuffer(l->_light.shadow_fbo);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -332,7 +333,7 @@ void render_scene_shadows()
 	}
 
 
-	glCullFace(GL_BACK);
+	// glCullFace(GL_BACK);
 }
 
 void render_scene_normal()
@@ -423,7 +424,7 @@ void render_scene_normal()
 			}
 			if (m == NULL) { continue; }
 			material* mat = get_material("MAT_cel");
-			draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
+			draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, GLM_VEC3_ONE); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 		#endif
 	}
@@ -609,7 +610,6 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 	{
 		get_editor_camera_view_mat(&view[0]);
 	}
-	
 
 	mat4 proj;
 

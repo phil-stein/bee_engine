@@ -464,5 +464,9 @@ void free_texture(texture* tex)
 }
 void free_shader(shader* s)
 {
-	glDeleteProgram(&s->handle);
+	free(s->name);
+	// free(s->vert_name);
+	// free(s->frag_name);
+	glDeleteProgram(s->handle);
+	arrfree(s->uniform_defs);
 }

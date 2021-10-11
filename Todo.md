@@ -14,6 +14,8 @@ Todo
   
 - buggs
 
+  - [ ] interacting with a popup means you cant click on the window anymore till you click on another window
+
   - [ ] importing assets sometimes crashes the editor
 
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
@@ -66,7 +68,7 @@ Todo
   
   - [x] hdr
   
-  - [ ] bloom
+  - [ ] bloom (as in the cherno video)
   
   - [ ] deferred shading
   
@@ -137,17 +139,9 @@ Todo
 
   - [ ] interface to create meshes / other components to create models etc in gravity
 
-    
 
-- [ ] in-engine text editor
-  - [x] view source
   
-  - [ ] syntax highlighting
-  
-  - [ ] edit source ???
-  
-  
-  
+
 - [ ] physics-system
 
   - [ ] aabb v aabb
@@ -172,4 +166,5 @@ Todo
 - [ ] optimization
   - [ ] use uniform buffers for matrices and maybe lights
   - [ ] use proper sorting algorithm for transparent objects
-  - [ ] take a look at normal-mapping chapter again and use better option 
+  - [ ] take a look at normal-mapping chapter again and use better option
+  - [ ] instanced rendering / batching

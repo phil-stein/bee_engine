@@ -374,7 +374,7 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 
 	// deserialize assets that arent defined in their own files
 	int shaders_len = deserialize_int(buffer, offset);
-	printf("shaders len: %d\n", shaders_len);
+	// printf("shaders len: %d\n", shaders_len);
 
 	for (int i = 0; i < shaders_len; ++i)
 	{
@@ -468,7 +468,7 @@ material* deserialize_material(char* buffer, int* offset)
 	if (current_version >= 0.4f)
 	{
 		name = deserialize_str(buffer, offset);
-		printf("deserialized material %s\n", name);
+		// printf("deserialized material %s\n", name);
 	}
 	char* shader_name = deserialize_str(buffer, offset);
 	shader* s = get_shader(shader_name);
@@ -491,7 +491,7 @@ material* deserialize_material(char* buffer, int* offset)
 	if (current_version >= 0.6f)
 	{
 		uniforms_len = deserialize_int(buffer, offset);
-		if (uniforms_len > 0) { printf(" -> with %d uniforms\n", uniforms_len); }
+		// if (uniforms_len > 0) { printf(" -> with %d uniforms\n", uniforms_len); }
 		for (int i = 0; i < uniforms_len; ++i)
 		{
 			uniform u = deserialize_uniform(buffer, offset, s);
@@ -586,12 +586,12 @@ shader* deserialize_shader(char* buffer, int* offset)
 	char* vert_name = deserialize_str(buffer, offset);
 	char* frag_name = deserialize_str(buffer, offset);
 	char* name		= deserialize_str(buffer, offset);
-	printf("deserialized shader %s\n", name);
+	// printf("deserialized shader %s\n", name);
 	if (current_version >= 0.7f)
 	{
 		bee_bool use_lighting = deserialize_enum(buffer, offset);
 		int uniform_defs_len = deserialize_int(buffer, offset);
-		if (uniform_defs_len > 0) { printf(" -> with %d uniform types\n", uniform_defs_len); }
+		// if (uniform_defs_len > 0) { printf(" -> with %d uniform types\n", uniform_defs_len); }
 		uniform_def* uniform_defs = NULL;
 		for (int i = 0; i < uniform_defs_len; ++i)
 		{

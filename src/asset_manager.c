@@ -1188,6 +1188,7 @@ bee_bool check_shader_exists(const char* name)
 
 // @TODO: check_vert_file_exists & check_frag_file_exists
 
+// @TODO: memory slightly increases when hot-reloading
 void hot_reload_shader(const char* name)
 {
 	if (!check_shader_exists(name))
@@ -1219,6 +1220,8 @@ void hot_reload_shader(const char* name)
 	{
 		arrput(s_new.uniform_defs, s->uniform_defs[i]);
 	}
+	free_shader(s);
+
 
 	shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)] = s_new;
 }
