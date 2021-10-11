@@ -71,23 +71,21 @@
     } _in;
 
     //uniforms
-    uniform Material material;
+    uniform Material mat;
+    uniform vec3 view_pos;
 
-    uniform int Num_DirLights;
-    uniform DirectionalLight dirLights[4];
+    uniform int num_dir_lights;
+    uniform DirectionalLight dir_lights[6];
     
-    uniform int Num_PointLights;
-    uniform PointLight pointLights[32];
+    uniform int num_point_lights;
+    uniform PointLight point_lights[32];
         
-    uniform int Num_SpotLights;
-    uniform SpotLight spotLights[16];
+    uniform int num_spot_lights;
+    uniform SpotLight spot_lights[16];
 
-    // uniform 
+    // could be uniforms
     int Num_LightLevels = 0;
-    // uniform 
     LightLevel lightLevels[8];
-
-    uniform vec3 viewPos;
 
     //function prototypes (they need to be declared before being called like in c)
     float CalcDirectionalLight(DirectionalLight light, vec2 texCoords, vec3 normal, vec3 viewDir);
@@ -117,20 +115,20 @@
     	// 0.5f, 2.0f, 0.8f, new Vector3(1.2f, 1.0f, 1.2f)),i
 
         //scale the texcoords to fit the specified tiling
-        vec2 normTexCoords = material.tile * _in.tex_coords;
+        vec2 normTexCoords = mat.tile * _in.tex_coords;
 
         //get surface normal and the dir the light is coming from
         vec3 normal = normalize(_in.normal);
 
         //get the angle between the reflected light-ray and the view-direction        
-        vec3 viewDir = normalize(viewPos - _in.frag_pos);
+        vec3 viewDir = normalize(view_pos - _in.frag_pos);
      
         float result =0.0;
-        result += CalcDirectionalLight(dirLights[0], normTexCoords, normal, viewDir);
+        result += CalcDirectionalLight(dir_lights[0], normTexCoords, normal, viewDir);
         result = clamp(result, 0, 1);
         result *= 2; //with only dir lights it's a bit weak
 
-        vec4 color = texture(material.diffuse, normTexCoords);
+        vec4 color = texture(mat.diffuse, normTexCoords);
 
         for(int i = 0; i < Num_LightLevels; i++)
         {
@@ -146,7 +144,7 @@
         //color = vec4(color.rgb * vec3(0.55, 0.25, 0.2), color.a);
         //color = vec4(color.rgb * vec3(0.4, 0.2, 0.2), color.a);
         //color = vec4(color.rgb * vec3(1.0, 0.75, 0.75), color.a);
-        FragColor = vec4(color.rgb * result * material.tint, color.a); //vec4(color.rgb * result, color.a); //color.rgb * result, color.a
+        FragColor = vec4(color.rgb * result * mat.tint, color.a); //vec4(color.rgb * result, color.a); //color.rgb * result, color.a
     }
 
     float CalcDirectionalLight(DirectionalLight light,vec2 texCoords, vec3 normal, vec3 viewDir)

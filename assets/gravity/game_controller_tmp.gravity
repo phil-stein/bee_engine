@@ -6,11 +6,11 @@ extern var Input;
 extern var World;
 
 var original_level = true;
+var bunnies = 0;
 
 func init()
 {
 	System.print("called init: game_controller");
-	var input = Input();
 }
 
 func update()
@@ -32,13 +32,16 @@ func update()
 		}
 		else
 		{
-			game.load_level("good");
+			game.load_level("showcase06");
 		}
 		original_level = !original_level;
 	}
+
+	if (input.get_key_SPACE())
+	{
+		world.add_entity(0, 2.5 + (bunnies * 1.25), 0, "bunny.obj", "MAT_blank", "bunny" + bunnies);
+		bunnies += 1;
+	}
 }
 
-func cleanup()
-{
-}
 

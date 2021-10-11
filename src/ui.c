@@ -1774,11 +1774,17 @@ void properties_window()
                     nk_tree_pop(ctx);
                 }
 
-                if (nk_tree_push(ctx, NK_TREE_TAB, "FPS Diagnostics", NK_MINIMIZED))
+                if (nk_tree_push(ctx, NK_TREE_TAB, "Diagnostics", NK_MINIMIZED))
                 {
-                    char buf[10];
-                    sprintf_s(buf, 10, "FPS: %d", (int)get_fps());
+                    char buf[20];
+                    sprintf_s(buf, 20, "FPS: %d", (int)get_fps());
                     nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+                    sprintf_s(buf, 20, "Draw Calls: %d", *get_draw_calls_per_frame());
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+                    sprintf_s(buf, 20, "Verts: %d", *get_verts_per_frame());
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+                    sprintf_s(buf, 20, "Tris: %d", *get_tris_per_frame());
                     nk_label(ctx, buf, NK_TEXT_LEFT);
 
                     // ----
@@ -4890,6 +4896,8 @@ void set_error_popup(error_type type,char* msg)
     error_msg = calloc(strlen(msg), sizeof(char));
     strcpy(error_msg, msg);
     error_msg[strlen(msg)] = '\0';
+
+    set_cursor_visible(BEE_TRUE);
 }
 void set_source_code_window(char* src)
 {

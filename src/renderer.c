@@ -33,11 +33,22 @@ bee_bool hide_gizmos = BEE_TRUE;
 f32 perspective = 45.0f;
 f32 near_plane  = 0.1f;
 f32 far_plane   = 100.0f;
-int camera_ent_idx;
+int camera_ent_idx = -1; // -1 = no camera
 
 f32 editor_perspective = 45.0f;
 f32 editor_near_plane = 0.1f;
 f32 editor_far_plane = 100.0f;
+
+// hdr
+f32 exposure = 1.0f;
+
+vec3 bg_color = { 0.1f, 0.1f, 0.1f };
+
+#ifdef EDITOR_ACT
+int draw_calls_per_frame = 0;
+int verts_per_frame		= 0;
+int tris_per_frame		= 0;
+#endif
 
 // entities
 struct { int key; entity value; }* entities = NULL;
@@ -90,9 +101,6 @@ bee_bool use_msaa = BEE_TRUE;
 shader* shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
 
-// hdr
-f32 exposure = 1.0f;
-
 
 void renderer_init()
 {
@@ -102,11 +110,23 @@ void renderer_init()
 
 	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow");
 
-	create_framebuffer(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
-	create_framebuffer_multisampled(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
-	// create_framebuffer_shadowmap(&shadow_buffer, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
+#ifdef EDITOR_ACT
+	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
+	create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
 	set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
 	set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
+#else
+	if (use_msaa)
+	{
+		create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
+		set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
+	}
+	else
+	{
+		create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
+		set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
+	}
+#endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 	// positions   // texCoords
@@ -207,7 +227,7 @@ void renderer_init()
 #endif
 
 	// set background-color
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	set_bg_color(bg_color);
 
 	// set default return if key doesn't exist
 	entity e; 
@@ -223,6 +243,12 @@ void renderer_init()
 
 void renderer_update()
 {
+#ifdef EDITOR_ACT
+	draw_calls_per_frame = 0;
+	verts_per_frame		= 0;
+	tris_per_frame		= 0;
+#endif
+
 	render_scene_shadows();
 	render_scene_normal();
 	render_scene_screen();
@@ -418,13 +444,13 @@ void render_scene_normal()
 						m = get_mesh("flashlight.obj");
 						break;
 				}
-				// glm_vec3_copy(ent->_light.diffuse, tint);
+				glm_vec3_copy(ent->_light.diffuse, tint);
 				// printf("tint: %f, %f, %f\n", tint[0], tint[1], tint[2]);
 				// printf("dif:  %f, %f, %f\n", ent->_light.diffuse[0], ent->_light.diffuse[1], ent->_light.diffuse[2]);
 			}
 			if (m == NULL) { continue; }
 			material* mat = get_material("MAT_cel");
-			draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, GLM_VEC3_ONE); // entities[i].pos, entities[i].rot, entities[i].scalef
+			draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 		#endif
 	}
@@ -452,7 +478,10 @@ void render_scene_normal()
 	}
 
 	// skybox
-	render_scene_skybox();
+	if (draw_skybox == BEE_TRUE)
+	{
+		render_scene_skybox();
+	}
 
 	// draw transparent objects -----------------------------------------------
 #ifdef EDITOR_ACT
@@ -497,45 +526,47 @@ void render_scene_skybox()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 #endif
-	if (draw_skybox == BEE_TRUE)
+	// draw skybox as last
+	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+	//shader_use(skybox_shader);
+	shader_use(skybox_shader);
+
+	mat4 view;
+#ifdef EDITOR_ACT
+	if (gamestate)
 	{
-		// draw skybox as last
-		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-		//shader_use(skybox_shader);
-		shader_use(skybox_shader);
-
-		mat4 view;
-		if (gamestate)
-		{
-			get_camera_view_mat(get_entity(camera_ent_idx), &view[0]);
-		}
-		else
-		{
-			get_editor_camera_view_mat(&view[0]);
-		}
-		mat3 conv;
-		glm_mat4_pick3(view, conv);	// copy to mat3 to remove the position part
-		glm_mat4_zero(view);		// reset view
-		glm_mat4_ins3(conv, view);	// conv back to mat4
-
-
-		mat4 proj;
-		f32 deg_pers = perspective; glm_make_rad(&deg_pers);
-		int w, h; get_window_size(&w, &h);
-		glm_perspective(deg_pers, ((float)w / (float)h), near_plane, far_plane, proj);
-
-		shader_set_mat4(skybox_shader, "view", &view[0]);
-		shader_set_mat4(skybox_shader, "proj", &proj[0]);
-
-		// skybox cube
-		glBindVertexArray(skybox_vao);
-		glActiveTexture(GL_TEXTURE0);
-		shader_set_int(skybox_shader, "cube_map", 0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cube_map);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
-		glDepthFunc(GL_LESS); // set depth function back to default
+		get_camera_view_mat(get_entity(camera_ent_idx), view);
 	}
+	else
+	{
+		get_editor_camera_view_mat(view);
+	}
+#else
+	get_editor_camera_view_mat(view);
+#endif
+	mat3 conv;
+	glm_mat4_pick3(view, conv);	// copy to mat3 to remove the position part
+	glm_mat4_zero(view);		// reset view
+	glm_mat4_ins3(conv, view);	// conv back to mat4
+
+
+	mat4 proj;
+	f32 deg_pers = perspective; glm_make_rad(&deg_pers);
+	int w, h; get_window_size(&w, &h);
+	glm_perspective(deg_pers, ((float)w / (float)h), near_plane, far_plane, proj);
+
+	shader_set_mat4(skybox_shader, "view", &view[0]);
+	shader_set_mat4(skybox_shader, "proj", &proj[0]);
+
+	// skybox cube
+	glBindVertexArray(skybox_vao);
+	glActiveTexture(GL_TEXTURE0);
+	shader_set_int(skybox_shader, "cube_map", 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cube_map);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+	glDepthFunc(GL_LESS); // set depth function back to default
+	
 	// ------------------------------------------------------------------------
 }
 
@@ -679,12 +710,12 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		shader_set_mat4(mat->shader, "proj", proj);
 
 		set_shader_uniforms(mat);
-		if (is_gizmo)
-		{
-			shader_set_vec3(mat->shader, "material.tint", gizmo_col); // material because using cel_shader
-		}
 
 #ifdef EDITOR_ACT
+		if (is_gizmo)
+		{
+			shader_set_vec3(mat->shader, "mat.tint", gizmo_col); // material because using cel_shader
+		}
 	}
 #endif
 
@@ -702,6 +733,14 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 	{
 		glEnable(GL_CULL_FACE);
 	}
+#ifdef EDITOR_ACT
+	if (!is_gizmo)
+	{
+		draw_calls_per_frame++;
+		verts_per_frame += _mesh->vertices_elems;
+		tris_per_frame  += _mesh->indices_elems;
+	}
+#endif
 }
 
 void set_shader_uniforms(material* mat)
@@ -941,55 +980,32 @@ void renderer_cleanup()
 
 void renderer_clear_scene()
 {
-	// for (int i = 0; i < entity_ids_len; ++i)
-	// {
-	// 	hmdel(entities, entity_ids[i]);
-	// }
+
 	hmfree(entities);
 	entities = NULL;
 	entities_len = 0;
-	// ------------------
-	// for (int i = 0; i < entity_ids_len; ++i)
-	// {
-	// 	bee_bool success = arrdel(entity_ids, i);
-	// 	printf("deleting entity - %s\n", success == 0 ? "FAILED" : "SUCCESS");
-	// }
+
 	arrfree(entity_ids);
 	entity_ids = NULL;
 	entity_ids_len = 0;
-	// for (int i = transparent_ents_len - 1; i >= 0; --i)
-	// {
-	// 	arrdel(transparent_ents, i);
-	// }
+	
 	arrfree(transparent_ents);
 	transparent_ents = NULL;
 	transparent_ents_len = 0;
 
-	// for (int i = dir_lights_len - 1; i >= 0; --i)
-	// {
-	// 	arrdel(dir_lights, i);
-	// }
 	arrfree(dir_lights);
 	dir_lights = NULL;
 	dir_lights_len = 0;
 
-	// for (int i = point_lights_len - 1; i >= 0; --i)
-	// {
-	// 	arrdel(point_lights, i);
-	// }
 	arrfree(point_lights);
 	point_lights = NULL;
 	point_lights_len = 0;
 
-	// for (int i = spot_lights_len - 1; i >= 0; --i)
-	// {
-	// 	arrdel(spot_lights, i);
-	// }
 	arrfree(spot_lights);
 	spot_lights = NULL;
 	spot_lights_len = 0;
 	
-	camera_ent_idx = 0;
+	camera_ent_idx = -1;
 	editor_perspective = 45.0f;
 	editor_near_plane = 0.1f;
 	editor_far_plane = 100.0f;
@@ -1002,12 +1018,19 @@ int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material,
 }
 int add_entity_direct(entity e) 
 {
-	add_entity_direct_id(e, entities_len);
+	// check id available
+	int idx = entities_len;
+	bee_bool id_taken = BEE_TRUE;
+	while (id_taken)
+	{
+		entity* ent = get_entity(idx);
+		id_taken = ent->id == -1 ? BEE_FALSE : BEE_TRUE; // default ent returned when id not found
+		if (id_taken) { idx++; } // printf("id taken now: %d, ent->id: %d\n", idx, ent->id);
+	}
+	add_entity_direct_id(e, idx);
 }
 int add_entity_direct_id(entity e, int id)
 {
-	e.id = id == -858993460 ? entities_len : id;
-	e.id_idx = entity_ids_len;
 
 	if (e.has_model && e._material != NULL && e._material->is_transparent)
 	{
@@ -1042,12 +1065,15 @@ int add_entity_direct_id(entity e, int id)
 		camera_ent_idx = entities_len;
 	}
 	
+	assert(id >= 0);
+	e.id = id < 0 ? entities_len : id;
+	e.id_idx = entity_ids_len;
 
 	// hmput(entities, entities_len, e);
-	hmput(entities, id, e);
+	hmput(entities, e.id, e);
 	// printf("added entity: \"%s\", idx: %d\n", e.name, entities_len);
 	// arrput(entity_ids, entities_len);
-	arrput(entity_ids, id);
+	arrput(entity_ids, e.id);
 	entities_len++;
 	entity_ids_len++;
 
@@ -1280,9 +1306,21 @@ void set_all_scripts(bee_bool act)
 		for (int n = 0; n < ent->scripts_len; ++n)
 		{
 			ent->scripts[n]->active = act;
+			if (!act)
+			{
+				// so the init gets run every time you press play
+				ent->scripts[n]->init_closure_assigned   = BEE_FALSE;
+				ent->scripts[n]->update_closure_assigned = BEE_FALSE;
+				ent->scripts[n]->vm		 = NULL;
+				ent->scripts[n]->closure = NULL;
+			}
 		}
 	}
 }
+
+int* get_draw_calls_per_frame() { return &draw_calls_per_frame; }
+int* get_verts_per_frame() { return &verts_per_frame; }
+int* get_tris_per_frame() { return &tris_per_frame; }
 #endif
 void renderer_set(render_setting setting, bee_bool value)
 {
@@ -1330,6 +1368,16 @@ f32* get_exposure()
 { return &exposure; }
 u32 get_color_buffer()
 { return tex_col_buffer; }
+void get_bg_color(vec3 col)
+{
+	glm_vec3_copy(bg_color, col);
+}
+void set_bg_color(vec3 col)
+{
+	glm_vec3_copy(col, bg_color);
+	glClearColor(bg_color[0], bg_color[1], bg_color[2], 1.0f);
+}
+
 
 void entity_set_parent(int child, int parent)
 {

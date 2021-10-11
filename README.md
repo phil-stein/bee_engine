@@ -22,8 +22,9 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 	- [x] shadows
 	- [x] normals 
 	- [x] hdr
-	- [ ] deferred rendering
+	- [ ] bloom
 	- [ ] ssao
+	- [ ] deferred rendering ?
 	- [ ] pbr
 	- [ ] ibl
 	- [ ] hdri

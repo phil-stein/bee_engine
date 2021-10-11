@@ -45,6 +45,8 @@ static bee_bool game_load_level(gravity_vm* vm, gravity_value_t* args, uint16_t 
 
 void setup_world_class(gravity_vm* vm);
 
+static bee_bool world_add_ent(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+
 static bee_bool world_get_entity(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool world_get_camera(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
@@ -55,6 +57,22 @@ static bee_bool world_move_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t
 static bee_bool world_get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool world_get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+
+static bee_bool world_rot_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_rot_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_rot_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+
+static bee_bool world_get_ent_x_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_get_ent_y_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_get_ent_z_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+
+static bee_bool world_scale_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_scale_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_scale_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+
+static bee_bool world_get_ent_x_scale(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_get_ent_y_scale(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
+static bee_bool world_get_ent_z_scale(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 
 void setup_input_class(gravity_vm* vm);

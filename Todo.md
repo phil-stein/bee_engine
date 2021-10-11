@@ -10,6 +10,8 @@ Todo
     - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
+  - [ ] split renderer and entity-stuff to two separate file
+  
     
   
 - buggs
@@ -20,23 +22,22 @@ Todo
 
   - [ ] gravity scripts sometimes cant compile since adding the load_file delegate
 
-  - [x] 'upper_hierachy_ents' sometimes crashes the engine when sorting the hierarchy
-
-  - [x] saving scenes corrupts the program, probably in write_text_file()
-
   - [ ] dark areas look weird since adding gamma correction
 
   - [ ] added entities assume taken id's
 
+  - [ ] disabling msaa makes cube map be drawn over scene and the vertex info of the meshes gets all screwy  
+
+  - [ ] mixing of the different light sources looks weird in ambient areas & shadows
+
     
 
 - unfinished
-  - [x] entity_remove() in renderer.c
-  
-  - [x] entity_switch_light_type() in renderer.c
-  
+
+  - [ ] ...
+
     
-  
+
 - [ ] scene system
   - [ ] serialization
     - [ ] add cubemap & settings to scene header
@@ -70,7 +71,7 @@ Todo
   
   - [ ] bloom (as in the cherno video)
   
-  - [ ] deferred shading
+  - [ ] deferred shading ?
   
   - [ ] ssao
   
@@ -86,27 +87,29 @@ Todo
     - [ ] add ui for drag&drop importing
     - [ ] removing assets
     
-  - [ ] hot-reload assets (especially shaders)
+  - [ ] hot-reload assets 
+  
+    - [x] shaders
+    - [ ] meshes
+    - [ ] scripts
   
   - [ ] !!! warn when adding f.e. a material with a name that already exists
-  
+
   - [ ] search function in asset manager ui
   
   - [ ] editor cam v. game cam (camera component)
-
+  
     - [ ] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
-  
+
   - [ ] visualize normal-direction
-  
-  - [x] material / asset editor in asset manager
 
   - [ ] show shader source
 
   - [ ] transform gizmos
 
   - [ ] structures (prefabs)
-
+  
     - [ ] serialize entity tree
     - [ ] save & load
     - [ ] asset manager
@@ -115,27 +118,24 @@ Todo
     
   
 - [ ] input 
-  - [x] mouse input 
+
   - [ ] controller input
+
   
-  
-  
+
 - [ ] gravity scripting
 
   - [ ] finish input interface
-    - [x] all keys
-    - [x] get_key() & get_key_down()
-    - [ ] mouse interface
     - [ ] controller interface
     - [ ] actions like unity ???
-    
+
   - [ ] load_file delegate for #import 
 
   - [ ] delegate for 'System.print()'
 
-  - [ ] 'reset' script when pausing game-mode, i.e. rerun the init func each time you press play
+  - [x] 'reset' script when pausing game-mode, i.e. rerun the init func each time you press play
 
-  - [ ] interface to instance objects 
+  - [x] interface to instance objects 
 
   - [ ] interface to create meshes / other components to create models etc in gravity
 

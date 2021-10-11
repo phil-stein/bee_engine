@@ -6,7 +6,7 @@
 #include "framebuffer.h"
 #include "scene_manager.h" // tmp
 
-#define VERSION 1.2f
+#define VERSION 1.3f
 f32 current_version = VERSION;
 
 
@@ -60,6 +60,12 @@ void serialize_scene(char* buffer, int* offset, scene* s)
 {
 	// serialization version number
 	serialize_float(buffer, offset, VERSION);
+
+	// serialize scene settings
+	// @TODO: cube-map
+	serialize_float(buffer, offset, s->exposure); // v1.3
+	serialize_enum(buffer, offset, s->use_msaa);  // v1.3
+	serialize_vec3(buffer, offset, s->bg_color);  // v1.3
 
 	// serializing assets that arent defined in files
 	
@@ -372,6 +378,24 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 	current_version = ver;
 	printf("deserializing scene using version: %f\n", ver);
 
+	scene s;
+	if (current_version >= 1.3f)
+	{
+		s.exposure = deserialize_float(buffer, offset);
+		s.use_msaa = deserialize_enum(buffer, offset);
+		vec3 bg;
+		deserialize_vec3(buffer, offset, bg);
+		glm_vec3_copy(bg, s.bg_color);
+
+	}
+	else
+	{
+		s.exposure = 1;
+		s.use_msaa = BEE_TRUE;
+		vec3 bg = { 0.1f, 0.1f, 0.1f };
+		glm_vec3_copy(bg, s.bg_color);
+	}
+
 	// deserialize assets that arent defined in their own files
 	int shaders_len = deserialize_int(buffer, offset);
 	// printf("shaders len: %d\n", shaders_len);
@@ -389,7 +413,6 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 	}
 
 	// deserialize entities
-	scene s;
 	s.entities = NULL;
 	s.entities_len = deserialize_int(buffer, offset);
 	for (int i = 0; i < s.entities_len; ++i)

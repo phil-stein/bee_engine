@@ -202,7 +202,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 	assert(frag_src != NULL);
 
 	// fill text buffer
-	fread(frag_src, sizeof(char), len -1, f);
+	fread(frag_src, sizeof(char), len, f);
 	assert(strlen(frag_src) > 0);
 	fclose(f);
 

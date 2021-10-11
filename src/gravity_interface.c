@@ -43,7 +43,11 @@ void gravity_check_for_pending_actions()
     load_level_act = BEE_FALSE;
     if (quit_game_act)
     {
+#ifdef EDITOR_ACT
         set_gamestate(BEE_FALSE, BEE_TRUE);
+#else
+        close_window();
+#endif
     }
     quit_game_act = BEE_FALSE;
 }
@@ -367,17 +371,66 @@ void setup_world_class(gravity_vm* vm)
     gravity_class_t* c = gravity_class_new_pair(vm, "World", NULL, 0, 0);
 
     // allocate and bind bar closure to the newly created class
+    gravity_class_bind(c, "add_entity", NEW_CLOSURE_VALUE(world_add_ent));
     gravity_class_bind(c, "get_entity", NEW_CLOSURE_VALUE(world_get_entity));
     gravity_class_bind(c, "get_camera", NEW_CLOSURE_VALUE(world_get_camera));
     gravity_class_bind(c, "move_x", NEW_CLOSURE_VALUE(world_move_ent_x));
     gravity_class_bind(c, "move_y", NEW_CLOSURE_VALUE(world_move_ent_y));
     gravity_class_bind(c, "move_z", NEW_CLOSURE_VALUE(world_move_ent_z));
-    gravity_class_bind(c, "get_x", NEW_CLOSURE_VALUE(world_get_ent_x));
-    gravity_class_bind(c, "get_y", NEW_CLOSURE_VALUE(world_get_ent_y));
-    gravity_class_bind(c, "get_z", NEW_CLOSURE_VALUE(world_get_ent_z));
+    gravity_class_bind(c, "get_x_pos", NEW_CLOSURE_VALUE(world_get_ent_x));
+    gravity_class_bind(c, "get_y_pos", NEW_CLOSURE_VALUE(world_get_ent_y));
+    gravity_class_bind(c, "get_z_pos", NEW_CLOSURE_VALUE(world_get_ent_z));
+    gravity_class_bind(c, "rotate_x", NEW_CLOSURE_VALUE(world_rot_ent_x));
+    gravity_class_bind(c, "rotate_y", NEW_CLOSURE_VALUE(world_rot_ent_y));
+    gravity_class_bind(c, "rotate_z", NEW_CLOSURE_VALUE(world_rot_ent_z));
+    gravity_class_bind(c, "get_x_rot", NEW_CLOSURE_VALUE(world_get_ent_x_rot));
+    gravity_class_bind(c, "get_y_rot", NEW_CLOSURE_VALUE(world_get_ent_y_rot));
+    gravity_class_bind(c, "get_z_rot", NEW_CLOSURE_VALUE(world_get_ent_z_rot));
+    gravity_class_bind(c, "scale_x", NEW_CLOSURE_VALUE(world_scale_ent_x));
+    gravity_class_bind(c, "scale_y", NEW_CLOSURE_VALUE(world_scale_ent_y));
+    gravity_class_bind(c, "scale_z", NEW_CLOSURE_VALUE(world_scale_ent_z));
+    gravity_class_bind(c, "get_x_scale", NEW_CLOSURE_VALUE(world_get_ent_x_scale));
+    gravity_class_bind(c, "get_y_scale", NEW_CLOSURE_VALUE(world_get_ent_y_scale));
+    gravity_class_bind(c, "get_z_scale", NEW_CLOSURE_VALUE(world_get_ent_z_scale));
 
     // register class c inside VM
     gravity_vm_setvalue(vm, "World", VALUE_FROM_OBJECT(c));
+}
+
+static bee_bool world_add_ent(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 7)
+    {
+        throw_error("[World.add_entity(float, float, float, string, string, string)] Wrong amount of arguments, 6 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    gravity_value_t v3 = GET_VALUE(3);
+    gravity_value_t v4 = GET_VALUE(4);
+    gravity_value_t v5 = GET_VALUE(5);
+    gravity_value_t v6 = GET_VALUE(6);
+    if ((VALUE_ISA_INT(v1) == BEE_FALSE && VALUE_ISA_FLOAT(v1) == BEE_FALSE) ||
+        (VALUE_ISA_INT(v2) == BEE_FALSE && VALUE_ISA_FLOAT(v2) == BEE_FALSE) ||
+        (VALUE_ISA_INT(v3) == BEE_FALSE && VALUE_ISA_FLOAT(v3) == BEE_FALSE) ||
+        VALUE_ISA_STRING(v4) == BEE_FALSE || VALUE_ISA_STRING(v5) == BEE_FALSE ||
+        VALUE_ISA_STRING(v6) == BEE_FALSE)
+    {
+        throw_error("[World.add_entity(float, float, float, string, string, string)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    vec3 one = GLM_VEC3_ONE_INIT;
+    vec3 zero = GLM_VEC3_ZERO_INIT;
+    vec3 pos = { VALUE_AS_FLOAT(v1), VALUE_AS_FLOAT(v2), VALUE_AS_FLOAT(v3) };
+    char* mesh = VALUE_AS_CSTRING(v4);
+    char* mat  = VALUE_AS_CSTRING(v5);
+    char* name  = VALUE_AS_CSTRING(v6);
+    printf("world.add_entity mesh: %s, mat: %s, name: %s\n", mesh, mat, name);
+    int id = add_entity(pos, zero, one, get_mesh(mesh), get_material(mat), NULL, NULL, name);
+    RETURN_VALUE(VALUE_FROM_INT(id), rindex);
 }
 
 static bee_bool world_get_entity(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
@@ -430,7 +483,7 @@ static bee_bool world_move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t
 
     // int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(VALUE_AS_INT(v1));
-
+    if (!ent->has_trans) { return; }
     f32* y = &ent->pos[0];
     if (ent->pos == NULL) { f32 val = 0;  y = &val; }
     *y += VALUE_AS_FLOAT(v2);
@@ -451,7 +504,7 @@ static bee_bool world_move_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t
 
     // int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(VALUE_AS_INT(v1));
-
+    if (!ent->has_trans) { return; }
     f32* y = &ent->pos[1];
     if (ent->pos == NULL) { f32 val = 0;  y = &val; }
     *y += VALUE_AS_FLOAT(v2);
@@ -471,7 +524,7 @@ static bee_bool world_move_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t
 
     // int ents_len; get_entity_len(&ents_len);
     entity* ent = get_entity(VALUE_AS_INT(v1));
-
+    if (!ent->has_trans) { return; }
     f32* y = &ent->pos[2];
     if (ent->pos == NULL) { f32 val = 0;  y = &val; }
     *y += VALUE_AS_FLOAT(v2);
@@ -481,12 +534,12 @@ static bee_bool world_get_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t 
 {
     if (nargs != 2)
     {
-        throw_error("[World.get_x(int)] Wrong amount of arguments, 1 argument is needed."); return;
+        throw_error("[World.get_x_pos(int)] Wrong amount of arguments, 1 argument is needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     if (VALUE_ISA_INT(v1) == BEE_FALSE)
     {
-        throw_error("[World.move_x(int)] Wrong argument types."); return;
+        throw_error("[World.move_x_pos(int)] Wrong argument types."); return;
     }
 
     entity* ent = get_entity(VALUE_AS_INT(v1));
@@ -500,12 +553,12 @@ static bee_bool world_get_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t 
 {
     if (nargs != 2)
     {
-        throw_error("[World.get_y(int)] Wrong amount of arguments, 1 argument is needed."); return;
+        throw_error("[World.get_y_pos(int)] Wrong amount of arguments, 1 argument is needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     if (VALUE_ISA_INT(v1) == BEE_FALSE)
     {
-        throw_error("[World.move_y(int)] Wrong argument types."); return;
+        throw_error("[World.move_y_pos(int)] Wrong argument types."); return;
     }
 
     entity* ent = get_entity(VALUE_AS_INT(v1));
@@ -519,12 +572,12 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
 {
     if (nargs != 2)
     {
-        throw_error("[World.get_z(int)] Wrong amount of arguments, 1 argument is needed."); return;
+        throw_error("[World.get_z__pos(int)] Wrong amount of arguments, 1 argument is needed."); return;
     }
     gravity_value_t v1 = GET_VALUE(1);
     if (VALUE_ISA_INT(v1) == BEE_FALSE)
     {
-        throw_error("[World.move_z(int)] Wrong argument types."); return;
+        throw_error("[World.move_z_pos(int)] Wrong argument types."); return;
     }
 
     entity* ent = get_entity(VALUE_AS_INT(v1));
@@ -533,6 +586,244 @@ static bee_bool world_get_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t 
     if (ent->pos == NULL) { x = 0; }
 
     RETURN_VALUE(VALUE_FROM_FLOAT(x), rindex);
+}
+
+static bee_bool world_rot_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 3)
+    {
+        throw_error("[World.rotate_x(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
+    {
+        throw_error("[World.rotate_x(int, float)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+    if (!ent->has_trans) { return; }
+    vec3 rot; glm_vec3_copy(ent->rot, rot);
+    rot[0] += VALUE_AS_FLOAT(v2);
+    entity_set_rot(VALUE_AS_INT(v1), rot);
+}
+static bee_bool world_rot_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 3)
+    {
+        throw_error("[World.rotate_y(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
+    {
+        throw_error("[World.rotate_y(int, float)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+    if (!ent->has_trans) { return; }
+    vec3 rot; glm_vec3_copy(ent->rot, rot);
+    rot[1] += VALUE_AS_FLOAT(v2);
+    entity_set_rot(VALUE_AS_INT(v1), rot);
+}
+static bee_bool world_rot_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 3)
+    {
+        throw_error("[World.rotate_z(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
+    {
+        throw_error("[World.rotate_z(int, float)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+    if (!ent->has_trans) { return; }
+    vec3 rot; glm_vec3_copy(ent->rot, rot);
+    rot[2] += VALUE_AS_FLOAT(v2);
+    entity_set_rot(VALUE_AS_INT(v1), rot);
+}
+
+static bee_bool world_get_ent_x_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2)
+    {
+        throw_error("[World.get_x_rot(int)] Wrong amount of arguments, 1 argument is needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE)
+    {
+        throw_error("[World.move_x_rot(int)] Wrong argument types."); return;
+    }
+
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    f32 val = ent->rot[0];
+    if (ent->rot == NULL) { val = 0; }
+
+    RETURN_VALUE(VALUE_FROM_FLOAT(val), rindex);
+}
+static bee_bool world_get_ent_y_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2)
+    {
+        throw_error("[World.get_y_rot(int)] Wrong amount of arguments, 1 argument is needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE)
+    {
+        throw_error("[World.move_y_rot(int)] Wrong argument types."); return;
+    }
+
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    f32 val = ent->rot[1];
+    if (ent->rot == NULL) { val = 0; }
+
+    RETURN_VALUE(VALUE_FROM_FLOAT(val), rindex);
+}
+static bee_bool world_get_ent_z_rot(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2)
+    {
+        throw_error("[World.get_z_rot(int)] Wrong amount of arguments, 1 argument is needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE)
+    {
+        throw_error("[World.move_z_rot(int)] Wrong argument types."); return;
+    }
+
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    f32 val = ent->rot[2];
+    if (ent->rot == NULL) { val = 0; }
+
+    RETURN_VALUE(VALUE_FROM_FLOAT(val), rindex);
+}
+
+static bee_bool world_scale_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 3)
+    {
+        throw_error("[World.scale_x(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
+    {
+        throw_error("[World.scale_x(int, float)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+    if (!ent->has_trans) { return; }
+    ent->scale[0] += VALUE_AS_FLOAT(v2);
+}
+static bee_bool world_scale_ent_y(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 3)
+    {
+        throw_error("[World.scale_y(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
+    {
+        throw_error("[World.scale_y(int, float)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+    if (!ent->has_trans) { return; }
+    ent->scale[1] += VALUE_AS_FLOAT(v2);
+}
+static bee_bool world_scale_ent_z(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    // SKIPPED: check nargs (must be 3 because arg[0] is self)
+    if (nargs != 3)
+    {
+        throw_error("[World.scale_z(int, float)] Wrong amount of arguments, 2 argument are needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    gravity_value_t v2 = GET_VALUE(2);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE || VALUE_ISA_FLOAT(v2) == BEE_FALSE)
+    {
+        throw_error("[World.scale_z(int, float)] Wrong argument types."); return;
+    }
+
+    // int ents_len; get_entity_len(&ents_len);
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+    if (!ent->has_trans) { return; }
+    ent->scale[2] += VALUE_AS_FLOAT(v2);
+}
+
+static bee_bool world_get_ent_x_scale(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2)
+    {
+        throw_error("[World.get_x_scale(int)] Wrong amount of arguments, 1 argument is needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE)
+    {
+        throw_error("[World.move_x_scale(int)] Wrong argument types."); return;
+    }
+
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    f32 val = ent->scale[0];
+    if (!ent->has_trans) { val = 0; }
+
+    RETURN_VALUE(VALUE_FROM_FLOAT(val), rindex);
+}
+static bee_bool world_get_ent_y_scale(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2)
+    {
+        throw_error("[World.get_y_scale(int)] Wrong amount of arguments, 1 argument is needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE)
+    {
+        throw_error("[World.move_y_scale(int)] Wrong argument types."); return;
+    }
+
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    f32 val = ent->scale[1];
+    if (!ent->has_trans) { val = 0; }
+
+    RETURN_VALUE(VALUE_FROM_FLOAT(val), rindex);
+}
+static bee_bool world_get_ent_z_scale(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 2)
+    {
+        throw_error("[World.get_z_scale(int)] Wrong amount of arguments, 1 argument is needed."); return;
+    }
+    gravity_value_t v1 = GET_VALUE(1);
+    if (VALUE_ISA_INT(v1) == BEE_FALSE)
+    {
+        throw_error("[World.move_z_scale(int)] Wrong argument types."); return;
+    }
+
+    entity* ent = get_entity(VALUE_AS_INT(v1));
+
+    f32 val = ent->scale[2];
+    if (!ent->has_trans) { val = 0; }
+
+    RETURN_VALUE(VALUE_FROM_FLOAT(val), rindex);
 }
 
 // void setup_camera_class(gravity_vm* vm)

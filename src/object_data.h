@@ -193,13 +193,9 @@ typedef struct entity
 
 typedef struct scene
 {
-	// assets
-	// these assets need to be defined, the others just get read from a file
-	// shader* shaders;
-	// int shaders_len;
-	// 
-	// material* materials;
-	// int materials_len;
+	f32 exposure;
+	bee_bool use_msaa;
+	vec3 bg_color;
 
 	// entitities
 	entity* entities;

@@ -51,10 +51,31 @@ void load_scene(const char* name)
 		return;
 	}
 
+	// settings
+	*get_exposure() = s.exposure;
+	renderer_set(RENDER_MSAA, s.use_msaa);
+	set_bg_color(s.bg_color);													
+
+	// entities
 	for (int i = 0; i < s.entities_len; ++i)
 	{
 		add_entity_direct_id(s.entities[i], s.entities[i].id);
 	}
+
+#ifdef EDITOR_ACT
+	if (get_cam_entity_id() == -1 && get_gamestate()) // no camera entity
+	{
+		set_gamestate(BEE_FALSE, BEE_TRUE);
+		char buf[40 + NAME_SIZE]; 
+		sprintf_s(buf, 40 + NAME_SIZE, "Scene loaded has no camera. Scene: \"%s\"", name);
+		set_error_popup(GENERAL_ERROR, buf); 
+	}
+#else
+	if (get_cam_entity_id() == -1)
+	{
+		assert(0); // scene without camera loaded
+	}
+#endif
 
 	strcpy_s(active_scene, NAME_SIZE, name);
 
@@ -66,6 +87,13 @@ void save_scene(const char* name)
 	strcat(path, name);
 
 	scene s;
+	// settings
+	s. exposure = *get_exposure();			
+	s.use_msaa = *renderer_get(RENDER_MSAA);
+	vec3 bg; get_bg_color(bg);								
+	glm_vec3_copy(bg, s.bg_color);
+
+	// entities
 	s.entities = NULL;
 	int* entity_ids = get_entity_ids(&s.entities_len);
 	for (int i = 0; i < s.entities_len; ++i)

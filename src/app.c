@@ -354,13 +354,11 @@ void process_input(GLFWwindow* window)
 	// fly-mode, rotate cam with mouse
 	if (is_mouse_pressed(MOUSE_right))
 	{
-		// printf("pressed right mouse\n");
 		fly_enabled = BEE_TRUE;
 		set_cursor_visible(BEE_FALSE);
 	}
 	else if (is_mouse_released(MOUSE_right) && fly_enabled)
 	{
-		// printf("reset mouse\n");
 		center_cursor_pos();
 		fly_enabled = BEE_FALSE;
 		set_cursor_visible(BEE_TRUE);

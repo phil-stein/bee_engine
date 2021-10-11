@@ -39,17 +39,22 @@ void render_scene_shadows();
 void render_scene_normal();
 void render_scene_skybox();
 void render_scene_screen();
-// renderes a single mesh, amounting in one draw-call
+// renderes a single mesh, causing one draw-call
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col);
 void set_shader_uniforms(material* mat);
 
+// clears all entities, etc, completely wiping the current scene
 void renderer_clear_scene();
 
 // the transform of the entity with the parents transforms, calculated recursively 
 void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
 
+// only use this when certain id isnt taken, as it doesnt get checked properly.
 int add_entity_direct_id(entity e, int id);
+// add previously made entity to the engine
 int add_entity_direct(entity e);
+// makes entity from given properties and adds it to the engine
+// if your goal is to simply add an entity to the game use this function
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name);
 int duplicate_entity(int id);
 
@@ -65,12 +70,18 @@ void entity_set_dir_vec(int entity_id, vec3 dir);
 void set_gamestate(bee_bool play, bee_bool _hide_gizmos);
 bee_bool get_gamestate();
 void set_all_scripts(bee_bool act);
+
+int* get_draw_calls_per_frame();
+int* get_verts_per_frame();
+int* get_tris_per_frame();
 // void set_all_gizmo_meshes(bee_bool act);
 
 void renderer_set(render_setting setting, bee_bool value);
 bee_bool* renderer_get(render_setting setting);
 f32* get_exposure();
 u32 get_color_buffer();
+void get_bg_color(vec3 col);
+void set_bg_color(vec3 col);
 
 void entity_set_parent(int child, int parent);
 void entity_remove_child(int parent, int child);
