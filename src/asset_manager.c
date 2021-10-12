@@ -354,30 +354,6 @@ void check_file(char* file_name, int file_name_len, char* dir_path)
 		log_scene(t_path, file_name);
 	}
 }
-void add_file_to_project(char* file_path)
-{
-	if (!file_exists_check(file_path))
-	{ return; }
-
-	// char path_cpy[124];
-	char* name = str_trunc(str_find_last_of(file_path, "\\"), 1); // isolate name
-	if (get_asset_type(name) == NOT_ASSET)
-	{
-		sprintf(stderr,    "[Error] File added to Project isn't an Asset.");
-		submit_txt_console("[Error] File added to Project isn't an Asset.");
-		return;
-	}
-	char* path_cpy = get_asset_dir();
-	strcat(path_cpy, "\\");
-	strcat(path_cpy, name);
-
-	copy_file(file_path, path_cpy);
-	printf("copied to: %s\n", path_cpy);
-
-	char* path_cpy_no_name = str_trunc(path_cpy, (strlen(name) + 1) * -1); // remove name from path
-
-	check_file(name, strlen(name), path_cpy_no_name); // logs file if it is an asset
-}
 
 void assetm_cleanup()
 {
@@ -438,6 +414,38 @@ void assetm_cleanup()
 	arrfree(logged_frag_files);
 	arrfree(shaders_data);
 }
+
+#ifdef EDITOR_ACT
+void add_file_to_project(char* file_path)
+{
+	if (!file_exists_check(file_path))
+	{ return; }
+
+	// char path_cpy[124];
+	char* name = str_trunc(str_find_last_of(file_path, "\\"), 1); // isolate name
+	if (get_asset_type(name) == NOT_ASSET)
+	{
+		sprintf(stderr,    "[Error] File added to Project isn't an Asset.\n");
+		submit_txt_console("[Error] File added to Project isn't an Asset.");
+		return;
+	}
+	char* path_cpy = get_asset_dir();
+	strcat(path_cpy, "\\");
+	strcat(path_cpy, name);
+
+	copy_file(file_path, path_cpy);
+	if (!file_exists_check(file_path))
+	{ printf("[ERROR] copy of imported file failed\n");  return; }
+	// printf("copied to: %s\n", path_cpy);
+
+	char* path_cpy_no_name = str_trunc(path_cpy, (strlen(name) + 1) * -1); // remove name from path
+	// printf("-> path: %s\n", path_cpy_no_name);
+	// printf("-> name: %s\n", name);
+
+	check_file(name, strlen(name), path_cpy_no_name); // logs file if it is an asset
+}
+#endif
+
 
 //
 // ---- misc ----
@@ -586,6 +594,51 @@ bee_bool check_asset_internal(char* name)
 	return BEE_FALSE;
 }
 
+// @TODO: function to search assets
+/*
+void search_assets(asset_type type, char* name)
+{
+
+	static int equal_names[32];
+	static int equal_names_len = 0;
+
+	int assets_len = 
+
+	for (int n = 0; n < node_names_len; ++n)
+	{
+		bee_bool equal = BEE_FALSE;
+
+		if (strlen(buffer) == strlen(node_names[n]))
+		{
+			equal = !_strcmpi(buffer, node_names[n]);
+		}
+		else if (strlen(buffer) > strlen(node_names[n]))
+		{
+			char* str_cpy = malloc((strlen(node_names[n]) + 1) * sizeof(char));
+			assert(str_cpy != NULL);
+			strncpy(str_cpy, buffer, strlen(node_names[n]) * sizeof(char));
+			assert(str_cpy != NULL);
+
+			equal = !_strcmpi(str_cpy, node_names[n]);
+		}
+		else
+		{
+			char* str_cpy = malloc((strlen(buffer) + 1) * sizeof(char));
+			assert(str_cpy != NULL);
+			strncpy(str_cpy, node_names[n], strlen(buffer) * sizeof(char));
+			assert(str_cpy != NULL);
+
+			equal = !_strcmpi(buffer, str_cpy);
+		}
+
+		if (equal)
+		{
+			equal_names[equal_names_len] = n;
+			equal_names_len++;
+		}
+	}
+}
+*/
 
 //
 // ---- textures ----
@@ -763,7 +816,8 @@ mesh* get_mesh(const char* name)
 	//		  for example make the 0th texture allways be all pink etc.
 	if (!check_mesh_exists(name))
 	{
-		assert(0);
+		// assert(0);
+		printf("[ERROR] requested mesh \"%s\" not found.\n", name);
 	}
 
 	// get the index to the mesh_data array from the hashmap

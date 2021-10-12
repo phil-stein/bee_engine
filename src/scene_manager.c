@@ -3,6 +3,7 @@
 #include "file_handler.h"
 #include "serialization.h"
 #include "stb/stb_ds.h"
+#include "entities.h"
 #include "renderer.h"
 
 #define NAME_SIZE 25
@@ -31,7 +32,7 @@ char* get_active_scene_name()
 
 void load_scene(const char* name)
 {
-	renderer_clear_scene();
+	clear_scene();
 
 	char* path = get_scene_dir_path(name);
 	assert(path != NULL);
@@ -63,7 +64,7 @@ void load_scene(const char* name)
 	}
 
 #ifdef EDITOR_ACT
-	if (get_cam_entity_id() == -1 && get_gamestate()) // no camera entity
+	if (get_camera_ent_id() == -1 && get_gamestate()) // no camera entity
 	{
 		set_gamestate(BEE_FALSE, BEE_TRUE);
 		char buf[40 + NAME_SIZE]; 
@@ -71,7 +72,7 @@ void load_scene(const char* name)
 		set_error_popup(GENERAL_ERROR, buf); 
 	}
 #else
-	if (get_cam_entity_id() == -1)
+	if (get_camera_ent_id() == -1)
 	{
 		assert(0); // scene without camera loaded
 	}
@@ -115,6 +116,12 @@ void save_scene(const char* name)
 
 	// check with asset managers
 	log_scene(path, name);
+}
+
+void clear_scene()
+{
+	entities_clear_scene();
+	renderer_clear_scene();
 }
 
 void add_empty_scene(const char* name)
@@ -234,7 +241,7 @@ void save_scene_state()
 
 void load_scene_state()
 {
-	renderer_clear_scene();
+	clear_scene();
 
 	int offset = 0;
 	rtn_code rtn = BEE_OK;

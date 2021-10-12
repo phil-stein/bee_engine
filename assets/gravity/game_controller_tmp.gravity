@@ -6,7 +6,7 @@ extern var Input;
 extern var World;
 
 var original_level = true;
-var bunnies = 0;
+var added_ents = 0;
 
 func init()
 {
@@ -37,10 +37,10 @@ func update()
 		original_level = !original_level;
 	}
 
-	if (input.get_key_SPACE())
+	if (input.get_key_down_SPACE())
 	{
-		world.add_entity(0, 2.5 + (bunnies * 1.25), 0, "bunny.obj", "MAT_blank", "bunny" + bunnies);
-		bunnies += 1;
+		world.add_entity(0, 2.5 + (added_ents * 1.25), 0, "cube.obj", "MAT_blank", "inst" + added_ents);
+		added_ents += 1;
 	}
 }
 

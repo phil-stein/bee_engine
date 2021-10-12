@@ -6,6 +6,7 @@
 #include "framebuffer.h"
 #include "stb/stb_ds.h"
 #include "window.h"
+#include "ui.h"
 
 // ---- vars ----
 GLFWwindow* window;
@@ -155,8 +156,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void file_drop_callback(GLFWwindow* window, int path_count, const char* paths[])
 {
-	for (int i = 0; i < path_count; ++i)
-	{
-		add_file_to_project(paths[i]);
-	}
+#ifdef EDITOR_ACT
+	set_drag_and_drop_import_window(path_count, paths);
+#endif
 }

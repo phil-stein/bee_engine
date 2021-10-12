@@ -128,9 +128,12 @@ void ui_cleanup();
 
 void properties_window();
 void draw_entity_hierachy_entity(int idx, int offset);
+void properties_popups();
+
 void pause_button_window();
 
 void asset_browser_window();
+void asset_browser_popups(texture* textures, mesh* meshes, gravity_script* scripts, material* materials, shader* shaders);
 
 void console_window();
 void submit_txt_console(char* txt);
@@ -147,6 +150,9 @@ void scene_context_window();
 
 void edit_asset_window();
 void set_edit_asset_window(asset_type type, void* asset_ptr);
+
+void drag_and_drop_import_window();
+void set_drag_and_drop_import_window(int path_count, char* paths[]);
 
 // themes
 enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };

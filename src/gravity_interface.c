@@ -4,6 +4,8 @@
 #include "scene_manager.h"
 #include "file_handler.h"
 #include "game_time.h"
+#include "entities.h"
+#include "entities.h"
 #include "renderer.h"
 #include "str_util.h"
 #include "camera.h"
@@ -15,7 +17,7 @@
 gravity_script* cur_script = NULL;
 int cur_script_entity = 0;
 
-// pending actions
+// ---- pending actions ----
 bee_bool load_level_act = BEE_FALSE;
 char load_level_name[25];
 bee_bool quit_game_act = BEE_FALSE;
@@ -23,6 +25,7 @@ bee_bool quit_game_act = BEE_FALSE;
 bee_bool rotate_cam_by_mouse_act = BEE_FALSE;
 int      rotate_cam_by_mouse_idx = 0;
 f32      rotate_cam_by_mouse_speed = 1.0f;
+
 
 void set_cur_script(gravity_script* script, int entity_index)
 {
@@ -424,12 +427,13 @@ static bee_bool world_add_ent(gravity_vm* vm, gravity_value_t* args, uint16_t na
 
     vec3 one = GLM_VEC3_ONE_INIT;
     vec3 zero = GLM_VEC3_ZERO_INIT;
+    // pos = { VALUE_AS_FLOAT(v1), VALUE_AS_FLOAT(v2), VALUE_AS_FLOAT(v3) };
     vec3 pos = { VALUE_AS_FLOAT(v1), VALUE_AS_FLOAT(v2), VALUE_AS_FLOAT(v3) };
-    char* mesh = VALUE_AS_CSTRING(v4);
+    char* _mesh = VALUE_AS_CSTRING(v4);
     char* mat  = VALUE_AS_CSTRING(v5);
     char* name  = VALUE_AS_CSTRING(v6);
-    printf("world.add_entity mesh: %s, mat: %s, name: %s\n", mesh, mat, name);
-    int id = add_entity(pos, zero, one, get_mesh(mesh), get_material(mat), NULL, NULL, name);
+    printf("world.add_entity mesh: %s, mat: %s, name: %s\n", _mesh, mat, name);
+    int id = add_entity(pos, zero, one, get_mesh(_mesh), get_material(mat), NULL, NULL, name);
     RETURN_VALUE(VALUE_FROM_INT(id), rindex);
 }
 
@@ -464,7 +468,7 @@ static bee_bool world_get_camera(gravity_vm* vm, gravity_value_t* args, uint16_t
         throw_error("[World.get_camera()] Wrong amount of arguments, 0 arguments are needed."); return;
     }
 
-    RETURN_VALUE(VALUE_FROM_INT(get_cam_entity()->id), rindex);
+    RETURN_VALUE(VALUE_FROM_INT(get_camera_ent_id()), rindex);
 }
 
 static bee_bool world_move_ent_x(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)

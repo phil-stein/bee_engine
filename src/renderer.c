@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "window.h"
 #include "camera.h"
+#include "entities.h"
 #include "framebuffer.h"
 #include "file_handler.h"
 #include "asset_manager.h"
@@ -49,13 +50,6 @@ int draw_calls_per_frame = 0;
 int verts_per_frame		= 0;
 int tris_per_frame		= 0;
 #endif
-
-// entities
-struct { int key; entity value; }* entities = NULL;
-// entity* entities = NULL;
-int  entities_len = 0;
-int* entity_ids = NULL;
-int  entity_ids_len = 0;
 
 int* transparent_ents     = NULL;
 int  transparent_ents_len = 0;
@@ -110,23 +104,10 @@ void renderer_init()
 
 	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow");
 
-#ifdef EDITOR_ACT
 	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
 	create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
 	set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
 	set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
-#else
-	if (use_msaa)
-	{
-		create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
-		set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
-	}
-	else
-	{
-		create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
-		set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
-	}
-#endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 	// positions   // texCoords
@@ -229,13 +210,6 @@ void renderer_init()
 	// set background-color
 	set_bg_color(bg_color);
 
-	// set default return if key doesn't exist
-	entity e; 
-	e.has_trans = 0; e.has_model = 0; e.has_cam = 0;  e.has_light = 0;
-	e.name = "x"; e.id = -1; e.id_idx = -1;
-	e.scripts_len = 0; e.children_len = 0; e.parent = 9999;
-	hmdefault(entities, e);
-
 
 	// light* l = &get_entity(dir_lights[0])->_light;
 	// create_framebuffer_shadowmap(&l->shadow_map, &l->shadow_fbo, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
@@ -249,6 +223,8 @@ void renderer_update()
 	tris_per_frame		= 0;
 #endif
 
+	printf("use_msaa: %s\n", use_msaa ? "true": "false");
+
 	render_scene_shadows();
 	render_scene_normal();
 	render_scene_screen();
@@ -261,16 +237,6 @@ void renderer_update()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 #endif
-
-	// entities ---------------------------------------------------------------
-
-	for (int i = 0; i < entity_ids_len; ++i)
-	{
-		update_entity(get_entity(entity_ids[i]));
-	}
-	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene / etc
-
-	// ------------------------------------------------------------------------
 
 }
 
@@ -542,7 +508,7 @@ void render_scene_skybox()
 		get_editor_camera_view_mat(view);
 	}
 #else
-	get_editor_camera_view_mat(view);
+	get_camera_view_mat(get_entity(camera_ent_idx), view);
 #endif
 	mat3 conv;
 	glm_mat4_pick3(view, conv);	// copy to mat3 to remove the position part
@@ -965,13 +931,6 @@ void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale)
 
 void renderer_cleanup()
 {
-	for (int i = 0; i < entities_len; ++i)
-	{
-		free_entity(&entities[i]);
-	}
-
-	// arrfree(entities);
-	hmfree(entities);
 	arrfree(dir_lights);
 	arrfree(point_lights);
 	arrfree(spot_lights);
@@ -980,14 +939,6 @@ void renderer_cleanup()
 
 void renderer_clear_scene()
 {
-
-	hmfree(entities);
-	entities = NULL;
-	entities_len = 0;
-
-	arrfree(entity_ids);
-	entity_ids = NULL;
-	entity_ids_len = 0;
 	
 	arrfree(transparent_ents);
 	transparent_ents = NULL;
@@ -1011,243 +962,81 @@ void renderer_clear_scene()
 	editor_far_plane = 100.0f;
 }
 
-// add an entity
-int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name)
-{
-	return add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
-}
-int add_entity_direct(entity e) 
-{
-	// check id available
-	int idx = entities_len;
-	bee_bool id_taken = BEE_TRUE;
-	while (id_taken)
-	{
-		entity* ent = get_entity(idx);
-		id_taken = ent->id == -1 ? BEE_FALSE : BEE_TRUE; // default ent returned when id not found
-		if (id_taken) { idx++; } // printf("id taken now: %d, ent->id: %d\n", idx, ent->id);
-	}
-	add_entity_direct_id(e, idx);
-}
-int add_entity_direct_id(entity e, int id)
-{
-
-	if (e.has_model && e._material != NULL && e._material->is_transparent)
-	{
-		transparent_ents_len++;
-		arrput(transparent_ents, entities_len);
-	}
-
-	if (e.has_light)
-	{
-		switch (e._light.type)
-		{
-		case DIR_LIGHT:
-			arrput(dir_lights, entities_len);
-			e._light.id = dir_lights_len;
-			dir_lights_len++;
-			break;
-		case POINT_LIGHT:
-			arrput(point_lights, entities_len);
-			e._light.id = point_lights_len;
-			point_lights_len++;
-			break;
-		case SPOT_LIGHT:
-			arrput(spot_lights, entities_len);
-			e._light.id = spot_lights_len;
-			spot_lights_len++;
-			break;
-		}
-	}
-
-	if (e.has_cam)
-	{
-		camera_ent_idx = entities_len;
-	}
-	
-	assert(id >= 0);
-	e.id = id < 0 ? entities_len : id;
-	e.id_idx = entity_ids_len;
-
-	// hmput(entities, entities_len, e);
-	hmput(entities, e.id, e);
-	// printf("added entity: \"%s\", idx: %d\n", e.name, entities_len);
-	// arrput(entity_ids, entities_len);
-	arrput(entity_ids, e.id);
-	entities_len++;
-	entity_ids_len++;
-
-	// sets dir & front vec in light & cam
-	entity_set_rot(id, e.rot);
-
-	return entities_len - 1;
-}
-int duplicate_entity(int id)
-{
-	entity e;
-	entity* original = get_entity(id);
-	// memcpy(&e, original, sizeof(entity));
-	e.id     = -1;
-	e.id_idx = -1;
-	char* name = malloc(strlen(original->name) +2 +1);
-	sprintf_s(name, strlen(original->name) + 2 + 1, "%s02", original->name);
-	e.name = name;
-
-	e.has_trans = original->has_trans;
-	if (e.has_trans)
-	{
-		glm_vec3_copy(original->pos, e.pos);
-		glm_vec3_copy(original->rot, e.rot);
-		glm_vec3_copy(original->scale, e.scale);
-	}
-	e.rotate_global = original->rotate_global;
-	e.has_model = original->has_model;
-	if (e.has_model)
-	{
-		e._mesh = original->_mesh;
-		e._material = original->_material;
-	}
-	e.has_cam = original->has_cam;
-	if (e.has_cam)
-	{
-		e._camera = original->_camera;
-	}
-	e.has_light = original->has_light;
-	if (e.has_light)
-	{
-		e._light = original->_light;
-	}
-
-	for (int i = 0; i < e.children_len; ++i)
-	{
-		e.children[i] = 0;
-	}
-	e.children_len = 0;
-	e.parent = 9999;
-
-	e.scripts = NULL;
-	for (int i = 0; i < original->scripts_len; ++i)
-	{
-		arrput(e.scripts, original->scripts[i]);
-		e.scripts_len++;
-	}
-
-	return add_entity_direct(e);
-}
-void add_entity_cube()
-{
-	mesh m = make_cube_mesh(); // @TODO: make this check with the assetmanager if a cube mesh already exists
-	vec3 pos = { 0.0f, 0.0f, 0.0f };
-	vec3 rot = { 0.0f, 0.0f, 0.0f };
-	vec3 scale = { 1.0f, 1.0f, 1.0f };
-	add_entity(pos, rot, scale, &m, get_material("MAT_blank"), NULL, NULL, "cube");
-}
-
-// doesnt work yet
-void entity_switch_light_type(int entity_id, light_type new_type)
-{
-	entity* ent = get_entity(entity_id);
-	if (!ent->has_light) { return; }
-	// remove from old type categorisation
-	switch (ent->_light.type)
-	{
-		case DIR_LIGHT:
-			arrdel(dir_lights, ent->_light.id);
-			dir_lights_len--;
-			break;
-		case POINT_LIGHT:
-			arrdel(point_lights, ent->_light.id);
-			point_lights_len--;
-			break;
-		case SPOT_LIGHT:
-			arrdel(spot_lights, ent->_light.id);
-			spot_lights_len--;
-			break;
-	}
-
-	// add to new type categorisation
-	switch (new_type)
-	{
-		case DIR_LIGHT:
-			arrput(dir_lights, entity_id);
-			dir_lights_len++;
-			create_framebuffer_shadowmap(&ent->_light.shadow_map, &ent->_light.shadow_fbo, 2048, 2048);
-			break;
-		case POINT_LIGHT:
-			arrput(point_lights, entity_id);
-			point_lights_len++;
-			break;
-		case SPOT_LIGHT:
-			arrput(spot_lights, entity_id);
-			spot_lights_len++;
-			break;
-	}
-
-	ent->_light.type = new_type;
-}
-
-void entity_add_script(int entity_index, const char* name)
-{
-	entity* ent = &hmget(entities, entity_index);
-	gravity_script* script = get_script(name);
+// get -----------------------------------------------------------
+int   get_camera_ent_id()		{ return camera_ent_idx; }
+int** get_transparent_ids_ptr()	{ return &transparent_ents; }
+int*  get_transparent_ids_len()	{ return &transparent_ents_len; }
+int** get_dir_light_ids_ptr()	{ return &dir_lights; }
+int*  get_dir_light_ids_len()	{ return &dir_lights_len; }
+int** get_point_light_ids_ptr()	{ return &point_lights; }
+int*  get_point_light_ids_len()	{ return &point_lights_len; }
+int** get_spot_light_ids_ptr()	{ return &spot_lights; }
+int*  get_spot_light_ids_len()	{ return &spot_lights_len; }
 #ifdef EDITOR_ACT
-	script->active = BEE_FALSE;
+bee_bool get_gamestate()
+{
+	return gamestate;
+}
+
+int* get_draw_calls_per_frame() { return &draw_calls_per_frame; }
+int* get_verts_per_frame() { return &verts_per_frame; }
+int* get_tris_per_frame() { return &tris_per_frame; }
 #endif
-	arrput(ent->scripts, script);
-	ent->scripts_len++;
 
-}
-void entity_remove_script(int entity_index, int script_index)
+bee_bool* renderer_get(render_setting setting)
 {
-	entity* ent = &hmget(entities, entity_index);
-	free_script(ent->scripts[script_index]);
-	arrdel(ent->scripts, script_index);
-	ent->scripts_len--;
+	switch (setting)
+	{
+		case RENDER_WIREFRAME:
+			return &wireframe_mode_enabled;
+		case RENDER_UV:
+			return &uv_mode_enabled;
+		case RENDER_NORMAL:
+			return &normal_mode_enabled;
+		case RENDER_CUBEMAP:
+			return &draw_skybox;
+		case RENDER_MSAA:
+			return &use_msaa;
+	}
 }
-
-void entity_set_rot(int entity_id, vec3 rot)
+f32* get_exposure()
+{ return &exposure; }
+u32 get_color_buffer()
+{ return tex_col_buffer; }
+void get_bg_color(vec3 col)
 {
-	entity* e = get_entity(entity_id);
-	glm_vec3_copy(rot, e->rot);
-
-	if (e->has_light && e->_light.type == DIR_LIGHT)
-	{
-		// vec3 dir = { rot[0] / 360, rot[1] / 360, rot[2] / 360 };
-		vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
-		glm_vec3_normalize(dir);
-		glm_vec3_copy(dir, e->_light.direction);
-	}
-	if (e->has_cam)
-	{
-		// vec3 dir = { rot[0] / 360, rot[1] / 360, rot[2] / 360 };
-	
-		// vec3 dir = { rot[0] / 180, rot[1] / 180, rot[2] / 180 };
-		// glm_vec3_normalize(dir);
-		// glm_vec3_copy(dir, e->_camera.front);
-	}
+	glm_vec3_copy(bg_color, col);
 }
-void entity_set_dir_vec(int entity_id, vec3 dir)
+// ---------------------------------------------------------------
+
+// set -----------------------------------------------------------
+void renderer_set(render_setting setting, bee_bool value)
 {
-	entity* e = get_entity(entity_id);
-	// vec3 dir_val = { dir[0] * 360, dir[1] * 360, dir[2] * 360 };
-	vec3 dir_val = GLM_VEC3_ZERO_INIT; 
-	glm_vec3_copy(dir, dir_val);
-	// vec3 mul = { 360, 360, 360 };
-	// vec3 mul = { 180, 180, 180 };
-	vec3 mul = { 360 / 3.0f, 360 / 3.0f, 360 / 3.0f };
-	glm_vec3_normalize(dir_val);
-	glm_vec3_mul(dir_val, mul, dir_val);
-	glm_vec3_copy(dir_val, e->rot);
-
-	if (e->has_light)
+	if (value == BEE_SWITCH)
 	{
-		glm_vec3_copy(dir, e->_light.direction);
+		renderer_set(setting, !*renderer_get(setting));
+		return;
 	}
-	if (e->has_cam)
+	switch (setting)
 	{
-		glm_vec3_copy(dir, e->_camera.front);
+		case RENDER_WIREFRAME:
+			wireframe_mode_enabled = value;
+			break;
+		case RENDER_UV:
+			uv_mode_enabled = value;
+			break;
+		case RENDER_NORMAL:
+			normal_mode_enabled = value;
+			break;
+		case RENDER_CUBEMAP:
+			draw_skybox = value;
+			break;
+		case RENDER_MSAA:
+			use_msaa = value;
+			break;
 	}
 }
+void set_camera_ent_id(int id)	{ camera_ent_idx = id; }
 
 #ifdef EDITOR_ACT
 void set_gamestate(bee_bool play, bee_bool _hide_gizmos)
@@ -1294,15 +1083,13 @@ void set_gamestate(bee_bool play, bee_bool _hide_gizmos)
 	// 	set_all_gizmo_meshes(!play);
 	// }
 }
-bee_bool get_gamestate()
-{
-	return gamestate;
-}
 void set_all_scripts(bee_bool act)
 {
-	for (int i = 0; i < entities_len; ++i)
+	int entity_ids_len = 0;
+	int* entity_ids = get_entity_ids(&entity_ids_len);
+	for (int i = 0; i < entity_ids_len; ++i)
 	{
-		entity* ent = get_entity(i);
+		entity* ent = get_entity(entity_ids[i]);
 		for (int n = 0; n < ent->scripts_len; ++n)
 		{
 			ent->scripts[n]->active = act;
@@ -1317,235 +1104,17 @@ void set_all_scripts(bee_bool act)
 		}
 	}
 }
-
-int* get_draw_calls_per_frame() { return &draw_calls_per_frame; }
-int* get_verts_per_frame() { return &verts_per_frame; }
-int* get_tris_per_frame() { return &tris_per_frame; }
 #endif
-void renderer_set(render_setting setting, bee_bool value)
-{
-	if (value == BEE_SWITCH)
-	{
-		renderer_set(setting, !*renderer_get(setting));
-		return;
-	}
-	switch (setting)
-	{
-		case RENDER_WIREFRAME:
-			wireframe_mode_enabled = value;
-			break;
-		case RENDER_UV:
-			uv_mode_enabled = value;
-			break;
-		case RENDER_NORMAL:
-			normal_mode_enabled = value;
-			break;
-		case RENDER_CUBEMAP:
-			draw_skybox = value;
-			break;
-		case RENDER_MSAA:
-			use_msaa = value;
-			break;
-	}
-}
-bee_bool* renderer_get(render_setting setting)
-{
-	switch (setting)
-	{
-		case RENDER_WIREFRAME:
-			return &wireframe_mode_enabled;
-		case RENDER_UV:
-			return &uv_mode_enabled;
-		case RENDER_NORMAL:
-			return &normal_mode_enabled;
-		case RENDER_CUBEMAP:
-			return &draw_skybox;
-		case RENDER_MSAA:
-			return &use_msaa;
-	}
-}
-f32* get_exposure()
-{ return &exposure; }
-u32 get_color_buffer()
-{ return tex_col_buffer; }
-void get_bg_color(vec3 col)
-{
-	glm_vec3_copy(bg_color, col);
-}
+
 void set_bg_color(vec3 col)
 {
 	glm_vec3_copy(col, bg_color);
 	glClearColor(bg_color[0], bg_color[1], bg_color[2], 1.0f);
 }
+// ---------------------------------------------------------------
 
 
-void entity_set_parent(int child, int parent)
-{
-	if (child == parent) { return; }
-
-	entity* parent_ent = get_entity(parent);
-	entity* child_ent  = get_entity(child);
-	if (!parent_ent->has_trans || !child_ent->has_trans)
-	{
-		printf("assign child: \"%s\" to entity: \"%s\" failed\n", child_ent->name, parent_ent->name);
-		return;
-	}
-
-
-	int* parent_ptr = &child_ent->parent;
-	if (child_ent->parent != 9999)
-	{
-		entity_remove_child(child_ent->parent, child);
-	}
-
-	// keep the relative transform before being a child
-	vec3 pos = { 0.0f, 0.0f, 0.0f };
-	vec3 rot = { 0.0f, 0.0f, 0.0f };
-	vec3 scale = { 0.0f, 0.0f, 0.0f };
-	get_entity_global_transform(parent, pos, rot, scale);
-	glm_vec3_sub(child_ent->pos, parent_ent->pos, child_ent->pos);
-	// rotation
-	glm_vec3_div(child_ent->scale, parent_ent->scale, child_ent->scale);
-
-	child_ent->parent = parent;
-
-	arrput(parent_ent->children, child);
-	parent_ent->children_len++;
-}
-void entity_remove_child(int parent, int child)
-{
-	if (child == parent) { return; }
-
-
-	vec3 pos = { 0.0f, 0.0f, 0.0f };
-	vec3 rot = { 0.0f, 0.0f, 0.0f };
-	vec3 scale = { 0.0f, 0.0f, 0.0f };
-	get_entity_global_transform(child, pos, rot, scale);
-	entity* child_ent = (get_entity(child));
-	printf("removed child: \"%s\" of parent: \"%s\"\n", child_ent->name, (get_entity(parent))->name);
-	child_ent->parent = 9999;
-	// set the childs transform to be the one it was while it still was a child
-	glm_vec3_copy(pos,   child_ent->pos);
-	glm_vec3_copy(rot,   child_ent->rot);
-	glm_vec3_copy(scale, child_ent->scale);
-	
-
-	// remove child from children array
-	for (int i = 0; i < (get_entity(parent))->children_len; ++i)
-	{
-		if ((get_entity(parent))->children[i] == child)
-		{
-			arrdel((get_entity(parent))->children, i);
-			(get_entity(parent))->children_len--;
-			return;
-		}
-	}
-}
-
-
-// doesnt work yet
-void entity_remove(int entity_idx)
-{
-	entity* ent = get_entity(entity_idx);
-	if (ent->has_light)
-	{
-		switch (ent->_light.type)
-		{
-			case DIR_LIGHT:
-				for (int i = 0; i < dir_lights_len; ++i)
-				{
-					if (dir_lights[i] == entity_idx)
-					{
-						arrdel(dir_lights, i);
-						dir_lights_len--;
-						break;
-					}
-				}
-			case POINT_LIGHT:
-				for (int i = 0; i < point_lights_len; ++i)
-				{
-					if (point_lights[i] == entity_idx)
-					{
-						arrdel(point_lights, i);
-						point_lights_len--;
-						break;
-					}
-				}
-			case SPOT_LIGHT:
-				for (int i = 0; i < spot_lights_len; ++i)
-				{
-					if (spot_lights[i] == entity_idx)
-					{
-						arrdel(spot_lights, i);
-						spot_lights_len--;
-						break;
-					}
-				}
-		}
-	}
-
-	// unparent all children
-	for (int i = 0; i < ent->children_len; ++i)
-	{
-		entity_remove_child(entity_idx, ent->children[i]);
-	}
-	assert(ent->children_len == 0);
-
-	if (ent->parent != 9999)
-	{
-		entity_remove_child(ent->parent, entity_idx);
-	}
-
-	int id_idx = ent->id_idx;
-	hmdel(entities, entity_idx);
-	entities_len--;
-	arrdel(entity_ids, id_idx);
-	entity_ids_len--;
-
-	// update the id_idx
-	int ids_len = 0;
-	int* ids = get_entity_ids(&ids_len);
-	for (int i = id_idx; i < ids_len; ++i)
-	{
-		get_entity(ids[i])->id_idx = i;
-	}
-}
-
-void get_entity_len(int* _entities_len)
-{
-	*_entities_len = entities_len;
-}
-int* get_entity_ids(int* len)
-{
-	*len = entity_ids_len;
-	return entity_ids;
-}
-entity* get_entity(int id)
-{
-	return &hmget(entities, id);
-}
-entity* get_cam_entity()
-{
-	return get_entity(camera_ent_idx);
-}
-int get_cam_entity_id()
-{
-	return camera_ent_idx;
-}
-int get_entity_id_by_name(char* name)
-{
-	for (int i = 0; i < entities_len; ++i)
-	{
-		if (strcmp(get_entity(entity_ids[i])->name, name) == 0)
-		{
-			return entity_ids[i];
-		}
-	}
-	assert(0); // no entity with given name
-	return 9999;
-}
-
-
+// @UNCLEAR: still used ???
 #ifdef EDITOR_ACT
 renderer_properties get_renderer_properties()
 {

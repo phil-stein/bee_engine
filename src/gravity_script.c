@@ -34,9 +34,11 @@ void throw_error(char* msg)
     char error[248];
     sprintf_s(error, 248, "[GRAVITY_ERROR] %s", msg);
     printf("%s\n", error);
+#ifdef EDITOR_ACT
     set_error_popup(GRAVITY_ERROR, msg);
     submit_txt_console(error);
     set_gamestate(BEE_FALSE, BEE_FALSE);
+#endif
     // disable current script
     cur_script_error      = BEE_TRUE;
     gravity_script* cur_script = get_cur_script();

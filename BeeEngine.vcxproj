@@ -165,6 +165,7 @@
     <ClCompile Include="src\app.c" />
     <ClCompile Include="src\asset_manager.c" />
     <ClCompile Include="src\camera.c" />
+    <ClCompile Include="src\entities.c" />
     <ClCompile Include="src\file_handler.c" />
     <ClCompile Include="src\framebuffer.c" />
     <ClCompile Include="src\game_time.c" />
@@ -188,6 +189,7 @@
     <ClInclude Include="src\app.h" />
     <ClInclude Include="src\asset_manager.h" />
     <ClInclude Include="src\camera.h" />
+    <ClInclude Include="src\entities.h" />
     <ClInclude Include="src\file_handler.h" />
     <ClInclude Include="src\framebuffer.h" />
     <ClInclude Include="src\game_time.h" />

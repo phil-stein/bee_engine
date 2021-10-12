@@ -12,13 +12,14 @@
 #include "renderer.h"
 #include "asset_manager.h"
 #include "game_time.h"
+#include "entities.h"
 #include "window.h"
 #include "input.h"
 #include "app.h"
 #include "ui.h"
 
-#include "serialization.h"
-#include "scene_manager.h"
+// #include "serialization.h"
+// #include "scene_manager.h"
 
 // temp
 #include "shader.h"
@@ -62,6 +63,8 @@ int main(void)
 #endif
 	input_init();
 	printf(" -> input_init() finished\n");
+	entities_init();
+	printf(" -> entities_init() finished\n\n");
 	renderer_init();
 	printf(" -> renderer_init() finished\n\n");
 
@@ -69,10 +72,6 @@ int main(void)
 	submit_txt_console("bee_engine :)");
 	submit_txt_console("...");
 
-	// ---- tmp ----
-	// test_serialization();
-	// save_scene();
-	// ---- tmp ----
 
 	// main loop
 	while (!glfwWindowShouldClose(get_window()))
@@ -107,10 +106,10 @@ int main(void)
 		// ---- rendering ----
 		renderer_update(); // render all objects
 
-
 #ifdef EDITOR_ACT
 		ui_update();
 #endif
+		entities_update(); // has to be after ui
 
 		// reset last frames button state
 		input_update();
@@ -126,6 +125,7 @@ int main(void)
 	ui_cleanup();
 #endif
 	renderer_cleanup();
+	entities_cleanup();
 	assetm_cleanup();
 
 	// close window and terminate glfw
