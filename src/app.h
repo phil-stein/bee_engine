@@ -8,7 +8,6 @@
 
 #include "global.h"
 #include "object_data.h"
-#include "ui.h"
 
 
 // struct used to pass pointers to various variables

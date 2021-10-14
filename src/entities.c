@@ -3,6 +3,7 @@
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION defined in renderer.c
 
 #include "gravity_interface.h"
+#include "asset_manager.h"
 #include "renderer.h"
 
 
@@ -253,7 +254,7 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 
 void entity_add_script(int entity_index, const char* name)
 {
-	entity* ent = &hmget(entities, entity_index);
+	entity* ent = get_entity(entity_index);
 	gravity_script* script = get_script(name);
 #ifdef EDITOR_ACT
 	script->active = BEE_FALSE;

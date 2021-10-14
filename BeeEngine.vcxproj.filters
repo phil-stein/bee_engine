@@ -42,7 +42,7 @@
     <ClCompile Include="src\window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui.c">
+    <ClCompile Include="src\editor_ui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer.c">
@@ -78,6 +78,9 @@
     <ClCompile Include="src\entities.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\gravity_interface_ui.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">
@@ -107,7 +110,7 @@
     <ClInclude Include="external\fastobj\fast_obj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui.h">
+    <ClInclude Include="src\editor_ui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer.h">
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\entities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gravity_interface_ui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

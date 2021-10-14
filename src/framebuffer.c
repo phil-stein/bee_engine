@@ -192,7 +192,6 @@ void create_framebuffer_multisampled_hdr(u32* tex_buffer, u32* fbo, u32* rbo)
 	// glDeleteFramebuffers(1, &fbo);
 }
 
-
 void create_framebuffer_shadowmap(u32* tex_buffer, u32* fbo, int width, int height)
 {
 	// create framebuffer object
@@ -219,6 +218,51 @@ void create_framebuffer_shadowmap(u32* tex_buffer, u32* fbo, int width, int heig
 
 	// unbind the framebuffer, opengl now renders to the default buffer again
 	unbind_framebuffer();
+}
+
+void create_framebuffer_mouse_picking(u32* tex_buffer, u32* fbo, u32* rbo)
+{
+	// create framebuffer object
+	glGenFramebuffers(1, fbo);
+	// set fbo to be the active framebuffer to be modified
+	glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
+
+	int w, h; get_window_size(&w, &h);
+	// quater the resolution 
+	w /= 4;
+	h /= 4;
+	// generate texture
+	glGenTextures(1, tex_buffer);
+	glBindTexture(GL_TEXTURE_2D, *tex_buffer);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, w, h, 0, GL_RED, GL_FLOAT, NULL); // GL_UNSIGNED_BYTE
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// glBindTexture(GL_TEXTURE_2D, 0);
+	// attach it to currently bound framebuffer object
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *tex_buffer, 0);
+
+	// create render buffer object
+	glGenRenderbuffers(1, rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, &rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, w, h);
+	// glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, w, h);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	// attach render buffer object to the depth and stencil buffer
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, &rbo);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		fprintf(stderr, "-!!!-> ERROR_CREATING_FRAMEBUFFER");
+		assert(0);
+	}
+
+	// unbind the framebuffer, opengl now renders to the default buffer again
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// free memory
+	// glDeleteFramebuffers(1, &fbo);
 }
 
 

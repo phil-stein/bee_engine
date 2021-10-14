@@ -171,6 +171,7 @@
     <ClCompile Include="src\game_time.c" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\gravity_interface.c" />
+    <ClCompile Include="src\gravity_interface_ui.c" />
     <ClCompile Include="src\gravity_script.c" />
     <ClCompile Include="src\input.c" />
     <ClCompile Include="src\main.c" />
@@ -181,7 +182,7 @@
     <ClCompile Include="src\shader.c" />
     <ClCompile Include="src\str_util.c" />
     <ClCompile Include="src\tinyfiledialogs.c" />
-    <ClCompile Include="src\ui.c" />
+    <ClCompile Include="src\editor_ui.c" />
     <ClCompile Include="src\window.c" />
   </ItemGroup>
   <ItemGroup>
@@ -195,6 +196,7 @@
     <ClInclude Include="src\game_time.h" />
     <ClInclude Include="src\global.h" />
     <ClInclude Include="src\gravity_interface.h" />
+    <ClInclude Include="src\gravity_interface_ui.h" />
     <ClInclude Include="src\gravity_script.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\object_data.h" />
@@ -203,7 +205,7 @@
     <ClInclude Include="src\serialization.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\str_util.h" />
-    <ClInclude Include="src\ui.h" />
+    <ClInclude Include="src\editor_ui.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>

@@ -19,7 +19,7 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 // generate a shader-program from a vertex- and fragment-shader
 // give the actual source code of the shader as arguments
 // returns: a pointer to the opengl shader program as a "unsigned int" aka. "u32"
-u32 create_shader(char* vert_shader_src, char* frag_shader_src, char* name);
+u32 create_shader(char* vert_shader_src, char* frag_shader_src, char* name, bee_bool* has_error);
 
 
 // activate / use the shader 

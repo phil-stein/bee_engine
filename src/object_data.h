@@ -56,6 +56,8 @@ typedef struct shader
 	uniform_def* uniform_defs;
 	int uniform_defs_len;
 
+	bee_bool has_error;
+
 }shader;
 
 

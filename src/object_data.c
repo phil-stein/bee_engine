@@ -409,9 +409,14 @@ void update_entity(entity* ent)
 	// scripts
 	for (int i = 0; i < ent->scripts_len; ++i)
 	{
-		if (ent->scripts[i]->active == BEE_FALSE || ent->scripts[i]->path_valid == BEE_FALSE || ent->scripts[i]->has_error == BEE_TRUE)
+		if (ent->scripts[i]->active == BEE_FALSE || ent->scripts[i]->path_valid == BEE_FALSE )
 		{
 			continue;
+		}
+		if (ent->scripts[i]->has_error == BEE_TRUE)
+		{
+			ent->scripts[i]->has_error = BEE_FALSE;
+			ent->scripts[i]->init_closure_assigned = BEE_FALSE;
 		}
 
 		// source not yet read
@@ -465,8 +470,8 @@ void free_texture(texture* tex)
 void free_shader(shader* s)
 {
 	free(s->name);
-	// free(s->vert_name);
-	// free(s->frag_name);
-	glDeleteProgram(s->handle);
 	arrfree(s->uniform_defs);
+
+	if (s->has_error) { return; }
+	glDeleteProgram(s->handle);
 }

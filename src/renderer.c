@@ -10,6 +10,7 @@
 #include "window.h"
 #include "camera.h"
 #include "entities.h"
+#include "editor_ui.h"
 #include "framebuffer.h"
 #include "file_handler.h"
 #include "asset_manager.h"
@@ -95,19 +96,34 @@ bee_bool use_msaa = BEE_TRUE;
 shader* shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
 
+#ifdef EDITOR_ACT
+// mouse picking
+u32 mouse_pick_buffer;
+u32 mouse_pick_fbo;
+u32 mouse_pick_rbo;
+shader* mouse_pick_shader;
+#endif
+
 
 void renderer_init()
 {
 	// framebuffer ----------------------------------------------------------------------------------
 	
 	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer");
-
+				  
 	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow");
+	
 
 	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
 	create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
 	set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
 	set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
+
+#ifdef EDITOR_ACT
+	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick");
+	create_framebuffer_mouse_picking(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo);
+	set_framebuffer_to_update(mouse_pick_buffer);  // updates framebuffer on window resize
+#endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
 	// positions   // texCoords
@@ -223,8 +239,9 @@ void renderer_update()
 	tris_per_frame		= 0;
 #endif
 
-	printf("use_msaa: %s\n", use_msaa ? "true": "false");
-
+#ifdef EDITOR_ACT
+	render_scene_mouse_pick();
+#endif
 	render_scene_shadows();
 	render_scene_normal();
 	render_scene_screen();
@@ -239,6 +256,99 @@ void renderer_update()
 #endif
 
 }
+
+#ifdef EDITOR_ACT
+void render_scene_mouse_pick()
+{
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	int w, h; get_window_size(&w, &h);
+	glViewport(0, 0, w / 4, h / 4);
+	bind_framebuffer(mouse_pick_fbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
+
+	mat4 view;
+	if (gamestate)
+	{
+		get_camera_view_mat(get_entity(camera_ent_idx), &view[0]);
+	}
+	else
+	{
+		get_editor_camera_view_mat(&view[0]);
+	}
+
+	mat4 proj;
+
+	entity* cam = get_entity(camera_ent_idx);
+	f32 deg_pers = cam->_camera.perspective;
+	f32 near_p = cam->_camera.near_plane;
+	f32 far_p = cam->_camera.far_plane;
+#ifdef EDITOR_ACT
+	if (!gamestate) // play-mode
+	{
+		deg_pers = perspective;
+		near_p = near_plane;
+		far_p = far_plane;
+	}
+#endif
+	glm_make_rad(&deg_pers);
+	glm_perspective(deg_pers, ((float)w / (float)h), near_p, far_p, proj);
+
+	// cycle all objects
+	int entity_ids_len = 0;
+	int* entity_ids = get_entity_ids(&entity_ids_len);
+	for (int i = 0; i < entity_ids_len; ++i)
+	{
+		entity* ent = get_entity(entity_ids[i]);
+		if (ent->has_model && ent->_mesh.visible)
+		{
+			// MVP for mesh
+			vec3 pos = { 0.0f, 0.0f, 0.0f };
+			vec3 rot = { 0.0f, 0.0f, 0.0f };
+			vec3 scale = { 0.0f, 0.0f, 0.0f };
+			get_entity_global_transform(entity_ids[i], pos, rot, scale);
+
+			mat4 model = GLM_MAT4_IDENTITY_INIT;
+			f32 x = rot[0];  glm_make_rad(&x);
+			f32 y = rot[1];  glm_make_rad(&y);
+			f32 z = rot[2];  glm_make_rad(&z);
+
+			const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
+			const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
+			const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
+			glm_rotate_at(model, pos, x, x_axis);
+			glm_rotate_at(model, pos, y, y_axis);
+			glm_rotate_at(model, pos, z, z_axis);
+			glm_translate(model, pos);
+			glm_scale(model, scale);
+
+			shader_use(mouse_pick_shader);
+			shader_set_mat4(mouse_pick_shader, "model", model);
+			shader_set_mat4(mouse_pick_shader, "view", view);
+			shader_set_mat4(mouse_pick_shader, "proj", proj);
+
+			shader_set_float(mouse_pick_shader, "id", (f32)ent->id);
+
+			glBindVertexArray(ent->_mesh.vao);
+			if (ent->_mesh.indexed == BEE_TRUE)
+			{
+				glDrawElements(GL_TRIANGLES, (ent->_mesh.indices_len), GL_UNSIGNED_INT, 0);
+			}
+			else
+			{
+				glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh.vertices_len / F32_PER_VERT));
+			}
+
+		}
+	}
+	unbind_framebuffer();
+
+	// reset bg color
+	vec3 col; 
+	get_bg_color(col);
+	set_bg_color(col);
+}
+#endif
 
 void render_scene_shadows()
 {
@@ -330,6 +440,7 @@ void render_scene_shadows()
 
 void render_scene_normal()
 {
+
 	// first pass
 	int w, h;
 	get_window_size(&w, &h);
@@ -345,6 +456,13 @@ void render_scene_normal()
 	// this works when only activated once
 	glEnable(GL_CULL_FACE); 
 	glEnable(GL_DEPTH_TEST); // enable the z-buffer
+
+	// // object outline
+	// glClear(GL_STENCIL_BUFFER_BIT);
+	// glEnable(GL_STENCIL_TEST);
+	// glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	// glStencilFunc(GL_ALWAYS, 1, 0xFF); // let all frags pass
+	// glStencilMask(0x00); // disable writing to the stencil mask
 #endif
 
 #ifdef EDITOR_ACT
@@ -366,6 +484,7 @@ void render_scene_normal()
 	int* entity_ids = get_entity_ids(&entity_ids_len);
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
+
 		// skip transparent objects
 		bee_bool is_trans = BEE_FALSE;
 		for (int n = 0; n < transparent_ents_len; ++n)
@@ -377,11 +496,20 @@ void render_scene_normal()
 		entity* ent = get_entity(entity_ids[i]);
 		if (ent->has_model)
 		{
+			// if (entity_ids[i] == get_selected_entity())
+			// {
+			// 	glStencilMask(0xFF); // enable writing to mask
+			// }
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(entity_ids[i], pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
 			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
+			
+			// if (entity_ids[i] == get_selected_entity())
+			// {
+			// 	glStencilMask(0x00); // disable writing to mask
+			// }
 		}
 		#ifdef EDITOR_ACT
 		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam))
@@ -442,6 +570,37 @@ void render_scene_normal()
 			}
 		}
 	}
+
+#ifdef EDITOR_ACT
+	// draw object outline ----------------------------------------------------
+	if (get_selected_entity() != -1)
+	{
+		// glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		// glStencilMask(0x00); // disable writing to mask
+		// glDisable(GL_DEPTH_TEST);
+		// 
+		// entity* ent = get_entity(get_selected_entity());
+		// vec3 pos = { 0.0f, 0.0f, 0.0f };
+		// vec3 rot = { 0.0f, 0.0f, 0.0f };
+		// vec3 scale = { 0.0f, 0.0f, 0.0f };
+		// get_entity_global_transform(get_selected_entity(), pos, rot, scale);
+		// vec3 scalar = { 1.2f, 1.2f, 1.2f };
+		// glm_vec3_mul(scale, scalar, scale);
+		// // vec3 pos02 = { pos[0], pos[1] - (scale[1] * 0.8f), pos[2] };
+		// // vec3 cam; get_editor_camera_pos(cam);  // cam pos
+		// // vec3 dir; glm_vec3_sub(cam, pos, dir); // dir from obj to cam
+		// // glm_vec3_normalize(dir);
+		// // vec3 dist = { 1.2f, 1.2f, 1.2f };
+		// // glm_vec3_mul(dir, dist, dir);
+		// // glm_vec3_add(pos, dir, pos);
+		// vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
+		// material* mat = get_material("MAT_cel");
+		// draw_mesh(&ent->_mesh, mat, pos, rot, scale, ent->rotate_global, BEE_FALSE, tint);
+		// 
+		// glEnable(GL_DEPTH_TEST); // enable the z-buffer
+	}
+	// ------------------------------------------------------------------------
+#endif
 
 	// skybox
 	if (draw_skybox == BEE_TRUE)
@@ -554,7 +713,7 @@ void render_scene_screen()
 	shader_use(screen_shader);
 	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex_col_buffer); // shadow_buffer
+	glBindTexture(GL_TEXTURE_2D, tex_col_buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
 	shader_set_int(screen_shader, "tex", 0);
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -962,6 +1121,51 @@ void renderer_clear_scene()
 	editor_far_plane = 100.0f;
 }
 
+#ifdef EDITOR_ACT
+int read_mouse_position_mouse_pick_buffer_color()
+{
+	f64 x = 0;
+	f64 y = 0;
+	get_mouse_pos(&x, &y);
+	int w = 0;
+	int h = 0;
+	get_window_size(&w, &h);
+	y = h - y; // invert as buffer is rendered upside down
+	// printf("mouse pos  %.2f, %.2f\n", x, y);
+	x *= 0.25;
+	y *= 0.25;
+	// printf("buffer pos %d, %d\n", (int)x, (int)y);
+
+	// int start_x = (int)(x * w);
+	// int start_y = (int)(y * h);
+	// printf("start pos %d, %d\n", start_x, start_y);
+	f32 pixel[1];
+
+	glGetError(); // clear any previous errors
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, mouse_pick_fbo);
+	glReadPixels((int)x, (int)y, 1, 1, GL_RED, GL_FLOAT, pixel); // GL_UNSIGNED_BYTE
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	
+	int error = glGetError();
+	if (error != GL_NO_ERROR)
+	{
+		if (error == GL_INVALID_ENUM)				   { printf("[OpenGL ERROR] Invalid Enum\n"); }
+		if (error == GL_INVALID_VALUE)				   { printf("[OpenGL ERROR] Invalid Value\n"); }
+		if (error == GL_INVALID_OPERATION)			   { printf("[OpenGL ERROR] Invalid Operation\n"); }
+		if (error == GL_STACK_OVERFLOW)				   { printf("[OpenGL ERROR] Stack Overflow\n"); }
+		if (error == GL_STACK_UNDERFLOW)			   { printf("[OpenGL ERROR] Stack Underflow\n"); }
+		if (error == GL_OUT_OF_MEMORY)				   { printf("[OpenGL ERROR] Out of Memory\n"); }
+		if (error == GL_INVALID_FRAMEBUFFER_OPERATION) { printf("[OpenGL ERROR] Invalid Framebuffer Operation\n"); }
+		assert(0);
+	}
+
+	int id = pixel[0] -1;
+	return id;
+	//	entity* e = get_entity(id);
+	// printf(" -> id: %d, entity: %s, float: %f\n", id, e->name, pixel[0]);
+}
+#endif
+
 // get -----------------------------------------------------------
 int   get_camera_ent_id()		{ return camera_ent_idx; }
 int** get_transparent_ids_ptr()	{ return &transparent_ents; }
@@ -972,6 +1176,7 @@ int** get_point_light_ids_ptr()	{ return &point_lights; }
 int*  get_point_light_ids_len()	{ return &point_lights_len; }
 int** get_spot_light_ids_ptr()	{ return &spot_lights; }
 int*  get_spot_light_ids_len()	{ return &spot_lights_len; }
+
 #ifdef EDITOR_ACT
 bee_bool get_gamestate()
 {
@@ -979,8 +1184,8 @@ bee_bool get_gamestate()
 }
 
 int* get_draw_calls_per_frame() { return &draw_calls_per_frame; }
-int* get_verts_per_frame() { return &verts_per_frame; }
-int* get_tris_per_frame() { return &tris_per_frame; }
+int* get_verts_per_frame()		{ return &verts_per_frame; }
+int* get_tris_per_frame()		{ return &tris_per_frame; }
 #endif
 
 bee_bool* renderer_get(render_setting setting)
@@ -1049,6 +1254,7 @@ void set_gamestate(bee_bool play, bee_bool _hide_gizmos)
 
 	gamestate = play;
 	hide_gizmos = _hide_gizmos;
+	gravity_reset_pending_actions();
 
 	if (play)
 	{

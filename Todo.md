@@ -5,12 +5,15 @@ Todo
   
   - [ ] setup x86 build
   
+  - [ ] parent child rotation (vqs or v, mat, s)
+  
   - [ ] turn dir vec into rotation and reverse
   
     - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
-    
+  - [ ] organize \src folder
+  
     
   
 - buggs
@@ -18,8 +21,6 @@ Todo
   - [x] dark areas look weird since adding gamma correction
 
   - [ ] disabling msaa makes cube map be drawn over scene and the vertex info of the meshes gets all screwy  
-
-  - [ ] free_shader() is called when shader wasnt compiled because of error
 
   - [ ] world.add_entity() sometimes freezes editor, prob in ui -> entity hierarchy
 
@@ -29,6 +30,12 @@ Todo
 
     -> in scene "default"
 
+  - [ ] first object in mouse_pick_buffer is rendered behind the others 
+
+  - [ ] keyboard input in ui doesn't work since adding gravity ui
+
+  - [ ] "scripts over bounds" in properties_window() ->  scripts
+
     
 
 - unfinished
@@ -36,6 +43,8 @@ Todo
   - [ ] mixing of the different light sources looks weird in ambient areas & shadows
 
   - [ ] search function in asset manager ui
+
+  - [ ] object outline 
 
     
 
@@ -81,36 +90,37 @@ Todo
     - [x] add ui for drag&drop importing
     - [ ] removing assets
     - [ ] add cube map assets
+    - [ ] add font assets for nuklear
     - [ ] reload assets 
       - [x] shaders
       - [ ] meshes
       - [ ] scripts
     - [ ] hot-reloading (when files edited)
-
+    
   - [ ] !!! warn when adding f.e. a material with a name that already exists
-
+  
   - [x] ui for drag & drop imported assets
-
+  
   - [ ] editor cam v. game cam (camera component)
-
-    - [ ] assure always one and only one camera in scene
+  
+    - [x] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
-
+  
   - [ ] visualize normal-direction
-
+  
   - [ ] show shader source
-
+  
   - [ ] transform gizmos
-
+  
   - [ ] structures (prefabs)
-
+  
     - [ ] serialize entity tree
     - [ ] save & load
     - [ ] asset manager
     - [ ] ui
-
+  
     
-
+  
 - [ ] input 
 
   - [ ] controller input
@@ -128,6 +138,32 @@ Todo
   - [ ] delegate for 'System.print()'
 
   - [ ] interface to create meshes / other components to create models etc in gravity
+
+  - [ ] interface for nuklear
+
+    - [x] window
+
+    - [x] layout
+
+    - [x] label
+
+    - [x] button
+
+    - [x] image
+
+    - [ ] checkbox
+
+    - [ ] float property
+
+    - [ ] color wheel
+
+    - [ ] groups
+
+    - [ ] set style
+
+      - [ ] through functions or style-sheets ?
+
+        -> both prob.
 
 
 

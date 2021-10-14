@@ -1,0 +1,46 @@
+extern var UI;
+
+var btn_menu01 = false;
+var btn_image = false;
+var check01 = false;
+var check02 = false;
+var check03 = false;
+
+func init()
+{
+}
+
+func update()
+{
+	var ui = UI();
+
+	ui.begin();
+	ui.window_begin("in game nuklear ui", 900, 10, 300, 200);
+	ui.layout(25, 1);
+	if (ui.button("menu01"))
+	{
+		btn_menu01 = !btn_menu01;
+	}
+	if (btn_menu01)
+	{
+		check01 = ui.checkbox("option a", check01);
+		check02 = ui.checkbox("option b", check02);
+		check03 = ui.checkbox("option c", check03);
+	}
+	if (ui.button("image"))
+	{
+		btn_image = !btn_image;
+	}
+	if (btn_image)
+	{
+		ui.layout_static(50, 50, 1);
+		ui.image("crate01_dif.png");
+		ui.layout(25, 2);
+		ui.text("thats a crate");
+	}
+	ui.window_end();
+	ui.end();
+}
+
+
+

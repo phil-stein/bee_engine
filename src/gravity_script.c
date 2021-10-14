@@ -2,14 +2,15 @@
 
 #include "CGLM/cglm.h"
 
+#include "gravity_interface_ui.h"
 #include "gravity_interface.h"
-#include "game_time.h"
 #include "file_handler.h"
-#include "camera.h"
+#include "game_time.h"
+#include "editor_ui.h"
 #include "str_util.h"
 #include "renderer.h"
+#include "camera.h"
 #include "input.h"
-#include "ui.h"
 
 
 bee_bool cur_script_error = BEE_FALSE;
@@ -157,6 +158,7 @@ rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_in
     setup_input_class(script->vm);
     setup_world_class(script->vm);
     // setup_camera_class(script->vm);
+    setup_ui_class(script->vm);
 
     // transfer memory from the compiler (front-end) to the VM (back-end)
     gravity_compiler_transfer(compiler, script->vm);

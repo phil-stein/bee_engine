@@ -6,10 +6,9 @@
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION defined in renderer.c
 
 #include "file_handler.h"
+#include "editor_ui.h"
 #include "str_util.h"
 #include "shader.h"
-#include "ui.h"
-
 
 // ---- vars ----
 // hashmaps & dyn.-arrays using stb_ds.h
@@ -250,33 +249,12 @@ void load_internal_assets()
 		{
 			get_mesh(internal_assets_names[i]);
 		}
-		/*
-		if (internal_assets_names[i][name_len - 4] == '.' &&
-			internal_assets_names[i][name_len - 3] == 'p' &&
-			internal_assets_names[i][name_len - 2] == 'n' &&
-			internal_assets_names[i][name_len - 1] == 'g')
-		{
-			get_texture(internal_assets_names[i]);
-		}
-		else if (internal_assets_names[i][name_len - 4] == '.' &&
-				 internal_assets_names[i][name_len - 3] == 'j' &&
-				 internal_assets_names[i][name_len - 2] == 'p' &&
-				 internal_assets_names[i][name_len - 1] == 'g')
-		{
-			get_texture(internal_assets_names[i]);
-		}
-		else if (
-			internal_assets_names[i][name_len - 4] == '.' &&
-			internal_assets_names[i][name_len - 3] == 'o' &&
-			internal_assets_names[i][name_len - 2] == 'b' &&
-			internal_assets_names[i][name_len - 1] == 'j')
-		{
-			get_mesh(internal_assets_names[i]);
-		}
-		*/
 	}
 
 	add_mesh(make_plane_mesh());
+
+	add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error"); // default shader
+	// add_shader("basic.vert", "blinn_phong.frag", "SHADER_default"); // default shader
 
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
@@ -1069,9 +1047,18 @@ material* get_all_materials(int* materials_len)
 	return materials_data;
 }
 
-// @TODO: doesnt work yet
 void change_material_name(char* old_name, char* new_name)
 {
+	if (check_material_exists(new_name)) 
+	{
+		char buf[50]; 
+		sprintf_s(buf, 50, "Material name \"%s\" already taken.", new_name);
+		set_error_popup(GENERAL_ERROR, buf);
+		submit_txt_console("[!!!] Material Name taken.");
+		printf("[ERROR] Material name already taken.");
+		return;
+	}
+
 	// materials[selected_material].name = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
 	(get_material(old_name))->name = calloc(strlen(new_name) + 1, sizeof(char));
 	assert((get_material(old_name))->name != NULL);
@@ -1150,7 +1137,9 @@ shader* get_shader(char* name)
 	}
 
 	// retrieve mesh from mesh_data array
-	return &shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)];
+	shader* s = &shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)];
+	if (s->has_error) { s = &shaders_data[0]; }
+	return s;
 }
 
 shader* get_all_shaders(int* shaders_len)
@@ -1233,6 +1222,32 @@ void log_frag_file(const char* path, const char* name)
 	arrput(logged_frag_files, name_cpy);
 
 	// not freeing name_cpy and path_cpy as they need to be used in the future
+}
+
+void change_shader_name(char* old_name, char* new_name)
+{
+	if (check_shader_exists(new_name))
+	{
+		char buf[50];
+		sprintf_s(buf, 50, "Shader name \"%s\" already taken.", new_name);
+		set_error_popup(GENERAL_ERROR, buf);
+		submit_txt_console("[!!!] Shader Name taken.");
+		printf("[ERROR] Shader name already taken.");
+		return;
+	}
+
+	// materials[selected_material].name = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+	(get_shader(old_name))->name = calloc(strlen(new_name) + 1, sizeof(char));
+	assert((get_shader(old_name))->name != NULL);
+	// copy name so its persistent
+	char* name_cpy = malloc((strlen(new_name) + 1) * sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, new_name);
+	strcpy((get_shader(old_name))->name, name_cpy);
+
+	int idx = get_shader_idx(old_name);
+	shput(shaders, name_cpy, idx);
+	shdel(shaders, old_name);
 }
 
 bee_bool check_shader_exists(const char* name)

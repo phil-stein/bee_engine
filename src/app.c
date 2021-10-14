@@ -14,6 +14,7 @@
 #include "camera.h"
 #include "renderer.h"
 #include "game_time.h"
+#include "editor_ui.h"
 #include "file_handler.h"
 #include "asset_manager.h"
 #include "scene_manager.h"
@@ -194,7 +195,8 @@ void init()
 
 	*/
 
-	load_scene("showcase06.scene");
+	// load_scene("showcase06.scene");
+	load_scene("ui_test.scene");
 
 
 	// texture screenshot_tex = get_texture("screenshot08.png");
@@ -215,7 +217,6 @@ void update()
 #endif
 	
 	// ---- fps ----
-
 	
 	char title[50];
 	int rtn = sprintf_s(title, sizeof(title), "bee engine | fps: %d | scene: \"%s\"", (int)get_fps(), get_active_scene_name());

@@ -9,14 +9,15 @@
 
 #include "global.h"
 // #include "file_handler.h"
-#include "renderer.h"
+#include "gravity_interface_ui.h"
 #include "asset_manager.h"
 #include "game_time.h"
+#include "editor_ui.h"
+#include "renderer.h"
 #include "entities.h"
 #include "window.h"
 #include "input.h"
 #include "app.h"
-#include "ui.h"
 
 // #include "serialization.h"
 // #include "scene_manager.h"
@@ -61,6 +62,8 @@ int main(void)
 	ui_init();
 	printf(" -> ui_init() finished\n");
 #endif
+	gravity_ui_init();
+	printf(" -> grav_ui_init() finished\n");
 	input_init();
 	printf(" -> input_init() finished\n");
 	entities_init();
@@ -109,6 +112,7 @@ int main(void)
 #ifdef EDITOR_ACT
 		ui_update();
 #endif
+
 		entities_update(); // has to be after ui
 
 		// reset last frames button state

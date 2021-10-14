@@ -10,6 +10,7 @@ void create_framebuffer_hdr(u32* tex_buffer, u32* fbo, u32* rbo);
 void create_framebuffer_multisampled(u32* tex_buffer, u32* fbo, u32* rbo);
 void create_framebuffer_multisampled_hdr(u32* tex_buffer, u32* fbo, u32* rbo);
 void create_framebuffer_shadowmap(u32* tex_buffer, u32* fbo, int width, int height);
+void create_framebuffer_mouse_picking(u32* tex_buffer, u32* fbo, u32* rbo);
 
 
 void bind_framebuffer(u32 fbo);

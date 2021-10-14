@@ -5,8 +5,8 @@
 #include "asset_manager.h"
 #include "framebuffer.h"
 #include "stb/stb_ds.h"
+#include "editor_ui.h"
 #include "window.h"
-#include "ui.h"
 
 // ---- vars ----
 GLFWwindow* window;

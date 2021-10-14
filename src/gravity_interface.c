@@ -4,13 +4,13 @@
 #include "scene_manager.h"
 #include "file_handler.h"
 #include "game_time.h"
+#include "editor_ui.h"
 #include "entities.h"
 #include "entities.h"
 #include "renderer.h"
 #include "str_util.h"
 #include "camera.h"
 #include "input.h"
-#include "ui.h"
 
 
 // ---- vars ----
@@ -53,6 +53,14 @@ void gravity_check_for_pending_actions()
 #endif
     }
     quit_game_act = BEE_FALSE;
+}
+void gravity_reset_pending_actions()
+{
+    load_level_act = BEE_FALSE;
+    quit_game_act = BEE_FALSE;
+    rotate_cam_by_mouse_act = BEE_FALSE;
+    rotate_cam_by_mouse_idx = 0;
+    rotate_cam_by_mouse_speed = 1.0f;
 }
 void mouse_movement_callback()
 {

@@ -5,8 +5,12 @@ extern var Game;
 extern var Input;
 extern var World;
 
+
+var paused = false;
+
 var original_level = true;
 var added_ents = 0;
+
 
 func init()
 {
@@ -23,6 +27,11 @@ func update()
 	{
 		game.quit();
 	}
+	if (input.get_key_P())
+	{
+		paused = !paused;
+	}
+	if (paused) { return; }
 
 	if (input.get_key_ENTER())
 	{
@@ -42,6 +51,7 @@ func update()
 		world.add_entity(0, 2.5 + (added_ents * 1.25), 0, "cube.obj", "MAT_blank", "inst" + added_ents);
 		added_ents += 1;
 	}
+
 }
 
 

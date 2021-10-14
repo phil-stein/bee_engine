@@ -16,6 +16,7 @@ void set_cur_script(gravity_script* script);
 gravity_script* get_cur_script();
 
 void gravity_check_for_pending_actions();
+void gravity_reset_pending_actions();
 void mouse_movement_callback();
 
 void setup_entity_class(gravity_vm* vm);

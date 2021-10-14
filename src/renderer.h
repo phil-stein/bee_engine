@@ -6,7 +6,6 @@
 
 #include "global.h"
 #include "object_data.h"
-#include "ui.h"
 
 typedef struct
 {
@@ -35,6 +34,9 @@ void renderer_update();
 
 void renderer_cleanup();
 
+#ifdef EDITOR_ACT
+void render_scene_mouse_pick();
+#endif
 void render_scene_shadows();
 void render_scene_normal();
 void render_scene_skybox();
@@ -46,6 +48,9 @@ void set_shader_uniforms(material* mat);
 // clears all entities, etc, completely wiping the current scene
 void renderer_clear_scene();
 
+#ifdef EDITOR_ACT
+int read_mouse_position_mouse_pick_buffer_color();
+#endif
 
 int   get_camera_ent_id();
 int** get_transparent_ids_ptr();
