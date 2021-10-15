@@ -104,21 +104,9 @@ char** logged_frag_files = NULL;
 
 
 // ---- scenes ----
-// value: index of texture in 'scene_data', key: name of scene 
-// struct { char* key;  int   value; }*scenes = NULL;
-// int scenes_len = 0;
-
 // value: path to scene-file, key: scene-name
 struct { char*   key;	 char* value; }*scenes_paths = NULL;
 int scenes_paths_len = 0;
-
-
-// array of holding scenes
-// scene* scene_data = NULL;
-// int texture_data_len = 0;
-
-// array holding the names of all textures not yet loaded
-// char** logged_textures = NULL;
 
 
 
@@ -132,6 +120,10 @@ char* internal_assets_names[] = {
 								    // mesh with index 0 in meshes_data array 
 									// this means this mesh shows up when requested mesh isnt found
 									"missing_mesh.obj",
+
+									// script with index 0 in scripts_data array 
+									// this means this script is returned when requested script isnt found
+									"template.gravity",
 									
 									// scene with index 0 in scenes_paths array 
 									// this means this scene shows up when requested scene isnt found
@@ -253,7 +245,9 @@ void load_internal_assets()
 
 	add_mesh(make_plane_mesh());
 
-	add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error", BEE_TRUE); // default shader
+	shader* s = add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error", BEE_TRUE); // default shader
+
+	add_material(s, *get_texture_by_idx(0), *get_texture_by_idx(0), BEE_FALSE, 1.0f, GLM_VEC2_ONE, GLM_VEC3_ONE, BEE_FALSE, "MAT_missing_mat", BEE_TRUE);
 	// add_shader("basic.vert", "blinn_phong.frag", "SHADER_default"); // default shader
 
 }
@@ -911,19 +905,11 @@ gravity_script* get_script(const char* name)
 {
 	if (!check_script_exists(name))
 	{
+		return get_script("template.gravity");
 		assert(0);
 	}
 	// get the index to the mesh_data array from the hashmap
 	int i = shget(scripts, name);
-
-	// @TODO: add security check that the texture doesn't exist at all
-	//		  for example make the 0th texture allways be all pink etc.
-
-	// check if the mesh hasn't been loaded yet 
-	// if (i == 9999 || i > scripts_data_len) // 0 == 0
-	// {
-	// 	create_script(name);
-	// }
 
 	// retrieve mesh from mesh_data array
 	return &scripts_data[shget(scripts, name) == -1 ? 0 : shget(scripts, name)];
@@ -1030,8 +1016,6 @@ material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, te
 
 material* get_material(char* name)
 {
-	// @TODO: add security check that the texture doesn't exist at all
-	//		  for example make the 0th texture allways be all pink etc.
 	if (!check_material_exists(name))
 	{
 		assert(0);
@@ -1280,11 +1264,14 @@ bee_bool check_shader_exists(const char* name)
 // @TODO: check_vert_file_exists & check_frag_file_exists
 
 // @TODO: memory slightly increases when hot-reloading
-void hot_reload_shader(const char* name)
+void recomile_shader(const char* name)
 {
 	if (!check_shader_exists(name))
 	{
-		printf("[ERROR] Shader \"%s\" cant be reloaded it doesnt exist.\n");
+		char buf[64];
+		sprintf_s(buf, 64, "Shader \"%s\" cant be recompiled it doesnt exist.\n", name);
+		set_error_popup(GENERAL_ERROR, buf);
+		printf("[ERROR] %s", buf);
 		return;
 	}
 
@@ -1311,7 +1298,8 @@ void hot_reload_shader(const char* name)
 	{
 		arrput(s_new.uniform_defs, s->uniform_defs[i]);
 	}
-	free_shader(s);
+	// free_shader(s);
+	shader_delete(s); // this instead of free_shader() as that also frees the name
 
 
 	shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)] = s_new;

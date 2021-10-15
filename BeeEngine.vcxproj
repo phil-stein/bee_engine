@@ -176,6 +176,7 @@
     <ClCompile Include="src\input.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\object_data.c" />
+    <ClCompile Include="src\physics.c" />
     <ClCompile Include="src\renderer.c" />
     <ClCompile Include="src\scene_manager.c" />
     <ClCompile Include="src\serialization.c" />
@@ -200,6 +201,7 @@
     <ClInclude Include="src\gravity_script.h" />
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\object_data.h" />
+    <ClInclude Include="src\physics.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\scene_manager.h" />
     <ClInclude Include="src\serialization.h" />

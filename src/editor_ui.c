@@ -1680,6 +1680,10 @@ void properties_window()
             {
                 set_style(ctx, THEME_DARK);
             }
+            if (nk_menu_item_label(ctx, "light blue", NK_TEXT_LEFT))
+            {
+                set_style(ctx, THEME_LIGHT_BLUE);
+            }
             nk_menu_end(ctx);
         }
         // nk_layout_row_push(ctx, 70);
@@ -2138,243 +2142,18 @@ void properties_window()
                     }
                 }
             
-                // ---- transform ----
+                // ---- components ----
                 draw_transform_component(ent);
 
                 draw_mesh_component(ent);
 
                 draw_material_component(ent);
 
-                if (ent->has_cam == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
-                {
-                    nk_property_float(ctx, "Perspective:", 1.0f, &ent->_camera.perspective, 200.0f, 0.1f, 0.2f);
+                draw_physics_components(ent);
+                
+                draw_camera_component(ent);
 
-                    nk_property_float(ctx, "Near Plane:", 0.0001f, &ent->_camera.near_plane, 10.0f, 0.1f, 0.01f);
-
-                    nk_property_float(ctx, "Far Plane:", 1.0f, &ent->_camera.far_plane, 500.0f, 0.1f, 0.2f);
-
-                    nk_spacing(ctx, 1);
-
-                    nk_property_float(ctx, "Dir X:", -1024.0f, &ent->_camera.front[0], 1024.0f, 0.1f, 0.2f);
-
-                    nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_camera.front[1], 1024.0f, 0.1f, 0.2f);
-
-                    nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_camera.front[2], 1024.0f, 0.1f, 0.2f);
-
-                    nk_tree_pop(ctx);
-                }
-
-                if (ent->has_light == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Light", NK_MINIMIZED))
-                {
-                    nk_layout_row_dynamic(ctx, 25, 2);
-                    nk_label(ctx, "Type: ", NK_TEXT_LEFT);
-                    // nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
-                    
-                    int selected_type = ent->_light.type == POINT_LIGHT ? 0 : ent->_light.type == SPOT_LIGHT ? 1 : ent->_light.type == DIR_LIGHT ? 2 : 0;
-                    int selected_type_old = selected_type;
-                    char* type_names[] = { "Point Light", "Spot Light", "Dir Light" };
-                    selected_type = nk_combo(ctx, type_names, 3, selected_type, 25, nk_vec2(200, 200));
-                    if (selected_type_old != selected_type)
-                    {
-                        // switched types
-                        submit_txt_console("switched light types");
-                        light_type new_type = selected_type == 0 ? POINT_LIGHT : selected_type == 1 ? SPOT_LIGHT : selected_type == 2 ? DIR_LIGHT : POINT_LIGHT;
-                        entity_switch_light_type(ent->id, new_type);
-                    }
-
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    char buf[16]; sprintf_s(buf, 12, "Light-ID: %d", ent->_light.id);
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
-
-                    nk_checkbox_label(ctx, " enabled", &ent->_light.enabled);
-                    nk_checkbox_label(ctx, " cast shadows", &ent->_light.cast_shadow);
-
-                    // ambient, diffuse, specular
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_label(ctx, "Ambient", NK_TEXT_LEFT);
-                    // ambient complex color combobox
-                    struct nk_colorf ambient = { ent->_light.ambient[0], ent->_light.ambient[1], ent->_light.ambient[2] };
-                    if (nk_combo_begin_color(ctx, nk_rgb_cf(ambient), nk_vec2(200, 400)))
-                    {
-                        enum color_mode { COL_RGB, COL_HSV };
-                        static int col_mode = COL_RGB;
-
-                        nk_layout_row_dynamic(ctx, 120, 1);
-                        ambient = nk_color_picker(ctx, ambient, NK_RGB);
-
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                        col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        if (col_mode == COL_RGB) {
-                            ambient.r = nk_propertyf(ctx, "#R:", 0, ambient.r, 1.0f, 0.01f, 0.005f);
-                            ambient.g = nk_propertyf(ctx, "#G:", 0, ambient.g, 1.0f, 0.01f, 0.005f);
-                            ambient.b = nk_propertyf(ctx, "#B:", 0, ambient.b, 1.0f, 0.01f, 0.005f);
-                        }
-                        else {
-                            float hsva[4];
-                            nk_colorf_hsva_fv(hsva, ambient);
-                            hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                            hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                            hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                            ambient = nk_hsva_colorfv(hsva);
-                        }
-                        nk_combo_end(ctx);
-
-                        // assign the altered color 
-                        ent->_light.ambient[0] = ambient.r;
-                        ent->_light.ambient[1] = ambient.g;
-                        ent->_light.ambient[2] = ambient.b;
-                    }
-                    
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_label(ctx, "Diffuse", NK_TEXT_LEFT);
-                    // ambient complex color combobox
-                    struct nk_colorf diffuse = { ent->_light.diffuse[0], ent->_light.diffuse[1], ent->_light.diffuse[2] };
-                    if (nk_combo_begin_color(ctx, nk_rgb_cf(diffuse), nk_vec2(200, 400)))
-                    {
-                        enum color_mode { COL_RGB, COL_HSV };
-                        static int col_mode = COL_RGB;
-
-                        nk_layout_row_dynamic(ctx, 120, 1);
-                        diffuse = nk_color_picker(ctx, diffuse, NK_RGB);
-
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                        col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        if (col_mode == COL_RGB) {
-                            diffuse.r = nk_propertyf(ctx, "#R:", 0, diffuse.r, 1.0f, 0.01f, 0.005f);
-                            diffuse.g = nk_propertyf(ctx, "#G:", 0, diffuse.g, 1.0f, 0.01f, 0.005f);
-                            diffuse.b = nk_propertyf(ctx, "#B:", 0, diffuse.b, 1.0f, 0.01f, 0.005f);
-                        }
-                        else {
-                            float hsva[4];
-                            nk_colorf_hsva_fv(hsva, diffuse);
-                            hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                            hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                            hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                            diffuse = nk_hsva_colorfv(hsva);
-                        }
-                        nk_combo_end(ctx);
-
-                        // assign the altered color 
-                        ent->_light.diffuse[0] = diffuse.r;
-                        ent->_light.diffuse[1] = diffuse.g;
-                        ent->_light.diffuse[2] = diffuse.b;
-                    }
-                    nk_property_float(ctx, "Intensity: ", 0, &ent->_light.dif_intensity, 1024, 0.1f, 0.1f);
-
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_label(ctx, "Specular", NK_TEXT_LEFT);
-                    // ambient complex color combobox
-                    struct nk_colorf specular = { ent->_light.specular[0], ent->_light.specular[1], ent->_light.specular[2] };
-                    if (nk_combo_begin_color(ctx, nk_rgb_cf(specular), nk_vec2(200, 400)))
-                    {
-                        enum color_mode { COL_RGB, COL_HSV };
-                        static int col_mode = COL_RGB;
-
-                        nk_layout_row_dynamic(ctx, 120, 1);
-                        specular = nk_color_picker(ctx, specular, NK_RGB);
-
-                        nk_layout_row_dynamic(ctx, 25, 2);
-                        col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                        col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        if (col_mode == COL_RGB) {
-                            diffuse.r = nk_propertyf(ctx, "#R:", 0, specular.r, 1.0f, 0.01f, 0.005f);
-                            diffuse.g = nk_propertyf(ctx, "#G:", 0, specular.g, 1.0f, 0.01f, 0.005f);
-                            diffuse.b = nk_propertyf(ctx, "#B:", 0, specular.b, 1.0f, 0.01f, 0.005f);
-                        }
-                        else {
-                            float hsva[4];
-                            nk_colorf_hsva_fv(hsva, specular);
-                            hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                            hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                            hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                            specular = nk_hsva_colorfv(hsva);
-                        }
-                        nk_combo_end(ctx);
-
-                        // assign the altered color 
-                        ent->_light.specular[0] = specular.r;
-                        ent->_light.specular[1] = specular.g;
-                        ent->_light.specular[2] = specular.b;
-                    }
-
-                    // direction
-                    if (ent->_light.type == DIR_LIGHT || ent->_light.type == SPOT_LIGHT)
-                    {
-                        if (nk_tree_push(ctx, NK_TREE_NODE, "Direction", NK_MINIMIZED))
-                        {
-                            nk_layout_row_static(ctx, 30, 80, 2);
-                            static int option;
-                            option = nk_option_label(ctx, "global", option == 0) ? 0 : option;
-                            option = nk_option_label(ctx, "local", option == 1) ? 1 : option;
-
-                            vec3 dir = GLM_VEC2_ZERO_INIT;
-                            glm_vec3_copy(ent->_light.direction, dir);
-
-                            nk_layout_row_dynamic(ctx, 20, 1);
-                            nk_property_float(ctx, "Dir X:", -1024.0f, &dir[0], 1024.0f, 0.1f, 0.2f);
-                            nk_property_float(ctx, "Dir Y:", -1024.0f, &dir[1], 1024.0f, 0.1f, 0.2f);
-                            nk_property_float(ctx, "Dir Z:", -1024.0f, &dir[2], 1024.0f, 0.1f, 0.2f);
-
-
-                            if (dir[0] != ent->_light.direction[0] || dir[1] != ent->_light.direction[1] || dir[2] != ent->_light.direction[2])
-                            {
-                                printf("changed dir\n");
-                                entity_set_dir_vec(selected_entity, dir);
-                            }
-
-                            nk_tree_pop(ctx);
-                        }
-                    }
-
-                    if (ent->_light.cast_shadow == BEE_TRUE && nk_tree_push(ctx, NK_TREE_NODE, "Shadow Map", NK_MINIMIZED))
-                    {
-                        f32 ratio_x = (f32)ent->_light.shadow_map_x / (f32)ent->_light.shadow_map_y;
-                        struct nk_image img = nk_image_id(ent->_light.shadow_map);
-                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
-                        // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
-                        nk_image(ctx, img);
-                        
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        char buf[36];
-                        sprintf_s(buf, 36, "%dpx x %dpx", ent->_light.shadow_map_x, ent->_light.shadow_map_y);
-                        nk_label(ctx, buf, NK_TEXT_LEFT);
-
-                        nk_tree_pop(ctx);
-                    }
-
-                    // spacing
-                    nk_layout_row_static(ctx, 5, 20, 1);
-                    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    // constant, linear, quadratic
-                    if (ent->_light.type == POINT_LIGHT || ent->_light.type == SPOT_LIGHT)
-                    {
-                        nk_property_float(ctx, "constant",  0.0f,      &ent->_light.constant,  2.0f, 0.1f, 0.2f);
-                        nk_property_float(ctx, "linear",    0.0014f,   &ent->_light.linear,    0.7f, 0.1f, 0.0005f);
-                        nk_property_float(ctx, "quadratic", 0.000007f, &ent->_light.quadratic, 1.8f, 0.1f, 0.0005f);
-                    }
-
-                    // cut_off
-                    if (ent->_light.type == SPOT_LIGHT)
-                    {
-                        nk_property_float(ctx, "cut off", 1.0f, &ent->_light.cut_off, 90.0f, 0.1f, 0.2f);
-                        nk_property_float(ctx, "outer cut off", ent->_light.cut_off + 0.1f, &ent->_light.outer_cut_off, 90.0f, 0.1f, 0.2f);
-                    }
-
-                    nk_tree_pop(ctx);
-                }
-
+                draw_light_component(ent);
 
                 // scritps always the last element
                 sprintf(buffer, "Scripts [%d]", ent->scripts_len);
@@ -3133,6 +2912,280 @@ void draw_material_component(entity* ent)
                 }
                 dropped_asset.handled = BEE_TRUE;
             }
+        }
+
+        nk_tree_pop(ctx);
+    }
+
+}
+
+void draw_physics_components(entity* ent)
+{
+
+    if (ent->has_rb == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody", NK_MINIMIZED))
+    {
+
+        nk_property_float(ctx, "Mass:", -1024.0f, &ent->rb.mass, 1024.0f, 0.1f, 0.2f);
+        nk_spacing(ctx, 1);
+        nk_property_float(ctx, "Velocity X:", -1024.0f, &ent->rb.velocity[0], 1024.0f, 0.1f, 0.2f);
+        nk_property_float(ctx, "Velocity Y:", -1024.0f, &ent->rb.velocity[1], 1024.0f, 0.1f, 0.2f);
+        nk_property_float(ctx, "Velocity Z:", -1024.0f, &ent->rb.velocity[2], 1024.0f, 0.1f, 0.2f);
+        nk_spacing(ctx, 1);
+        nk_property_float(ctx, "Force X:", -1024.0f, &ent->rb.force[0], 1024.0f, 0.1f, 0.2f);
+        nk_property_float(ctx, "Force Y:", -1024.0f, &ent->rb.force[1], 1024.0f, 0.1f, 0.2f);
+        nk_property_float(ctx, "Force Z:", -1024.0f, &ent->rb.force[2], 1024.0f, 0.1f, 0.2f);
+
+        nk_tree_pop(ctx);
+    }
+
+    if (ent->has_collider == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Collider", NK_MINIMIZED))
+    {
+        if (ent->collider.type == SPHERE_COLLIDER)
+        {
+            nk_label(ctx, "Sphere Collider", NK_TEXT_LEFT);
+            nk_property_float(ctx, "Radius:", 0.1f, &ent->collider.sphere.radius, 200.0f, 0.1f, 0.2f);
+        }
+
+        nk_property_float(ctx, "Offset X:", -1024.0f, &ent->collider.offset[0], 1024.0f, 0.1f, 0.2f);
+        nk_property_float(ctx, "Offset Y:", -1024.0f, &ent->collider.offset[1], 1024.0f, 0.1f, 0.2f);
+        nk_property_float(ctx, "Offset Z:", -1024.0f, &ent->collider.offset[2], 1024.0f, 0.1f, 0.2f);
+
+        nk_tree_pop(ctx);
+    }
+
+
+}
+
+void draw_camera_component(entity* ent)
+{
+    if (ent->has_cam == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
+    {
+        nk_property_float(ctx, "Perspective:", 1.0f, &ent->_camera.perspective, 200.0f, 0.1f, 0.2f);
+
+        nk_property_float(ctx, "Near Plane:", 0.0001f, &ent->_camera.near_plane, 10.0f, 0.1f, 0.01f);
+
+        nk_property_float(ctx, "Far Plane:", 1.0f, &ent->_camera.far_plane, 500.0f, 0.1f, 0.2f);
+
+        nk_spacing(ctx, 1);
+
+        nk_property_float(ctx, "Dir X:", -1024.0f, &ent->_camera.front[0], 1024.0f, 0.1f, 0.2f);
+
+        nk_property_float(ctx, "Dir Y:", -1024.0f, &ent->_camera.front[1], 1024.0f, 0.1f, 0.2f);
+
+        nk_property_float(ctx, "Dir Z:", -1024.0f, &ent->_camera.front[2], 1024.0f, 0.1f, 0.2f);
+
+        nk_tree_pop(ctx);
+    }
+}
+
+void draw_light_component(entity* ent)
+{
+    if (ent->has_light == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Light", NK_MINIMIZED))
+    {
+        nk_layout_row_dynamic(ctx, 25, 2);
+        nk_label(ctx, "Type: ", NK_TEXT_LEFT);
+        // nk_label(ctx, ent->_light.type == DIR_LIGHT ? "Dir. Light" : ent->_light.type == POINT_LIGHT ? "Point Light" : ent->_light.type == SPOT_LIGHT ? "Spot Light" : "Unknown", NK_TEXT_LEFT);
+
+        int selected_type = ent->_light.type == POINT_LIGHT ? 0 : ent->_light.type == SPOT_LIGHT ? 1 : ent->_light.type == DIR_LIGHT ? 2 : 0;
+        int selected_type_old = selected_type;
+        char* type_names[] = { "Point Light", "Spot Light", "Dir Light" };
+        selected_type = nk_combo(ctx, type_names, 3, selected_type, 25, nk_vec2(200, 200));
+        if (selected_type_old != selected_type)
+        {
+            // switched types
+            submit_txt_console("switched light types");
+            light_type new_type = selected_type == 0 ? POINT_LIGHT : selected_type == 1 ? SPOT_LIGHT : selected_type == 2 ? DIR_LIGHT : POINT_LIGHT;
+            entity_switch_light_type(ent->id, new_type);
+        }
+
+
+        nk_layout_row_dynamic(ctx, 25, 1);
+        char buf[16]; sprintf_s(buf, 12, "Light-ID: %d", ent->_light.id);
+        nk_label(ctx, buf, NK_TEXT_LEFT);
+
+        nk_checkbox_label(ctx, " enabled", &ent->_light.enabled);
+        nk_checkbox_label(ctx, " cast shadows", &ent->_light.cast_shadow);
+
+        // ambient, diffuse, specular
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_label(ctx, "Ambient", NK_TEXT_LEFT);
+        // ambient complex color combobox
+        struct nk_colorf ambient = { ent->_light.ambient[0], ent->_light.ambient[1], ent->_light.ambient[2] };
+        if (nk_combo_begin_color(ctx, nk_rgb_cf(ambient), nk_vec2(200, 400)))
+        {
+            enum color_mode { COL_RGB, COL_HSV };
+            static int col_mode = COL_RGB;
+
+            nk_layout_row_dynamic(ctx, 120, 1);
+            ambient = nk_color_picker(ctx, ambient, NK_RGB);
+
+            nk_layout_row_dynamic(ctx, 25, 2);
+            col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+            col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if (col_mode == COL_RGB) {
+                ambient.r = nk_propertyf(ctx, "#R:", 0, ambient.r, 1.0f, 0.01f, 0.005f);
+                ambient.g = nk_propertyf(ctx, "#G:", 0, ambient.g, 1.0f, 0.01f, 0.005f);
+                ambient.b = nk_propertyf(ctx, "#B:", 0, ambient.b, 1.0f, 0.01f, 0.005f);
+            }
+            else {
+                float hsva[4];
+                nk_colorf_hsva_fv(hsva, ambient);
+                hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                ambient = nk_hsva_colorfv(hsva);
+            }
+            nk_combo_end(ctx);
+
+            // assign the altered color 
+            ent->_light.ambient[0] = ambient.r;
+            ent->_light.ambient[1] = ambient.g;
+            ent->_light.ambient[2] = ambient.b;
+        }
+
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_label(ctx, "Diffuse", NK_TEXT_LEFT);
+        // ambient complex color combobox
+        struct nk_colorf diffuse = { ent->_light.diffuse[0], ent->_light.diffuse[1], ent->_light.diffuse[2] };
+        if (nk_combo_begin_color(ctx, nk_rgb_cf(diffuse), nk_vec2(200, 400)))
+        {
+            enum color_mode { COL_RGB, COL_HSV };
+            static int col_mode = COL_RGB;
+
+            nk_layout_row_dynamic(ctx, 120, 1);
+            diffuse = nk_color_picker(ctx, diffuse, NK_RGB);
+
+            nk_layout_row_dynamic(ctx, 25, 2);
+            col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+            col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if (col_mode == COL_RGB) {
+                diffuse.r = nk_propertyf(ctx, "#R:", 0, diffuse.r, 1.0f, 0.01f, 0.005f);
+                diffuse.g = nk_propertyf(ctx, "#G:", 0, diffuse.g, 1.0f, 0.01f, 0.005f);
+                diffuse.b = nk_propertyf(ctx, "#B:", 0, diffuse.b, 1.0f, 0.01f, 0.005f);
+            }
+            else {
+                float hsva[4];
+                nk_colorf_hsva_fv(hsva, diffuse);
+                hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                diffuse = nk_hsva_colorfv(hsva);
+            }
+            nk_combo_end(ctx);
+
+            // assign the altered color 
+            ent->_light.diffuse[0] = diffuse.r;
+            ent->_light.diffuse[1] = diffuse.g;
+            ent->_light.diffuse[2] = diffuse.b;
+        }
+        nk_property_float(ctx, "Intensity: ", 0, &ent->_light.dif_intensity, 1024, 0.1f, 0.1f);
+
+
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_label(ctx, "Specular", NK_TEXT_LEFT);
+        // ambient complex color combobox
+        struct nk_colorf specular = { ent->_light.specular[0], ent->_light.specular[1], ent->_light.specular[2] };
+        if (nk_combo_begin_color(ctx, nk_rgb_cf(specular), nk_vec2(200, 400)))
+        {
+            enum color_mode { COL_RGB, COL_HSV };
+            static int col_mode = COL_RGB;
+
+            nk_layout_row_dynamic(ctx, 120, 1);
+            specular = nk_color_picker(ctx, specular, NK_RGB);
+
+            nk_layout_row_dynamic(ctx, 25, 2);
+            col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+            col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if (col_mode == COL_RGB) {
+                diffuse.r = nk_propertyf(ctx, "#R:", 0, specular.r, 1.0f, 0.01f, 0.005f);
+                diffuse.g = nk_propertyf(ctx, "#G:", 0, specular.g, 1.0f, 0.01f, 0.005f);
+                diffuse.b = nk_propertyf(ctx, "#B:", 0, specular.b, 1.0f, 0.01f, 0.005f);
+            }
+            else {
+                float hsva[4];
+                nk_colorf_hsva_fv(hsva, specular);
+                hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                specular = nk_hsva_colorfv(hsva);
+            }
+            nk_combo_end(ctx);
+
+            // assign the altered color 
+            ent->_light.specular[0] = specular.r;
+            ent->_light.specular[1] = specular.g;
+            ent->_light.specular[2] = specular.b;
+        }
+
+        // direction
+        if (ent->_light.type == DIR_LIGHT || ent->_light.type == SPOT_LIGHT)
+        {
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Direction", NK_MINIMIZED))
+            {
+                nk_layout_row_static(ctx, 30, 80, 2);
+                static int option;
+                option = nk_option_label(ctx, "global", option == 0) ? 0 : option;
+                option = nk_option_label(ctx, "local", option == 1) ? 1 : option;
+
+                vec3 dir = GLM_VEC2_ZERO_INIT;
+                glm_vec3_copy(ent->_light.direction, dir);
+
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_property_float(ctx, "Dir X:", -1024.0f, &dir[0], 1024.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Dir Y:", -1024.0f, &dir[1], 1024.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Dir Z:", -1024.0f, &dir[2], 1024.0f, 0.1f, 0.2f);
+
+
+                if (dir[0] != ent->_light.direction[0] || dir[1] != ent->_light.direction[1] || dir[2] != ent->_light.direction[2])
+                {
+                    printf("changed dir\n");
+                    entity_set_dir_vec(selected_entity, dir);
+                }
+
+                nk_tree_pop(ctx);
+            }
+        }
+
+        if (ent->_light.cast_shadow == BEE_TRUE && nk_tree_push(ctx, NK_TREE_NODE, "Shadow Map", NK_MINIMIZED))
+        {
+            f32 ratio_x = (f32)ent->_light.shadow_map_x / (f32)ent->_light.shadow_map_y;
+            struct nk_image img = nk_image_id(ent->_light.shadow_map);
+            nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+            // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
+            nk_image(ctx, img);
+
+            nk_layout_row_dynamic(ctx, 25, 1);
+            char buf[36];
+            sprintf_s(buf, 36, "%dpx x %dpx", ent->_light.shadow_map_x, ent->_light.shadow_map_y);
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+
+            nk_tree_pop(ctx);
+        }
+
+        // spacing
+        nk_layout_row_static(ctx, 5, 20, 1);
+        nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
+        nk_layout_row_dynamic(ctx, 25, 1);
+        // constant, linear, quadratic
+        if (ent->_light.type == POINT_LIGHT || ent->_light.type == SPOT_LIGHT)
+        {
+            nk_property_float(ctx, "constant", 0.0f, &ent->_light.constant, 2.0f, 0.1f, 0.2f);
+            nk_property_float(ctx, "linear", 0.0014f, &ent->_light.linear, 0.7f, 0.1f, 0.0005f);
+            nk_property_float(ctx, "quadratic", 0.000007f, &ent->_light.quadratic, 1.8f, 0.1f, 0.0005f);
+        }
+
+        // cut_off
+        if (ent->_light.type == SPOT_LIGHT)
+        {
+            nk_property_float(ctx, "cut off", 1.0f, &ent->_light.cut_off, 90.0f, 0.1f, 0.2f);
+            nk_property_float(ctx, "outer cut off", ent->_light.cut_off + 0.1f, &ent->_light.outer_cut_off, 90.0f, 0.1f, 0.2f);
         }
 
         nk_tree_pop(ctx);
@@ -4113,7 +4166,7 @@ void asset_browser_window()
                         }                        
                         if (nk_button_label(ctx, "Recompile"))
                         {
-                            hot_reload_shader(shaders[selected_shader].name);
+                            recomile_shader(shaders[selected_shader].name);
                         }
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
@@ -5148,10 +5201,58 @@ void set_drag_and_drop_import_window(int path_count, char* paths[])
         printf("path: %s\n", drag_and_drop_import_paths[i]);
     }
 }
-static void set_style(struct nk_context* ctx, enum theme theme)
+static void set_style(struct nk_context* ctx, enum ui_theme theme)
 {
     struct nk_color table[NK_COLOR_COUNT];
-    if (theme == THEME_WHITE) {
+    if (theme == THEME_LIGHT_BLUE) 
+    {
+        // struct nk_color c       = nk_rgba(11, 255, 249, 255);
+        struct nk_color c_dark  = nk_rgba(7, 166, 162, 255);
+        struct nk_color c       = nk_rgba(11, 230, 228, 255);
+        struct nk_color c_light = nk_rgba(30, 255, 255, 255);
+        struct nk_color c_white = nk_rgba(150, 255, 255, 255);
+
+        table[NK_COLOR_TEXT] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_WINDOW] = nk_rgba(30, 33, 40, 255);  // a: 215
+        table[NK_COLOR_HEADER] = c_dark; // nk_rgba(181, 45, 69, 255); // a: 220 
+        table[NK_COLOR_BORDER] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_BUTTON] = c;  // nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_BUTTON_HOVER] = c_light; // nk_rgba(190, 50, 70, 255);
+        table[NK_COLOR_BUTTON_ACTIVE] = c_light; // nk_rgba(195, 55, 75, 255);
+        table[NK_COLOR_TOGGLE] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(45, 60, 60, 255);
+        table[NK_COLOR_TOGGLE_CURSOR] = c;  // nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_SELECT] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_SELECT_ACTIVE] = c;  // nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_SLIDER] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_SLIDER_CURSOR] = c;  // nk_rgba(181, 45, 69, 255);
+        table[NK_COLOR_SLIDER_CURSOR_HOVER] = c_light;  // nk_rgba(186, 50, 74, 255);
+        table[NK_COLOR_SLIDER_CURSOR_ACTIVE] = c_light;  // nk_rgba(191, 55, 79, 255);
+        table[NK_COLOR_PROPERTY] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_EDIT] = nk_rgba(51, 55, 67, 225);
+        table[NK_COLOR_EDIT_CURSOR] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_COMBO] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_CHART] = nk_rgba(51, 55, 67, 255);
+        table[NK_COLOR_CHART_COLOR] = c;  // nk_rgba(170, 40, 60, 255);
+        table[NK_COLOR_CHART_COLOR_HIGHLIGHT] = c_white; // nk_rgba(255, 0, 0, 255);
+        table[NK_COLOR_SCROLLBAR] = nk_rgba(30, 33, 40, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR] = nk_rgba(64, 84, 95, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_HOVER] = nk_rgba(70, 90, 100, 255);
+        table[NK_COLOR_SCROLLBAR_CURSOR_ACTIVE] = nk_rgba(75, 95, 105, 255);
+        table[NK_COLOR_TAB_HEADER] = c_dark; // nk_rgba(181, 45, 69, 255); // a: 220
+        nk_style_from_table(ctx, table);
+
+        ctx->style.tab.text = nk_rgba(51, 55, 67, 255);
+        ctx->style.window.header.label_active = nk_rgba(51, 55, 67, 255);
+        ctx->style.window.header.label_hover  = nk_rgba(51, 55, 67, 255);
+        ctx->style.window.header.label_normal = nk_rgba(51, 55, 67, 255);
+        ctx->style.selectable.text_pressed    = nk_rgba(51, 55, 67, 255);
+        ctx->style.button.text_active         = nk_rgba(51, 55, 67, 255);
+        ctx->style.button.text_hover          = nk_rgba(51, 55, 67, 255);
+        ctx->style.button.text_normal         = nk_rgba(51, 55, 67, 255);
+    }
+    else if (theme == THEME_WHITE) 
+    {
         table[NK_COLOR_TEXT] = nk_rgba(70, 70, 70, 255);
         table[NK_COLOR_WINDOW] = nk_rgba(175, 175, 175, 255);
         table[NK_COLOR_HEADER] = nk_rgba(175, 175, 175, 255);

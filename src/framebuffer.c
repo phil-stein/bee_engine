@@ -220,7 +220,7 @@ void create_framebuffer_shadowmap(u32* tex_buffer, u32* fbo, int width, int heig
 	unbind_framebuffer();
 }
 
-void create_framebuffer_mouse_picking(u32* tex_buffer, u32* fbo, u32* rbo)
+void create_framebuffer_single_channel_f(u32* tex_buffer, u32* fbo, u32* rbo, f32 size_divisor)
 {
 	// create framebuffer object
 	glGenFramebuffers(1, fbo);
@@ -229,8 +229,8 @@ void create_framebuffer_mouse_picking(u32* tex_buffer, u32* fbo, u32* rbo)
 
 	int w, h; get_window_size(&w, &h);
 	// quater the resolution 
-	w /= 4;
-	h /= 4;
+	w /= size_divisor;
+	h /= size_divisor;
 	// generate texture
 	glGenTextures(1, tex_buffer);
 	glBindTexture(GL_TEXTURE_2D, *tex_buffer);

@@ -10,7 +10,7 @@
 // ---- util ----
 
 // intis glfw & glad, also creates the window
-// returns: <stddef.h> return_code
+// returns: "global.h" return_code
 rtn_code create_window(const int width, const int height, const char* title, bee_bool maximized);
 
 void close_window();
@@ -30,7 +30,8 @@ void  get_window_size(int* width, int* height);
 // get the windows current title
 char* get_window_title();
 
-void set_framebuffer_to_update(u32 texture_buffer);
+// register a texture buffer to be resized if the window size changes
+void set_texturebuffer_to_update_to_screen_size(u32 texture_buffer);
 
 // --- callbacks ----
 

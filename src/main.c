@@ -14,6 +14,7 @@
 #include "editor_ui.h"
 #include "renderer.h"
 #include "entities.h"
+#include "physics.h"
 #include "window.h"
 #include "input.h"
 #include "app.h"
@@ -112,6 +113,8 @@ int main(void)
 #endif
 
 		entities_update(); // has to be after ui
+
+		physics_update();
 
 		// reset last frames button state
 		input_update();

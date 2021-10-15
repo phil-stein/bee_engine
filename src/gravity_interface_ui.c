@@ -26,7 +26,7 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
-enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };
+enum ui_theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };
 
 // ---- vars ----
 struct nk_color g_red = { 255, 0, 0, 255 };
@@ -270,7 +270,7 @@ static bee_bool gravity_image(gravity_vm* vm, gravity_value_t* args, uint16_t na
 }
 
 
-void gravity_ui_set_style(struct nk_context* ctx, enum theme theme)
+void gravity_ui_set_style(struct nk_context* ctx, enum ui_theme theme)
 {
     struct nk_color table[NK_COLOR_COUNT];
     if (theme == THEME_WHITE) {

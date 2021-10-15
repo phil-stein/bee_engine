@@ -17,25 +17,9 @@ Todo
   
 - buggs
 
-  - [x] dark areas look weird since adding gamma correction
-
   - [ ] disabling msaa makes cube map be drawn over scene and the vertex info of the meshes gets all screwy  
 
-  - [x] world.add_entity() sometimes freezes editor, prob in ui -> entity hierarchy
-
-    -> only happens when editor ui is open
-
-  - [x] adding camera can freeze the editor
-
-    -> in scene "default"
-
   - [ ] first object in mouse_pick_buffer is rendered behind the others 
-
-  - [x] keyboard input in ui doesn't work since adding gravity ui
-
-  - [x] "scripts over bounds" in properties_window() ->  scripts
-
-  - [x] entity hierarchy type is wrong 
 
   - [ ] shader name got swapped with a script name 
 
@@ -53,25 +37,13 @@ Todo
 
   - [ ] search function in asset browser
 
-  - [ ] object outline 
-
   - [ ] in-game ui doesnt scroll or take keyboard input while editor is act
 
     -> because editor ui ctx is in focus
     
   - [ ] divide big ui functions into sub-functions
 
-  - [x] mouse over ui for entity mouse selection
-
-  - [ ] entities.h function comments
-
-  - [ ] renderer.h function comments 
-
-  - [ ] gravity_interface.h function comments
-
-  - [ ] gravity_interface_ui.h function comments
-
-  - [ ] look for more uncommented functions
+  - [ ] revamp the uniform system to be less cumbersome
 
     
 
@@ -156,10 +128,6 @@ Todo
 
 - [ ] gravity scripting
 
-  - [ ] finish input interface
-    - [ ] controller interface
-    - [ ] actions like unity ???
-
   - [ ] load_file delegate for #import 
 
   - [ ] delegate for 'System.print()'
@@ -167,16 +135,6 @@ Todo
   - [ ] interface to create meshes / other components to create models etc in gravity
 
   - [ ] interface for nuklear
-
-    - [x] window
-
-    - [x] layout
-
-    - [x] label
-
-    - [x] button
-
-    - [x] image
 
     - [ ] checkbox
 
@@ -197,11 +155,16 @@ Todo
 
 - [ ] physics-system
 
+  
+  - [x] sphere v sphere
+  
+  - [x] dynamics
+  
+  - [ ] resolution
+  
   - [ ] aabb v aabb
   
   - [ ] aabb v sphere
-  
-  - [ ] aabb v plane
   
     
   

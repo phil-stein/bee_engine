@@ -216,15 +216,6 @@ int duplicate_entity(int id)
 
 	return add_entity_direct(e);
 }
-void add_entity_cube()
-{
-	mesh m = make_cube_mesh(); // @TODO: make this check with the assetmanager if a cube mesh already exists
-	vec3 pos = { 0.0f, 0.0f, 0.0f };
-	vec3 rot = { 0.0f, 0.0f, 0.0f };
-	vec3 scale = { 1.0f, 1.0f, 1.0f };
-	add_entity(pos, rot, scale, &m, get_material("MAT_blank"), NULL, NULL, "cube");
-}
-
 
 void entity_switch_light_type(int entity_id, light_type new_type)
 {
@@ -395,7 +386,6 @@ void entity_remove_child(int parent, int child)
 		}
 	}
 }
-
 
 void entity_remove(int entity_idx)
 {

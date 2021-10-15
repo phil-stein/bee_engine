@@ -5,11 +5,15 @@
 #include "stb/stb_ds.h"
 #include "entities.h"
 #include "renderer.h"
+#ifdef EDITOR_ACT
+#include "editor_ui.h"
+#endif
 
 #define NAME_SIZE 25
 
 #ifdef EDITOR_ACT
 char scene_state_buffer[10000];
+bee_bool scene_state_buffer_filled = BEE_FALSE;
 char scene_name_before_state_change[NAME_SIZE];
 #endif
 
@@ -122,6 +126,7 @@ void clear_scene()
 {
 	entities_clear_scene();
 	renderer_clear_scene();
+	strcpy(active_scene, "no_name");
 }
 
 void add_empty_scene(const char* name)
@@ -236,11 +241,20 @@ void save_scene_state()
 
 	strcpy_s(scene_name_before_state_change, NAME_SIZE, active_scene);
 
+	scene_state_buffer_filled = BEE_TRUE;
+
 	printf("serialized scene length -> %d\n", offset);
 }
 
 void load_scene_state()
 {
+
+	if (!scene_state_buffer_filled) 
+	{ 
+		set_error_popup(GENERAL_ERROR, "Attempted to restore saved scene state without saving one first.");
+		printf("[ERROR] Attempted to restore saved scene state without saving one first.");
+		return; 
+	}
 	clear_scene();
 
 	int offset = 0;

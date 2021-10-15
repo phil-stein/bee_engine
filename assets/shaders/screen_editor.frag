@@ -75,46 +75,56 @@ void main()
 	// ---- outline ----
 	const float width = 1.0 / 800.0; 
 	const vec3  outline_color = vec3(11.0f / 255.0f, 1.0, 249.0f / 255.0f);
+	int use_outline_color = 0;
 	float x = TexCoord.x;
 	float y = TexCoord.y;
 	vec2 coord = vec2(x, y);
 	
+
+	// sample around the current fragment and check if outside the mesh
+
 	float base = texture(outline, coord).r;
 	x = TexCoord.x + width;
 	y = TexCoord.y;
 	coord = vec2(x, y);
 	float c = texture(outline, coord).r;
-	if (c > 0.0 && base == 0.0) { col = outline_color; }
+	if (c > 0.0 && base == 0.0) { use_outline_color = 1; }
 
 	x = TexCoord.x - width;
 	y = TexCoord.y;
 	coord = vec2(x, y);
 	c = texture(outline, coord).r;
-	if (c > 0.0 && base == 0.0) { col = outline_color; }
+	if (c > 0.0 && base == 0.0) { use_outline_color = 1; }
 
 	x = TexCoord.x;
 	y = TexCoord.y + width;
 	coord = vec2(x, y);
 	c = texture(outline, coord).r;
-	if (c > 0.0 && base == 0.0) { col = outline_color; }
+	if (c > 0.0 && base == 0.0) { use_outline_color = 1; }
 
 	x = TexCoord.x;
 	y = TexCoord.y - width;
 	coord = vec2(x, y);
 	c = texture(outline, coord).r;
-	if (c > 0.0 && base == 0.0) { col = outline_color; }
+	if (c > 0.0 && base == 0.0) { use_outline_color = 1; }
 
 	x = TexCoord.x + width;
 	y = TexCoord.y + width;
 	coord = vec2(x, y);
 	c = texture(outline, coord).r;
-	if (c > 0.0 && base == 0.0) { col = outline_color; }
+	if (c > 0.0 && base == 0.0) { use_outline_color = 1; }
 
 	x = TexCoord.x - width;
 	y = TexCoord.y - width;
 	coord = vec2(x, y);
 	c = texture(outline, coord).r;
-	if (c > 0.0 && base == 0.0) { col = outline_color; }
+	if (c > 0.0 && base == 0.0) { use_outline_color = 1; }
+
+
+	if (use_outline_color == 1)
+	{
+		col = outline_color;
+	}
 
 
 	FragColor = vec4(col, 1.0);

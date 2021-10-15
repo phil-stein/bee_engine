@@ -11,9 +11,19 @@
 #include "global.h"
 #include "gravity_script.h"
 
-
+// creates the nuklear context
 void gravity_ui_init();
+// clears the nuklear context
 void gravity_ui_clear();
+
+//
+// setup_ui_class() adds the UI class to a gravity virtual machine
+// it can then be accessed in gravity: var ui = UI(); ui.function();
+// 
+// all other funtions are callbacks for gravity to call if the given 
+// function is called inside a gravity file
+// 
+
 
 void setup_ui_class(gravity_vm* vm);
 
@@ -29,6 +39,6 @@ static bee_bool gravity_checkbox(gravity_vm* vm, gravity_value_t* args, uint16_t
 static bee_bool gravity_image(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex);
 
 
-void gravity_ui_set_style(struct nk_context* ctx, enum theme theme);
+void gravity_ui_set_style(struct nk_context* ctx, enum ui_theme theme);
 
 #endif

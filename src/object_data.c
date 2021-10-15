@@ -385,13 +385,15 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, 
 	if (ent.has_cam)
 	{
 		ent._camera = *_cam;
-		printf("has camera\n");
 	}
 	ent.has_light = _light != NULL ? BEE_TRUE : BEE_FALSE;
 	if (_light != NULL)
 	{
 		ent._light = *_light;
 	}
+
+	ent.has_collider = BEE_FALSE;
+	ent.has_rb		 = BEE_FALSE;
 
 	ent.scripts_len = 0;
 	ent.scripts		= NULL; // needs to be null-pointer for stb_ds
@@ -466,15 +468,18 @@ void free_mesh(mesh* _mesh)
 void free_texture(texture* tex)
 {
 	glDeleteTextures(1, &tex->handle);
+#ifdef EDITOR_ACT
+	glDeleteTextures(1, &tex->icon_handle);
+#endif
 }
 void free_shader(shader* s)
 {
 	free(s->name);
 
-	if (s->has_error) { return; }
-
 	if (s->uniform_defs != NULL)
 	{ arrfree(s->uniform_defs); }
+
+	if (s->has_error) { return; }
 
 	glDeleteProgram(s->handle);
 }

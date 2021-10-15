@@ -127,7 +127,7 @@ char* get_window_title()
 	return window_title;
 }
 
-void set_framebuffer_to_update(u32 texture_buffer)
+void set_texturebuffer_to_update_to_screen_size(u32 texture_buffer)
 {
 	arrput(resize_buffers, texture_buffer);
 	resize_buffers_len++;

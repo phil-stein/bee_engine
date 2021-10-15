@@ -13,8 +13,10 @@
 #include "window.h"
 #include "camera.h"
 #include "renderer.h"
+#include "entities.h"
 #include "game_time.h"
 #include "editor_ui.h"
+#include "object_data.h"
 #include "file_handler.h"
 #include "asset_manager.h"
 #include "scene_manager.h"
@@ -197,6 +199,38 @@ void init()
 
 	// load_scene("showcase06.scene");
 	load_scene("ui_test.scene");
+
+
+	entity* cube	  = get_entity(0);
+	entity* tombstone = get_entity(6);
+	
+	// rigidbody
+	rigidbody rb;
+	// glm_vec3_copy(GLM_VEC3_ZERO, rb.force);
+	vec3 f = { 100.0f, 600.0f, 0.0f };
+	glm_vec3_copy(f, rb.force);
+	glm_vec3_copy(GLM_VEC3_ZERO, rb.velocity); 
+	rb.mass = 1.0f;
+	cube->has_rb = BEE_TRUE;
+	cube->rb = rb;
+
+	// collider
+	sphere_collider c_col, d_col;
+	c_col.radius = 1.0f;
+	d_col.radius = 1.0f;
+	
+	collider c01, c02;
+	c01.type = SPHERE_COLLIDER;
+	c01.sphere = c_col;
+	glm_vec3_copy(GLM_VEC3_ZERO, c01.offset);
+	c02.type = SPHERE_COLLIDER;
+	c02.sphere = d_col;
+	glm_vec3_copy(GLM_VEC3_ZERO, c02.offset);
+	
+	cube->has_collider = BEE_TRUE;
+	cube->collider = c01;
+	tombstone->has_collider = BEE_TRUE;
+	tombstone->collider = c02;
 
 
 	// texture screenshot_tex = get_texture("screenshot08.png");

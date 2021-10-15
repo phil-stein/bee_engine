@@ -24,6 +24,7 @@ void serialize_uniform_def(char* buffer, int* offset, uniform_def* u);
 
 // ---- base types ----
 void serialize_int(char* buffer, int* offset, int val);
+// serilizes float as string, not the most optimal
 void serialize_float(char* buffer, int* offset, f32 val);
 void serialize_u32(char* buffer, int* offset, u32 val);
 void serialize_enum(char* buffer, int* offset, char val);

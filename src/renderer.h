@@ -35,54 +35,85 @@ void renderer_update();
 void renderer_cleanup();
 
 #ifdef EDITOR_ACT
+// renders the scene with each object having a single color representing their id
 void render_scene_mouse_pick();
+// renders the currently selected entity as white
 void render_scene_outline();
 #endif
+// renders the shadowmap for each light
 void render_scene_shadows();
+// render all the entities using lighting and hdr
 void render_scene_normal();
+// renders the cubemap into the background
 void render_scene_skybox();
+// renders the previous stages onto a quad spanning the whole window
 void render_scene_screen();
+
 // renderes a single mesh, causing one draw-call
 void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col);
+// sets all the uniforms for a shader
 void set_shader_uniforms(material* mat);
 
-// clears all entities, etc, completely wiping the current scene
+// clears all internally used data, used for f.e. switching scenes
 void renderer_clear_scene();
 
 #ifdef EDITOR_ACT
+// retrieve the entity id at the mouse position from the buffer cretated in render_scene_mouse_pick() 
 int read_mouse_position_mouse_pick_buffer_color();
 #endif
 
+// get the id of the current camera entity
 int   get_camera_ent_id();
+// pointer to an array holding the id's of all transparent entities
 int** get_transparent_ids_ptr();
+// get the length of get_transparent_ids_ptr()
 int*  get_transparent_ids_len();
+// pointer to an array holding the id's of all entities with a dir light 
 int** get_dir_light_ids_ptr();
+// get the length of get_dir_light_ids_ptr()
 int*  get_dir_light_ids_len();
+// pointer to an array holding the id's of all entities with a point light 
 int** get_point_light_ids_ptr();
+// get the length of get_point_light_ids_ptr()
 int*  get_point_light_ids_len();
+// pointer to an array holding the id's of all entities with a spot light 
 int** get_spot_light_ids_ptr();
+// get the length of get_spot_light_ids_ptr()
 int*  get_spot_light_ids_len();
 
+// set the id informing the engine which entity currently has the camera
+// !!! use carefully !!!
 void set_camera_ent_id(int id);
 
-// set play / pause used for editor
+#ifdef EDITOR_ACT
+// set play / pause state in editor
 void set_gamestate(bee_bool play, bee_bool _hide_gizmos);
+// return true: play false: paused / in editor
 bee_bool get_gamestate();
+// activate / deactivate all scripts
 void set_all_scripts(bee_bool act);
+#endif
 
+// get how many draw calls there were last frame
 int* get_draw_calls_per_frame();
+// get how many vertices were rendered last frame
 int* get_verts_per_frame();
+// get how many triangles were rendered last frame
 int* get_tris_per_frame();
-// void set_all_gizmo_meshes(bee_bool act);
 
+// set any of the "render_setting" enum values 
 void renderer_set(render_setting setting, bee_bool value);
+// get any of the "render_setting" enum values 
 bee_bool* renderer_get(render_setting setting);
+// get the currently used exposure value
 f32* get_exposure();
+// get the color buffer, the hdr buffer all the objects get rendered into using lighting
 u32 get_color_buffer();
+// get the current background color
 void get_bg_color(vec3 col);
+// set the background color
 void set_bg_color(vec3 col);
 
-
-// entity_properties get_entity_properties(int index);
+// @TODO: replace this
 renderer_properties get_renderer_properties();
 #endif

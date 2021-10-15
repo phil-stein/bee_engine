@@ -12,12 +12,26 @@
 #include "gravity_script.h"
 
 
-void set_cur_script(gravity_script* script);
+// set the currently active script
+void set_cur_script(gravity_script* script, int entity_index);
+// get the currently active script
 gravity_script* get_cur_script();
 
+// actions that cannot be executed while the gravity scripts are being executed get executed here afterwards
 void gravity_check_for_pending_actions();
+// reset the state of all actions to false
 void gravity_reset_pending_actions();
+// mouse-movement callback used for input related fuctions
 void mouse_movement_callback();
+
+//
+// setup_..._class() functions add the given class to a gravity virtual machine
+// they then can be accessed in gravity: var class = Class(); class.function();
+// 
+// all other funtions are callbacks for gravity to call if the given function is
+// called inside a gravity file
+// 
+
 
 void setup_entity_class(gravity_vm* vm);
 

@@ -25,6 +25,10 @@ u32 create_shader(char* vert_shader_src, char* frag_shader_src, char* name, bee_
 // activate / use the shader 
 void shader_use(shader* s);
 
+// "free's" the shader program
+// !!! only deletes the opngl handle not the name, etc.
+void shader_delete(shader* s);
+
 // set a bool in the shader 
 // the given int is used as the bool ( 0/1 )
 void shader_set_bool(shader* s, const char* name, int value);

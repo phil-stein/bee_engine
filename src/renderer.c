@@ -126,15 +126,15 @@ void renderer_init()
 
 	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
 	create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
-	set_framebuffer_to_update(tex_col_buffer); // updates framebuffer on window resize
-	set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
+	set_texturebuffer_to_update_to_screen_size(tex_col_buffer); // updates framebuffer on window resize
+	set_texturebuffer_to_update_to_screen_size(tex_aa_buffer);  // updates framebuffer on window resize
 
 #ifdef EDITOR_ACT
 	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick", BEE_TRUE);
-	create_framebuffer_mouse_picking(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo);
-	set_framebuffer_to_update(mouse_pick_buffer);  // updates framebuffer on window resize
+	create_framebuffer_single_channel_f(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo, 4);
+	set_texturebuffer_to_update_to_screen_size(mouse_pick_buffer);  // updates framebuffer on window resize
 	
-	create_framebuffer(&outline_buffer, &outline_fbo, &outline_rbo);
+	create_framebuffer_single_channel_f(&outline_buffer, &outline_fbo, &outline_rbo, 1);
 #endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -587,7 +587,7 @@ void render_scene_normal()
 
 		}
 		#ifdef EDITOR_ACT
-		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam))
+		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam || ent->has_collider))
 		{
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
@@ -614,8 +614,16 @@ void render_scene_normal()
 						break;
 				}
 				glm_vec3_copy(ent->_light.diffuse, tint);
-				// printf("tint: %f, %f, %f\n", tint[0], tint[1], tint[2]);
-				// printf("dif:  %f, %f, %f\n", ent->_light.diffuse[0], ent->_light.diffuse[1], ent->_light.diffuse[2]);
+			}
+			else if (ent->has_collider)
+			{
+				vec3 col = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
+				glm_vec3_copy(col, tint);
+				m = get_mesh("sphere_collider.obj");
+				glm_vec3_copy(GLM_VEC3_ZERO, rot);
+				vec3 s = { ent->collider.sphere.radius, ent->collider.sphere.radius, ent->collider.sphere.radius };
+				glm_vec3_copy(s, scale);
+				glm_vec3_add(pos, ent->collider.offset, pos);
 			}
 			if (m == NULL) { continue; }
 			material* mat = get_material("MAT_cel");

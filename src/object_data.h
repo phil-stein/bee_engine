@@ -11,6 +11,8 @@
 // ---- assets ----
 //
 
+// all information needed about a texture
+// "icon_handle" is only available when "EDITOR_ACT" is defined and has the same texture loaded in rgb rather than srgb space for ui, etc.
 typedef struct texture
 {
 	u32 handle;
@@ -24,12 +26,16 @@ typedef struct texture
 
 }texture;
 
+// all available types of unifoms to be sent to a shader
 typedef enum uniform_type { UNIFORM_INT, UNIFORM_F32, UNIFORM_VEC2, UNIFORM_VEC3, UNIFORM_TEX }uniform_type;
+// all information needed about a uniform
+// doesnt hold the values as this is for the shader to tell the material what uniforms it can give values to
 typedef struct uniform_definition
 {
 	char* name;
 	uniform_type type;
 }uniform_def;
+// holds value for a uniform described by "def"
 typedef struct uniform
 {
 	// char* name;
@@ -105,11 +111,6 @@ typedef struct camera
 	f32 near_plane;  //  0.1f;
 	f32 far_plane;  //   100.0f;
 	
-	//
-	// @UNCLEAR: do this with the front direction like the lights 
-	// or finally try to figure out how to get to the front direction from position and rotation
-	//
-	
 	vec3 front;  // = { 0.0f,  -0.5f, -0.85f };
 	vec3 up;	 // = { 0.0f,  1.0f,   0.0f };
 	vec3 target; // = { 0.0, 0.0, 0.0 };
@@ -150,8 +151,41 @@ typedef struct light
 
 }light;
 
+
+// ---- physics ----
+typedef struct sphere_collider
+{
+	f32 radius;
+	// is_trigger, etc.
+
+}sphere_collider;
+
+typedef enum collider_type { SPHERE_COLLIDER }collider_type;
+typedef struct collider
+{
+	collider_type type;
+	vec3 offset;
+	// vec3 scale;
+	union
+	{
+		sphere_collider sphere;
+		// other collider types
+	};
+}collider;
+
+typedef struct rigidbody
+{
+	vec3 velocity;
+	vec3 force;
+	f32  mass;
+}rigidbody;
+
 // ---- entity ----
 
+// struct defing an object or entity
+// all meshes that get rendered and also lights cameras and scripts work through these entities
+// if "_mesh", "_light", "_camera" are "NULL" there not assigned, this is indicated by the "has_..." variables
+// when parent is 9999, or less than 0, the entity has no parent 
 typedef struct entity
 {
 	char* name;
@@ -180,6 +214,11 @@ typedef struct entity
 		light  _light;
 	};
 
+	bee_bool  has_collider;
+	collider  collider;
+	bee_bool  has_rb;
+	rigidbody rb;
+
 	// --------------------
 
 	gravity_script** scripts;
@@ -196,7 +235,7 @@ typedef struct entity
 typedef struct scene
 {
 	f32 exposure;
-	bee_bool use_msaa;
+	bee_bool use_msaa; // multisampled anti-aliasing
 	vec3 bg_color;
 
 	// entitities
@@ -205,13 +244,18 @@ typedef struct scene
 
 }scene;
 
+
+
 // creates a material struct
 material make_material(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
 // creates a mesh struct 
 // dont do this manually
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name);
+// straightforward mesh of a quad aka. plane
 mesh make_plane_mesh();
+// straightforward mesh of a cube, you could say the default cube
 mesh make_cube_mesh();
+// this is unfinished have to finish this
 mesh make_grid_mesh(int x_verts, int z_verts);
 
 // create a camera struct
@@ -226,11 +270,6 @@ light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction,
 
 // create an entity
 entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, camera* cam, light* _light, char* _name); //model* _model
-
-// render the mesh
-// void draw_mesh(mesh* _mesh, material* _material, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
-// render the models meshes
-// void draw_model(model* _model, vec3 pos, vec3 rot, vec3 scale, enum bee_bool rotate_global);
 
 // updates all attached components
 void update_entity(entity* ent);

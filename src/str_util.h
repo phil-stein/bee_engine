@@ -8,9 +8,9 @@
 // taken from: https://stackoverflow.com/questions/44539255/finding-last-occurence-of-string-in-c
 char* str_find_last_of(char* str, char* identifier);
 
-// taken from: https://www.delftstack.com/howto/c/truncate-string-in-c/
 // cut off "pos" amount of chars
 // if "pos" id negative it will cut from the back
+// taken from: https://www.delftstack.com/howto/c/truncate-string-in-c/
 char* str_trunc(char* str, int pos);
 
 #endif

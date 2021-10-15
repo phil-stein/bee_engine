@@ -422,7 +422,7 @@ mesh process_mesh(struct aiMesh* m_assimp, struct aiScene* scene, const char* na
         }
         else
         {
-            printf("-!!!-> loaded mesh did not contain normal information\n");
+            // printf("-!!!-> loaded mesh did not contain normal information\n");
             arrput(verts, 0.0f); verts_len++;
             arrput(verts, 0.0f); verts_len++;
             arrput(verts, 0.0f); verts_len++;
@@ -437,7 +437,7 @@ mesh process_mesh(struct aiMesh* m_assimp, struct aiScene* scene, const char* na
         }
         else
         {
-            printf("-!!!-> loaded mesh did not contain uv-coordinates\n");
+            // printf("-!!!-> loaded mesh did not contain uv-coordinates\n");
             arrput(verts, 0.0f); verts_len++;
             arrput(verts, 0.0f); verts_len++;
         }

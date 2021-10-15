@@ -6,11 +6,10 @@
 #include "window.h"
 
 
-// "keystate" mapps directly to glfws key definitions
+// "input_state" mapps directly to glfws key definitions
 typedef enum input_state { STATE_RELEASED, STATE_PRESS } input_state;
 // typedef enum keystate ;
 
-// "key" mapps directly to glfws key definitions
 enum key
 {
     KEY_Unknown = -1,
@@ -151,7 +150,9 @@ enum key
 
     KEY_Menu = 348
 };
+// "key" mapps directly to glfws key definitions
 typedef enum key key;
+
 
 enum mouse_btn
 {
@@ -216,6 +217,7 @@ enum mouse_btn
     /// </summary>
     MOUSE_middle = MOUSE_button3
 };
+// "mouse_btn" mapps directly to glfws key definitions
 typedef enum mouse_btn mouse_btn;
 
 void input_init();
@@ -254,11 +256,17 @@ bee_bool is_mouse_pressed(mouse_btn btn);
 bee_bool get_last_mouse_state(mouse_btn btn);
 void mouse_callback(GLFWwindow* window, mouse_btn button, input_state state, int mods);
 
+// get the mouse's x position
 f64 get_mouse_x();
+// get the mouse's y position
 f64 get_mouse_y();
+// get the mouse's position
 void get_mouse_pos(f64* x, f64* y);
+// get the distance the mouse moved on the x axis last frame
 f64 get_mouse_delta_x();
+// get the distance the mouse moved on the y axis last frame
 f64 get_mouse_delta_y();
+// get the distance the mouse moved on the x and y axis last frame
 void get_mouse_delta(f64* x, f64* y);
 
 // puts the cursor in the middle of the window
@@ -266,8 +274,12 @@ void center_cursor_pos();
 // set if the cursor is visible
 void set_cursor_visible(bee_bool visible);
 
+// glfw callback used internally
 void mouse_pos_callback(GLFWwindow* window, double xpos, double ypos);
+// register a function to be called each time the mouse moves
 int  register_mouse_pos_callback(empty_callback func);
+// remove a previously registered mouse position callback
+// registered using "register_mouse_pos_callback()"
 void remove_mouse_pos_callback(int idx);
 
 // rotates the camera accoding to the mouse-movement

@@ -427,6 +427,9 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 entity deserialize_entity(char* buffer, int* offset)
 {
 	entity e;
+	e.has_collider = BEE_FALSE; // tmp
+	e.has_rb	   = BEE_FALSE; // tmp
+
 	e.name = deserialize_str(buffer, offset);
 
 	if (current_version >= 0.2f)

@@ -275,6 +275,10 @@ void shader_use(shader* s)
 {
 	glUseProgram(s->handle);
 }
+void shader_delete(shader* s)
+{
+	glDeleteProgram(s->handle);
+}
 
 // set a bool in the shader 
 // the given int is used as the bool ( 0/1 )

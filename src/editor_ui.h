@@ -1,8 +1,8 @@
 #ifdef EDITOR_ACT
 #pragma once
 
-#ifndef UI_H
-#define UI_H
+#ifndef EDITOR_UI_H
+#define EDITOR_UI_H
 
 
 #include "global.h"
@@ -29,94 +29,6 @@ typedef struct
 
 }entity_drop;
 
-typedef struct
-{
-	char* ent_name;
-	bee_bool* rotate_global;
-	bee_bool* has_model;
-	bee_bool* has_light;
-	bee_bool* has_trans;
-
-	// transform
-	f32* pos_x;
-	f32* pos_y;
-	f32* pos_z;
-
-	f32* rot_x;
-	f32* rot_y;
-	f32* rot_z;
-	
-	f32* scale_x;
-	f32* scale_y;
-	f32* scale_z;
-
-	// mesh
-	mesh* mesh;
-	char* mesh_name;
-	u32* verts_len;
-	u32* indices_len;
-	enum bee_bool* mesh_indexed;
-	enum bee_bool* mesh_visible;
-
-	// material
-	material* mat;
-	char* material_name;
-	f32* shininess;
-	f32* tile_x;
-	f32* tile_y;
-
-	f32* tint_r;
-	f32* tint_g;
-	f32* tint_b;
-	
-	char* dif_tex_name;
-	char* spec_tex_name;
-	u32* dif_tex_handle;
-	u32* spec_tex_handle;
-	bee_bool* is_transparent;
-
-	char* vert_source;
-	char* frag_source;
-
-
-	// light
-	enum light_type* _light_type;
-
-	f32* ambient_r;
-	f32* ambient_g;
-	f32* ambient_b;
-	
-	f32* diffuse_r;
-	f32* diffuse_g;
-	f32* diffuse_b;
-	
-	f32* specular_r;
-	f32* specular_g;
-	f32* specular_b;
-
-	// -----------------
-
-	// for dir & spot light
-	f32* direction_x;
-	f32* direction_y;
-	f32* direction_z;
-
-	f32* constant;	// for point & spot light
-	f32* linear;		// for point & spot light
-	f32* quadratic;	// for point & spot light
-
-	// spot light
-	f32* cut_off;
-	f32* outer_cut_off;
-
-	// -----------------
-
-	int* scripts_len;
-	gravity_script** scripts;
-
-
-}entity_properties;
-
 void ui_init();
 
 void ui_update();
@@ -127,14 +39,20 @@ void ui_cleanup();
 // void overview_window();
 
 void properties_window();
+// updates all relevant variables, related to the entity selection
 void check_entity_selection();
+// sets all variables necessary for deselcting the current entity
 void deselect_entity();
+// returns the currently in the editor ui selected entity id
 int	 get_selected_entity();
 void draw_entity_hierarchy_entity(int idx, int offset);
 void draw_entity_hierarchy_type(int id);
 void draw_transform_component(entity* ent);
 void draw_mesh_component(entity* ent);
 void draw_material_component(entity* ent);
+void draw_physics_components(entity* ent);
+void draw_camera_component(entity* ent);
+void draw_light_component(entity* ent);
 void properties_popups();
 
 void pause_button_window();
@@ -142,35 +60,50 @@ void pause_button_window();
 void asset_browser_window();
 void asset_browser_popups(texture* textures, mesh* meshes, gravity_script* scripts, material* materials, shader* shaders);
 
-void console_window();
-void submit_txt_console(char* txt);
-
-void error_popup_window();
-void set_error_popup(error_type type, char* msg);
-
-void source_code_window();
-void set_source_code_window(char* src);
-
 void add_shader_window();
 
 void scene_context_window();
 
+void source_code_window();
+// activate the "source_code_window()" and provide it with the code to be displayed
+void set_source_code_window(char* src);
+
+void console_window();
+// write a line of text to the in editor console
+// inactive in play builds
+void submit_txt_console(char* txt);
+
+void error_popup_window();
+// activate the "error_popup_window()" and give it a message
+// "type" specifies what type of error it is usually "GENERAL_ERROR"
+void set_error_popup(error_type type, char* msg);
+
 void edit_asset_window();
+// activate the "edit_asset_window()" and set the asset to be edited
+// asset_ptr is a void* and accepts all asset types
+// therefore the asset type has to be specified extra
 void set_edit_asset_window(asset_type type, void* asset_ptr);
 
 void drag_and_drop_import_window();
+// activate the "drag_and_drop_import_window()" and set the file paths
 void set_drag_and_drop_import_window(int path_count, char* paths[]);
 
-// themes
-enum theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK };
-static void set_style(struct nk_context* ctx, enum theme theme);
+// themes available to choose from using "set_style()"
+typedef enum ui_theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK, THEME_LIGHT_BLUE }ui_theme;
+// set all color values in ctx->style according to the given "theme"
+static void set_style(struct nk_context* ctx, enum ui_theme theme);
 
 #endif
 #else 
 #pragma once
 
-#ifndef UI_H
-#define UI_H
+//
+// this provides empty functions for some of the editor_ui.h functions
+// this way i dont have to put "#ifdef EDITOR_ACT" statements around each of them
+// 
+
+#ifndef EDITOR_UI_H
+#define EDITOR_UI_H
 
 
 #include "global.h"
