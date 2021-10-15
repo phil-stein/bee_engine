@@ -70,6 +70,10 @@ void gravity_ui_init()
 
 }
 
+void gravity_ui_clear()
+{
+    nk_clear(g_ctx);
+}
 
 void setup_ui_class(gravity_vm* vm)
 {
@@ -148,8 +152,8 @@ static bee_bool gravity_window_begin(gravity_vm* vm, gravity_value_t* args, uint
     const f32 x_ratio = x / 1920.0f;
     const f32 y_ratio = y / 1020.0f;
 
-    nk_begin(g_ctx, title, nk_rect(x_ratio * width, y_ratio * height, w_ratio * width, h_ratio * height), g_window_flags);
-
+    bee_bool b = nk_begin(g_ctx, title, nk_rect(x_ratio * width, y_ratio * height, w_ratio * width, h_ratio * height), g_window_flags);
+    RETURN_VALUE(VALUE_FROM_INT(b), rindex);
 }
 
 static bee_bool gravity_window_end(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)

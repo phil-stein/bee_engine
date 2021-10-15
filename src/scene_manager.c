@@ -154,9 +154,9 @@ void add_default_scene(const char* name)
 	s.entities = NULL;
 	s.entities_len = 0;
 
-	shader* shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
+	shader* shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default", BEE_TRUE);
 
-	shader* shader_cel = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel");
+	shader* shader_cel = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel", BEE_TRUE);
 
 	vec2 tile = { 1.0f, 1.0f };
 	vec3 tint = { 1.0f, 1.0f, 1.0f };

@@ -16,6 +16,7 @@
 #include "asset_manager.h"
 #include "scene_manager.h"
 #include "gravity_interface.h"
+#include "gravity_interface_ui.h"
 
 
 #define F32_PER_VERT 11
@@ -102,6 +103,11 @@ u32 mouse_pick_buffer;
 u32 mouse_pick_fbo;
 u32 mouse_pick_rbo;
 shader* mouse_pick_shader;
+
+// outline 
+u32 outline_buffer;
+u32 outline_fbo;
+u32 outline_rbo;
 #endif
 
 
@@ -109,9 +115,13 @@ void renderer_init()
 {
 	// framebuffer ----------------------------------------------------------------------------------
 	
-	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer");
+#ifdef EDITOR_ACT
+	screen_shader = add_shader("screen.vert", "screen_editor.frag", "SHADER_framebuffer", BEE_TRUE);
+#else
+	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer", BEE_TRUE);
+#endif
 				  
-	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow");
+	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow", BEE_TRUE);
 	
 
 	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
@@ -120,9 +130,11 @@ void renderer_init()
 	set_framebuffer_to_update(tex_aa_buffer);  // updates framebuffer on window resize
 
 #ifdef EDITOR_ACT
-	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick");
+	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick", BEE_TRUE);
 	create_framebuffer_mouse_picking(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo);
 	set_framebuffer_to_update(mouse_pick_buffer);  // updates framebuffer on window resize
+	
+	create_framebuffer(&outline_buffer, &outline_fbo, &outline_rbo);
 #endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -151,11 +163,11 @@ void renderer_init()
 	// cube map -------------------------------------------------------------------------------------
 
 	// create_shader_from_file used before
-	skybox_shader = add_shader("cube_map.vert", "cube_map.frag", "SHADER_skybox");
+	skybox_shader = add_shader("cube_map.vert", "cube_map.frag", "SHADER_skybox", BEE_TRUE);
 
 	cube_map = load_cubemap("right.jpg", "left.jpg", "bottom.jpg", "top.jpg", "front.jpg", "back.jpg");
 
-	float skybox_verts[] = {
+	f32 skybox_verts[] = {
 		// positions          
 		-1.0f,  1.0f, -1.0f,
 		-1.0f, -1.0f, -1.0f,
@@ -212,7 +224,7 @@ void renderer_init()
 
 #ifdef EDITOR_ACT
 	// create_shader_from_file used before
-	modes_shader = add_shader("basic.vert", "modes.frag", "SHADER_modes");
+	modes_shader = add_shader("basic.vert", "modes.frag", "SHADER_modes", BEE_TRUE);
 #endif
 #ifndef EDITOR_ACT
 	// set opengl state, only once in build mode as we dont use nuklear
@@ -244,6 +256,15 @@ void renderer_update()
 #endif
 	render_scene_shadows();
 	render_scene_normal();
+#ifdef EDITOR_ACT
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+#endif
+#ifdef EDITOR_ACT
+	render_scene_outline();
+#endif
 	render_scene_screen();
 
 #ifdef EDITOR_ACT
@@ -300,7 +321,7 @@ void render_scene_mouse_pick()
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		entity* ent = get_entity(entity_ids[i]);
-		if (ent->has_model && ent->_mesh.visible)
+		if ((ent->has_model && ent->_mesh.visible) || ent->has_light || ent->has_cam)
 		{
 			// MVP for mesh
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
@@ -329,14 +350,35 @@ void render_scene_mouse_pick()
 
 			shader_set_float(mouse_pick_shader, "id", (f32)ent->id);
 
-			glBindVertexArray(ent->_mesh.vao);
-			if (ent->_mesh.indexed == BEE_TRUE)
+			mesh* m = &ent->_mesh;
+
+			// gizmos
+			if (ent->has_light)
 			{
-				glDrawElements(GL_TRIANGLES, (ent->_mesh.indices_len), GL_UNSIGNED_INT, 0);
+				switch (ent->_light.type)
+				{
+					case DIR_LIGHT:
+						m = get_mesh("arrow_down.obj");
+						break;
+					case POINT_LIGHT:
+						m = get_mesh("lightbulb.obj");
+						break;
+					case SPOT_LIGHT:
+						m = get_mesh("flashlight.obj");
+						break;
+				}
+			}
+			else if (ent->has_cam)
+			{ m = get_mesh("camera.obj"); }
+
+			glBindVertexArray(m->vao);
+			if (m->indexed == BEE_TRUE)
+			{
+				glDrawElements(GL_TRIANGLES, (m->indices_len), GL_UNSIGNED_INT, 0);
 			}
 			else
 			{
-				glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh.vertices_len / F32_PER_VERT));
+				glDrawArrays(GL_TRIANGLES, 0, (m->vertices_len / F32_PER_VERT));
 			}
 
 		}
@@ -347,6 +389,54 @@ void render_scene_mouse_pick()
 	vec3 col; 
 	get_bg_color(col);
 	set_bg_color(col);
+}
+
+void render_scene_outline()
+{
+	int id = get_selected_entity();
+	entity* ent = get_entity(id);
+	// printf("selected entity: \"%s\", id: %d, entity id: %d\n", ent->name, id, ent->id);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	int w, h; get_window_size(&w, &h);
+	glViewport(0, 0, w, h);
+	bind_framebuffer(outline_fbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
+	if (ent->id != -1 && (ent->has_model || ent->has_light || ent->has_cam))
+	{
+
+		vec3 pos   = { 0.0f, 0.0f, 0.0f };
+		vec3 rot   = { 0.0f, 0.0f, 0.0f };
+		vec3 scale = { 0.0f, 0.0f, 0.0f };
+		get_entity_global_transform(id, pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
+		// get_material("MAT_blank_unlit")
+		// vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
+		vec3 tint = GLM_VEC3_ONE_INIT;
+		material* mat = get_material("MAT_blank_unlit");
+		mesh* m = &ent->_mesh;
+		// gizmos
+		if (ent->has_light)
+		{
+			switch (ent->_light.type)
+			{
+			case DIR_LIGHT:
+				m = get_mesh("arrow_down.obj");
+				break;
+			case POINT_LIGHT:
+				m = get_mesh("lightbulb.obj");
+				break;
+			case SPOT_LIGHT:
+				m = get_mesh("flashlight.obj");
+				break;
+			}
+		}
+		else if (ent->has_cam)
+		{
+			m = get_mesh("camera.obj");
+		}
+		draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint);
+		
+	}
+	unbind_framebuffer();
 }
 #endif
 
@@ -456,13 +546,6 @@ void render_scene_normal()
 	// this works when only activated once
 	glEnable(GL_CULL_FACE); 
 	glEnable(GL_DEPTH_TEST); // enable the z-buffer
-
-	// // object outline
-	// glClear(GL_STENCIL_BUFFER_BIT);
-	// glEnable(GL_STENCIL_TEST);
-	// glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	// glStencilFunc(GL_ALWAYS, 1, 0xFF); // let all frags pass
-	// glStencilMask(0x00); // disable writing to the stencil mask
 #endif
 
 #ifdef EDITOR_ACT
@@ -496,20 +579,12 @@ void render_scene_normal()
 		entity* ent = get_entity(entity_ids[i]);
 		if (ent->has_model)
 		{
-			// if (entity_ids[i] == get_selected_entity())
-			// {
-			// 	glStencilMask(0xFF); // enable writing to mask
-			// }
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(entity_ids[i], pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
 			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
-			
-			// if (entity_ids[i] == get_selected_entity())
-			// {
-			// 	glStencilMask(0x00); // disable writing to mask
-			// }
+
 		}
 		#ifdef EDITOR_ACT
 		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam))
@@ -570,37 +645,6 @@ void render_scene_normal()
 			}
 		}
 	}
-
-#ifdef EDITOR_ACT
-	// draw object outline ----------------------------------------------------
-	if (get_selected_entity() != -1)
-	{
-		// glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		// glStencilMask(0x00); // disable writing to mask
-		// glDisable(GL_DEPTH_TEST);
-		// 
-		// entity* ent = get_entity(get_selected_entity());
-		// vec3 pos = { 0.0f, 0.0f, 0.0f };
-		// vec3 rot = { 0.0f, 0.0f, 0.0f };
-		// vec3 scale = { 0.0f, 0.0f, 0.0f };
-		// get_entity_global_transform(get_selected_entity(), pos, rot, scale);
-		// vec3 scalar = { 1.2f, 1.2f, 1.2f };
-		// glm_vec3_mul(scale, scalar, scale);
-		// // vec3 pos02 = { pos[0], pos[1] - (scale[1] * 0.8f), pos[2] };
-		// // vec3 cam; get_editor_camera_pos(cam);  // cam pos
-		// // vec3 dir; glm_vec3_sub(cam, pos, dir); // dir from obj to cam
-		// // glm_vec3_normalize(dir);
-		// // vec3 dist = { 1.2f, 1.2f, 1.2f };
-		// // glm_vec3_mul(dir, dist, dir);
-		// // glm_vec3_add(pos, dir, pos);
-		// vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
-		// material* mat = get_material("MAT_cel");
-		// draw_mesh(&ent->_mesh, mat, pos, rot, scale, ent->rotate_global, BEE_FALSE, tint);
-		// 
-		// glEnable(GL_DEPTH_TEST); // enable the z-buffer
-	}
-	// ------------------------------------------------------------------------
-#endif
 
 	// skybox
 	if (draw_skybox == BEE_TRUE)
@@ -713,8 +757,13 @@ void render_scene_screen()
 	shader_use(screen_shader);
 	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex_col_buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
+	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? mouse_pick_buffer : tex_col_buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
 	shader_set_int(screen_shader, "tex", 0);
+#ifdef EDITOR_ACT
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, outline_buffer);
+	shader_set_int(screen_shader, "outline", 1);
+#endif
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glEnable(GL_DEPTH_TEST);
@@ -1269,14 +1318,18 @@ void set_gamestate(bee_bool play, bee_bool _hide_gizmos)
 			gamestate = BEE_FALSE;
 			return;
 		}
-		// perspective = ent_cam->_camera.perspective;
-		// near_plane  = ent_cam->_camera.near_plane;
-		// far_plane   = ent_cam->_camera.far_plane;
+
+		// gravity_ui_init();
+		// printf(" -> grav_ui_init() finished\n");
 	}
 	else
 	{
+		// need to clear and re-init the editor ui for it to be the active one
+		// gravity_ui_clear();
+
 		load_scene_state();
 		set_cursor_visible(BEE_TRUE);
+
 		// act editor cam
 		perspective = editor_perspective;
 		near_plane  = editor_near_plane;

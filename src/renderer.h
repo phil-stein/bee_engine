@@ -36,6 +36,7 @@ void renderer_cleanup();
 
 #ifdef EDITOR_ACT
 void render_scene_mouse_pick();
+void render_scene_outline();
 #endif
 void render_scene_shadows();
 void render_scene_normal();

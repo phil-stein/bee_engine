@@ -470,8 +470,11 @@ void free_texture(texture* tex)
 void free_shader(shader* s)
 {
 	free(s->name);
-	arrfree(s->uniform_defs);
 
 	if (s->has_error) { return; }
+
+	if (s->uniform_defs != NULL)
+	{ arrfree(s->uniform_defs); }
+
 	glDeleteProgram(s->handle);
 }

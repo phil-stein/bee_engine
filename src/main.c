@@ -9,7 +9,6 @@
 
 #include "global.h"
 // #include "file_handler.h"
-#include "gravity_interface_ui.h"
 #include "asset_manager.h"
 #include "game_time.h"
 #include "editor_ui.h"
@@ -55,19 +54,18 @@ int main(void)
 	load_internal_assets();
 	printf(" -> assetm load_internal_assets() finished\n");
 
-	// initialize the application
+	entities_init();
+	printf(" -> entities_init() finished\n");
 	init(); // @TODO: this should be last
 	printf(" -> init() finished\n");
+	gravity_ui_init();
+	printf(" -> grav_ui_init() finished\n");
 #ifdef EDITOR_ACT
 	ui_init();
 	printf(" -> ui_init() finished\n");
 #endif
-	gravity_ui_init();
-	printf(" -> grav_ui_init() finished\n");
 	input_init();
 	printf(" -> input_init() finished\n");
-	entities_init();
-	printf(" -> entities_init() finished\n\n");
 	renderer_init();
 	printf(" -> renderer_init() finished\n\n");
 

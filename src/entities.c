@@ -4,6 +4,7 @@
 
 #include "gravity_interface.h"
 #include "asset_manager.h"
+#include "editor_ui.h"
 #include "renderer.h"
 
 
@@ -28,6 +29,9 @@ void entities_init()
 	e.name = "x"; e.id = -1; e.id_idx = -1;
 	e.scripts_len = 0; e.children_len = 0; e.parent = 9999;
 	hmdefault(entities, e);
+	printf(" -> entities_init() called\n");
+	entity* ent = get_entity(112);
+	printf("[ent].id: %d\n", ent->id);
 }
 
 void entities_update()
@@ -50,8 +54,8 @@ void entities_cleanup()
 		free_entity(&entities[i]);
 	}
 
-	// arrfree(entities);
 	hmfree(entities);
+	arrfree(entity_ids);
 }
 
 void entities_clear_scene()
@@ -63,6 +67,14 @@ void entities_clear_scene()
 	arrfree(entity_ids);
 	entity_ids = NULL;
 	entity_ids_len = 0;
+
+
+	// set default return if key doesn't exist
+	entity e;
+	e.has_trans = 0; e.has_model = 0; e.has_cam = 0;  e.has_light = 0;
+	e.name = "x"; e.id = -1; e.id_idx = -1;
+	e.scripts_len = 0; e.children_len = 0; e.parent = 9999;
+	hmdefault(entities, e);
 }
 
 // add an entity
@@ -75,11 +87,15 @@ int add_entity_direct(entity e)
 	// check id available
 	int idx = entities_len;
 	bee_bool id_taken = BEE_TRUE;
+	int debug = 0;
 	while (id_taken)
 	{
 		entity* ent = get_entity(idx);
 		id_taken = ent->id == -1 ? BEE_FALSE : BEE_TRUE; // default ent returned when id not found
 		if (id_taken) { idx++; } // printf("id taken now: %d, ent->id: %d\n", idx, ent->id);
+
+		debug++;
+		if (debug > 100) { assert(0); }
 	}
 	add_entity_direct_id(e, idx);
 }

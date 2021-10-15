@@ -621,7 +621,7 @@ shader* deserialize_shader(char* buffer, int* offset)
 			uniform_def def = deserialize_uniform_def(buffer, offset);
 			arrput(uniform_defs, def);
 		}
-		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniform_defs_len, uniform_defs);
+		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniform_defs_len, uniform_defs, BEE_TRUE);
 	}
 	else if (current_version >= 0.6f)
 	{
@@ -641,7 +641,7 @@ shader* deserialize_shader(char* buffer, int* offset)
 			deserialize_uniform(buffer, offset, get_shader(name));
 		}
 	}
-	return add_shader(vert_name, frag_name, name); 
+	return add_shader(vert_name, frag_name, name, BEE_TRUE); 
 }
 
 texture deserialize_texture(char* buffer, int* offset)

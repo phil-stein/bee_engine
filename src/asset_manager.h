@@ -67,8 +67,8 @@ void change_material_name(char* old_name, char* new_name);
 
 bee_bool check_shader_exists(const char* name);
 int get_shader_idx(char* name);
-shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform_def* uniforms);
-shader* add_shader(const char* vert_name, const char* frag_name, const char* name);
+shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform_def* uniforms, bee_bool overwrite);
+shader* add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite);
 shader* get_shader(char* name);
 shader* get_all_shaders(int* shaders_len);
 int		get_shaders_len();

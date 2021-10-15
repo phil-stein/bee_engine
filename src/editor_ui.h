@@ -130,7 +130,11 @@ void properties_window();
 void check_entity_selection();
 void deselect_entity();
 int	 get_selected_entity();
-void draw_entity_hierachy_entity(int idx, int offset);
+void draw_entity_hierarchy_entity(int idx, int offset);
+void draw_entity_hierarchy_type(int id);
+void draw_transform_component(entity* ent);
+void draw_mesh_component(entity* ent);
+void draw_material_component(entity* ent);
 void properties_popups();
 
 void pause_button_window();
@@ -176,7 +180,10 @@ static void set_style(struct nk_context* ctx, enum theme theme);
 void submit_txt_console(char* doesnt_show_up);
 
 // during play-build this obviously doesnt do anything
-void set_error_popup(error_type type, char* msg);
+void set_error_popup(error_type type, char* doesnt_show_up);
+
+// during play-build this obviously doesnt do anything
+void set_error_popup(error_type type, char* doesnt_show_up);
 
 #endif
 #endif

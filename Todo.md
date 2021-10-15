@@ -12,8 +12,7 @@ Todo
     - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
-  - [ ] organize \src folder
-  
+    
     
   
 - buggs
@@ -22,19 +21,27 @@ Todo
 
   - [ ] disabling msaa makes cube map be drawn over scene and the vertex info of the meshes gets all screwy  
 
-  - [ ] world.add_entity() sometimes freezes editor, prob in ui -> entity hierarchy
+  - [x] world.add_entity() sometimes freezes editor, prob in ui -> entity hierarchy
 
     -> only happens when editor ui is open
 
-  - [ ] adding camera can freeze the editor
+  - [x] adding camera can freeze the editor
 
     -> in scene "default"
 
   - [ ] first object in mouse_pick_buffer is rendered behind the others 
 
-  - [ ] keyboard input in ui doesn't work since adding gravity ui
+  - [x] keyboard input in ui doesn't work since adding gravity ui
 
-  - [ ] "scripts over bounds" in properties_window() ->  scripts
+  - [x] "scripts over bounds" in properties_window() ->  scripts
+
+  - [x] entity hierarchy type is wrong 
+
+  - [ ] shader name got swapped with a script name 
+
+    -> after dividing properties_window() into sub-functions
+
+    -> happened after recompile
 
     
 
@@ -42,9 +49,29 @@ Todo
 
   - [ ] mixing of the different light sources looks weird in ambient areas & shadows
 
-  - [ ] search function in asset manager ui
+    -> prob. wait till after implementing pbr
+
+  - [ ] search function in asset browser
 
   - [ ] object outline 
+
+  - [ ] in-game ui doesnt scroll or take keyboard input while editor is act
+
+    -> because editor ui ctx is in focus
+    
+  - [ ] divide big ui functions into sub-functions
+
+  - [x] mouse over ui for entity mouse selection
+
+  - [ ] entities.h function comments
+
+  - [ ] renderer.h function comments 
+
+  - [ ] gravity_interface.h function comments
+
+  - [ ] gravity_interface_ui.h function comments
+
+  - [ ] look for more uncommented functions
 
     
 
@@ -194,3 +221,4 @@ Todo
   - [ ] use proper sorting algorithm for transparent objects
   - [ ] take a look at normal-mapping chapter again and use better option
   - [ ] instanced rendering / batching
+  - [ ] multithreading ?

@@ -12,16 +12,16 @@
         // vec4 frag_pos_light_space;
     } _in;
 	
-	struct Material
+	struct material
 	{
 		vec3 tint;
 		sampler2D diffuse;
 	};
 
-	uniform Material material;	
+	uniform material mat;	
 
 	void main()
 	{
 		// FragColor = vec4(material.tint, 1.0);
-		FragColor = texture(material.diffuse, _in.tex_coords);
+		FragColor = texture(mat.diffuse, _in.tex_coords);
 	}

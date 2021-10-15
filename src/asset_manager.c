@@ -253,7 +253,7 @@ void load_internal_assets()
 
 	add_mesh(make_plane_mesh());
 
-	add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error"); // default shader
+	add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error", BEE_TRUE); // default shader
 	// add_shader("basic.vert", "blinn_phong.frag", "SHADER_default"); // default shader
 
 }
@@ -1088,10 +1088,32 @@ int get_shader_idx(char* name)
 	return shget(shaders, name);
 }
 
-shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs)
+shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs, bee_bool overwrite)
 {
 	if (shget(shaders, name) != -1) // check if already exist
 	{
+		if (overwrite)
+		{
+			// key for the path is the index of the file in the hashmap
+			int path_idx = shgeti(vert_files, vert_name);
+			char* vert_path = hmget(vert_files_paths, path_idx);
+			path_idx = shgeti(frag_files, frag_name);
+			char* frag_path = hmget(frag_files_paths, path_idx);
+
+			// make a persistent copy of the passed name
+			char* name_cpy = calloc(strlen(name) + 1, sizeof(char));
+			assert(name_cpy != NULL);
+			strcpy(name_cpy, name);
+
+			shader s = create_shader_from_file(vert_path, frag_path, name_cpy);
+			s.vert_name = vert_name;
+			s.frag_name = frag_name;
+			s.use_lighting = use_lighting;
+			s.uniform_defs_len = uniform_defs_len;
+			s.uniform_defs = uniform_defs;
+
+			shaders_data[shget(shaders, name)] = s;
+		}
 		printf("[ERROR] Shader \"%s\" already exists\n", name);
 		return get_shader(name);
 	}
@@ -1122,9 +1144,9 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 	return &shaders_data[shget(shaders, name)];
 }
 
-shader* add_shader(const char* vert_name, const char* frag_name, const char* name)
+shader* add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite)
 {
-	return add_shader_specific(vert_name, frag_name, name, BEE_TRUE, 0, NULL);
+	return add_shader_specific(vert_name, frag_name, name, BEE_TRUE, 0, NULL, overwrite);
 }
 
 shader* get_shader(char* name)

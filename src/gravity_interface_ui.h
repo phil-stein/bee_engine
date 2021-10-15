@@ -13,7 +13,7 @@
 
 
 void gravity_ui_init();
-
+void gravity_ui_clear();
 
 void setup_ui_class(gravity_vm* vm);
 
