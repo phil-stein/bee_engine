@@ -126,15 +126,16 @@ void renderer_init()
 
 	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
 	create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
-	set_texturebuffer_to_update_to_screen_size(tex_col_buffer); // updates framebuffer on window resize
-	set_texturebuffer_to_update_to_screen_size(tex_aa_buffer);  // updates framebuffer on window resize
+	set_texturebuffer_to_update_to_screen_size(tex_col_buffer, 1); // updates framebuffer on window resize
+	set_texturebuffer_to_update_to_screen_size(tex_aa_buffer, 1);  // updates framebuffer on window resize
 
 #ifdef EDITOR_ACT
 	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick", BEE_TRUE);
 	create_framebuffer_single_channel_f(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo, 4);
-	set_texturebuffer_to_update_to_screen_size(mouse_pick_buffer);  // updates framebuffer on window resize
+	set_texturebuffer_to_update_to_screen_size(mouse_pick_buffer, 4);  // updates framebuffer on window resize
 	
 	create_framebuffer_single_channel_f(&outline_buffer, &outline_fbo, &outline_rbo, 1);
+	set_texturebuffer_to_update_to_screen_size(outline_buffer, 1);  // updates framebuffer on window resize
 #endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -383,6 +384,64 @@ void render_scene_mouse_pick()
 
 		}
 	}
+
+	// draw gizmo
+	glClear(GL_DEPTH_BUFFER_BIT);
+	if (!(gamestate && hide_gizmos) && get_selected_entity() >= 0 && get_show_move_gizmo())
+	{
+		// glDisable(GL_DEPTH_TEST);
+		entity* ent = get_entity(get_selected_entity());
+
+		// MVP for mesh
+		vec3 pos = { 0.0f, 0.0f, 0.0f };
+		vec3 rot = { 0.0f, 0.0f, 0.0f };
+		vec3 scale = { 0.0f, 0.0f, 0.0f };
+		get_entity_global_transform(get_selected_entity(), pos, rot, scale);
+		glm_vec3_copy(GLM_VEC3_ZERO, rot);
+		glm_vec3_copy(GLM_VEC3_ONE, scale);
+
+		mat4 model = GLM_MAT4_IDENTITY_INIT;
+		f32 x = rot[0];  glm_make_rad(&x);
+		f32 y = rot[1];  glm_make_rad(&y);
+		f32 z = rot[2];  glm_make_rad(&z);
+
+		const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
+		const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
+		const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
+		glm_rotate_at(model, pos, x, x_axis);
+		glm_rotate_at(model, pos, y, y_axis);
+		glm_rotate_at(model, pos, z, z_axis);
+		glm_translate(model, pos);
+		glm_scale(model, scale);
+
+		shader_use(mouse_pick_shader);
+		shader_set_mat4(mouse_pick_shader, "model", model);
+		shader_set_mat4(mouse_pick_shader, "view", view);
+		shader_set_mat4(mouse_pick_shader, "proj", proj);
+
+		for (int i = 0; i < 3; ++i)
+		{
+			shader_set_float(mouse_pick_shader, "id", (f32)-2 -i); // -2, -3, -4
+
+			mesh* m = NULL;
+			vec3 tint = GLM_VEC3_ONE_INIT;
+
+			m = i == 0 ? get_mesh("move_gizmo_hitbox_x.obj") : i == 1 ? get_mesh("move_gizmo_hitbox_y.obj") : get_mesh("move_gizmo_hitbox_z.obj");
+
+			glBindVertexArray(m->vao);
+			if (m->indexed == BEE_TRUE)
+			{
+				glDrawElements(GL_TRIANGLES, (m->indices_len), GL_UNSIGNED_INT, 0);
+			}
+			else
+			{
+				glDrawArrays(GL_TRIANGLES, 0, (m->vertices_len / F32_PER_VERT));
+			}
+		}
+
+		// glEnable(GL_DEPTH_TEST);
+	}
+
 	unbind_framebuffer();
 
 	// reset bg color
@@ -683,6 +742,34 @@ void render_scene_normal()
 		}
 	}
 	// ------------------------------------------------------------------------
+
+
+	// draw translate gizmos
+#ifdef EDITOR_ACT
+	if (!(gamestate && hide_gizmos) && get_selected_entity() >= 0 && get_show_move_gizmo())
+	{
+		glDisable(GL_DEPTH_TEST);
+		entity* ent = get_entity(get_selected_entity());
+
+		vec3 pos = { 0.0f, 0.0f, 0.0f };
+		vec3 rot = { 0.0f, 0.0f, 0.0f };
+		vec3 scale = { 0.0f, 0.0f, 0.0f };
+		get_entity_global_transform(get_selected_entity(), pos, rot, scale);
+		mesh* m = NULL;
+
+		vec3 tint = GLM_VEC3_ONE_INIT;
+		vec3 col = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
+		glm_vec3_copy(col, tint);
+		glm_vec3_copy(GLM_VEC3_ZERO, rot);
+		glm_vec3_copy(GLM_VEC3_ONE, scale);
+		m = get_mesh("move_gizmo.obj");
+
+		material* mat = get_material("MAT_cel");
+		draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
+		glEnable(GL_DEPTH_TEST);
+	}
+#endif
+
 
 	// prepare for second pass
 	if (use_msaa)

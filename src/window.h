@@ -31,7 +31,7 @@ void  get_window_size(int* width, int* height);
 char* get_window_title();
 
 // register a texture buffer to be resized if the window size changes
-void set_texturebuffer_to_update_to_screen_size(u32 texture_buffer);
+void set_texturebuffer_to_update_to_screen_size(u32 texture_buffer, int size_divisor);
 
 // --- callbacks ----
 

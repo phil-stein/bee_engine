@@ -27,6 +27,10 @@ Todo
 
     -> happened after recompile
 
+  - [ ] framebuffers don't resize correctly sometimes
+
+    - [ ] make framebuffer struct and use that to determine the type in resize_framebuffer_to_window()
+
     
 
 - unfinished
@@ -44,6 +48,8 @@ Todo
   - [ ] divide big ui functions into sub-functions
 
   - [ ] revamp the uniform system to be less cumbersome
+
+  - [ ] move gizmo take camera rotation into account
 
     
 
@@ -111,6 +117,10 @@ Todo
   
   - [ ] transform gizmos
   
+    - [ ] move
+    - [ ] scale
+    - [ ] rotate
+  
   - [ ] structures (prefabs)
   
     - [ ] serialize entity tree
@@ -135,8 +145,6 @@ Todo
   - [ ] interface to create meshes / other components to create models etc in gravity
 
   - [ ] interface for nuklear
-
-    - [ ] checkbox
 
     - [ ] float property
 

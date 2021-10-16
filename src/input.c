@@ -73,6 +73,10 @@ void input_update()
 
     mouse_button1 = BEE_FALSE; mouse_button2 = BEE_FALSE; mouse_button3 = BEE_FALSE; mouse_button4 = BEE_FALSE; 
     mouse_button5 = BEE_FALSE; mouse_button6 = BEE_FALSE; mouse_button7 = BEE_FALSE; mouse_button8 = BEE_FALSE;
+
+
+    mouse_delta_x = 0.0;
+    mouse_delta_y = 0.0;
 }
 
 

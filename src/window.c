@@ -17,6 +17,8 @@ bee_bool is_maximized = BEE_TRUE;;
 // framebuffer texture buffer ptr
 u32* resize_buffers = NULL;
 int  resize_buffers_len = 0;
+int* resize_buffers_size_divisors = NULL;
+int  resize_buffers_size_divisors_len = 0;
 
 // intis glfw & glad, also creates the window
 // returns: <stddef.h> return_code
@@ -127,10 +129,12 @@ char* get_window_title()
 	return window_title;
 }
 
-void set_texturebuffer_to_update_to_screen_size(u32 texture_buffer)
+void set_texturebuffer_to_update_to_screen_size(u32 texture_buffer, int size_divisor)
 {
 	arrput(resize_buffers, texture_buffer);
 	resize_buffers_len++;
+	arrput(resize_buffers_size_divisors, size_divisor);
+	resize_buffers_size_divisors_len++;
 }
 
 // ---- callbacks ----
@@ -149,7 +153,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	{
 		if (resize_buffers[i] != NULL)
 		{
-			resize_frame_buffer_to_window(resize_buffers[i]);
+			resize_frame_buffer_to_window(resize_buffers[i], resize_buffers_size_divisors[i]);
 		}
 	}
 }

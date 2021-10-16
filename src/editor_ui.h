@@ -88,6 +88,9 @@ void drag_and_drop_import_window();
 // activate the "drag_and_drop_import_window()" and set the file paths
 void set_drag_and_drop_import_window(int path_count, char* paths[]);
 
+// get the bool specifing whether the move gizmo should be used
+bee_bool get_show_move_gizmo();
+
 // themes available to choose from using "set_style()"
 typedef enum ui_theme { THEME_BLACK, THEME_WHITE, THEME_RED, THEME_BLUE, THEME_DARK, THEME_LIGHT_BLUE }ui_theme;
 // set all color values in ctx->style according to the given "theme"

@@ -73,6 +73,7 @@ asset_drop dropped_asset;
 
 bee_bool hide_ui_on_play = BEE_TRUE;
 bee_bool hide_gizmos_on_play = BEE_TRUE;
+bee_bool show_move_gizmo = BEE_TRUE;
 
 // ---- right-click ----
 int ent_right_click_popup = 9999; // 9999 = inactive, otherwise entity id
@@ -266,6 +267,7 @@ void ui_update()
 
     // ---- mouse entity select ----
 
+    static int move_gizmo_axis = 0;
     bee_bool over_ui = BEE_FALSE;
     over_ui = nk_input_is_mouse_hovering_rect(&ctx->input, properties_window_rect)           ? BEE_TRUE : over_ui;
     over_ui = nk_input_is_mouse_hovering_rect(&ctx->input, asset_browser_window_rect)        ? BEE_TRUE : over_ui;
@@ -289,16 +291,62 @@ void ui_update()
         
 
         int id = read_mouse_position_mouse_pick_buffer_color();
-        if (id != -1)
+        if (id >= 0)
         {
             int id_idx = (get_entity(id))->id_idx;
             selected_entities[id_idx] = BEE_TRUE;
             // printf("entity id: %d, id_idx: %d\n", id, id_idx);
             check_entity_selection();
+            move_gizmo_axis = 0;
+        }
+        else if (id == -2) // move gizmo x
+        {
+            move_gizmo_axis = 1;
+        }
+        else if (id == -3) // move gizmo y
+        {
+            move_gizmo_axis = 2;
+        }
+        else if (id == -4) // move gizmo z
+        {
+            move_gizmo_axis = 3;
         }
         else 
         {
             deselect_entity();
+            move_gizmo_axis = 0;
+        }
+    }
+    if (show_move_gizmo && move_gizmo_axis > 0 && is_mouse_down(MOUSE_left))
+    {
+        // @TODO: this works when looking straight at the object but when the camera it rotated it doesnt
+
+        if (move_gizmo_axis == 1) // x
+        {
+            entity* e = get_entity(get_selected_entity());
+            f32 x = e->pos[0];
+            int w, h; get_window_size(&w, &h);
+            x += (get_mouse_delta_x() / w) * 11;
+            // printf("mouse dx: %.4f, change: %.4f\n", get_mouse_delta_x(), (get_mouse_delta_x() / w) * 12);
+            e->pos[0] = x;
+        }
+        if (move_gizmo_axis == 2) // y
+        {
+            entity* e = get_entity(get_selected_entity());
+            f32 y = e->pos[1];
+            int w, h; get_window_size(&w, &h);
+            y += (get_mouse_delta_y() / h) * 11;
+            // printf("mouse dx: %.4f, change: %.4f\n", get_mouse_delta_x(), (get_mouse_delta_x() / w) * 12);
+            e->pos[1] = y;
+        }
+        if (move_gizmo_axis == 3) // z
+        {
+            entity* e = get_entity(get_selected_entity());
+            f32 z = e->pos[2];
+            int w, h; get_window_size(&w, &h);
+            z += (get_mouse_delta_y() / h) * -11;
+            // printf("mouse dx: %.4f, change: %.4f\n", get_mouse_delta_x(), (get_mouse_delta_x() / w) * 12);
+            e->pos[2] = z;
         }
     }
 
@@ -1699,6 +1747,7 @@ void properties_window()
         nk_layout_row_dynamic(ctx, 25, 1);
         nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
         nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
+        nk_checkbox_label(ctx, " Move Gizmo", &show_move_gizmo);
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
         nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
@@ -5201,6 +5250,7 @@ void set_drag_and_drop_import_window(int path_count, char* paths[])
         printf("path: %s\n", drag_and_drop_import_paths[i]);
     }
 }
+bee_bool get_show_move_gizmo() { return show_move_gizmo; }
 static void set_style(struct nk_context* ctx, enum ui_theme theme)
 {
     struct nk_color table[NK_COLOR_COUNT];

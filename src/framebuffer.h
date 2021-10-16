@@ -28,7 +28,7 @@ void bind_framebuffer(u32 fbo);
 void unbind_framebuffer();
 
 // changes the framebuffers size to the one of the window
-void resize_frame_buffer_to_window(u32 tex_buffer);
+void resize_frame_buffer_to_window(u32 tex_buffer, int size_divisor);
 // write a multisampled framebuffer(fbo_msaa) into a regular buffer(fbo)
 // you need to do this and use the regular buffer (fbo) for displaying to screen
 void blit_multisampled_framebuffer(u32 fbo_msaa, u32 fbo);

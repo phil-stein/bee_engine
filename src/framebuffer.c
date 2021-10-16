@@ -276,11 +276,14 @@ void unbind_framebuffer()
 }
 
 
-void resize_frame_buffer_to_window(u32 tex_buffer)
+void resize_frame_buffer_to_window(u32 tex_buffer, int size_divisor)
 {
+	printf("resized texbuffer\n");
 	glBindTexture(GL_TEXTURE_2D, tex_buffer);
 
 	int w, h; get_window_size(&w, &h);
+	w /= size_divisor;
+	h /= size_divisor;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 }
 
