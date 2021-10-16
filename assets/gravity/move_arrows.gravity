@@ -30,34 +30,34 @@ func update()
 	if(input.get_key_down_ARROW_LEFT() || input.get_key_down_A())
 	{
 		this.move_x(-dist);
-		world.move_x(camera_ent, -dist);
-		this.rotate_y(dist * 10);
+		// world.move_x(camera_ent, -dist);
+		// this.rotate_y(dist * 10);
 	}
 	if(input.get_key_down_ARROW_RIGHT() || input.get_key_down_D())
 	{
 		this.move_x(dist);
-		world.move_x(camera_ent, dist);
-		this.rotate_y(-dist * 10);
+		// world.move_x(camera_ent, dist);
+		// this.rotate_y(-dist * 10);
 	}
 	if(input.get_key_down_ARROW_UP() || input.get_key_down_W())
 	{
 		this.move_z(-dist);
-		world.move_z(camera_ent, -dist);
+		// world.move_z(camera_ent, -dist);
 	}
 	if(input.get_key_down_ARROW_DOWN() || input.get_key_down_S())
 	{
 		this.move_z(dist);
-		world.move_z(camera_ent, dist);
+		// world.move_z(camera_ent, dist);
 	}
 	if(input.get_key_down_Q())
 	{
-		// this.move_y(dist);
-		world.move_y(camera_ent, dist);
+		this.move_y(dist);
+		// world.move_y(camera_ent, -dist);
 	}
 	if(input.get_key_down_E())
 	{
-		// this.move_y(-dist);
-		world.move_y(camera_ent, -dist);
+		this.move_y(-dist);
+		// world.move_y(camera_ent, dist);
 	}
 }
 

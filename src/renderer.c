@@ -85,12 +85,8 @@ u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
 
 // msaa & color buffer
-u32 tex_aa_buffer;
-u32 tex_aa_fbo;
-u32 tex_aa_rbo;
-u32 tex_col_buffer;
-u32 tex_col_fbo;
-u32 tex_col_rbo;
+framebuffer fb_msaa;
+framebuffer fb_color;
 bee_bool use_msaa = BEE_TRUE;
 
 // shadow mapping
@@ -99,15 +95,11 @@ const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
 
 #ifdef EDITOR_ACT
 // mouse picking
-u32 mouse_pick_buffer;
-u32 mouse_pick_fbo;
-u32 mouse_pick_rbo;
+framebuffer fb_mouse_pick;
 shader* mouse_pick_shader;
 
 // outline 
-u32 outline_buffer;
-u32 outline_fbo;
-u32 outline_rbo;
+framebuffer fb_outline;
 #endif
 
 
@@ -123,19 +115,49 @@ void renderer_init()
 				  
 	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow", BEE_TRUE);
 	
+	int w, h;
+	// create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo, 1, &w, &h);
+	// create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo, 1, &w, &h, 4);
+	
+	fb_color.type = FRAMEBUFFER_RGB16F;
+	fb_color.is_msaa = BEE_FALSE;
+	fb_color.width = 0;
+	fb_color.height = 0;
+	fb_color.size_divisor = 1;
+	create_framebuffer(&fb_color);
 
-	create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo);
-	create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo);
-	set_texturebuffer_to_update_to_screen_size(tex_col_buffer, 1); // updates framebuffer on window resize
-	set_texturebuffer_to_update_to_screen_size(tex_aa_buffer, 1);  // updates framebuffer on window resize
+	fb_msaa.type	= FRAMEBUFFER_RGB16F;
+	fb_msaa.is_msaa = BEE_TRUE;
+	fb_msaa.samples = 4;
+	fb_msaa.width   = 0;
+	fb_msaa.height  = 0;
+	fb_msaa.size_divisor = 1;
+	create_framebuffer(&fb_msaa);
+
+	set_texturebuffer_to_update_to_screen_size(&fb_color); // updates framebuffer on window resize
+	set_texturebuffer_to_update_to_screen_size(&fb_msaa);  // updates framebuffer on window resize
 
 #ifdef EDITOR_ACT
 	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick", BEE_TRUE);
-	create_framebuffer_single_channel_f(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo, 4);
-	set_texturebuffer_to_update_to_screen_size(mouse_pick_buffer, 4);  // updates framebuffer on window resize
+	// create_framebuffer_single_channel_f(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo, 4, &w, &h);
 	
-	create_framebuffer_single_channel_f(&outline_buffer, &outline_fbo, &outline_rbo, 1);
-	set_texturebuffer_to_update_to_screen_size(outline_buffer, 1);  // updates framebuffer on window resize
+	fb_mouse_pick.type	  = FRAMEBUFFER_SINGLE_CHANNEL_F;
+	fb_mouse_pick.is_msaa = BEE_FALSE;
+	fb_mouse_pick.width   = 0;
+	fb_mouse_pick.height  = 0;
+	fb_mouse_pick.size_divisor = 4;
+	create_framebuffer(&fb_mouse_pick);
+	set_texturebuffer_to_update_to_screen_size(&fb_mouse_pick);  // updates framebuffer on window resize
+
+	// create_framebuffer_single_channel_f(&outline_buffer, &outline_fbo, &outline_rbo, 1, &w, &h);
+	
+	fb_outline.type = FRAMEBUFFER_SINGLE_CHANNEL_F;
+	fb_outline.is_msaa = BEE_FALSE;
+	fb_outline.width = 0;
+	fb_outline.height = 0;
+	fb_outline.size_divisor = 1;
+	create_framebuffer(&fb_outline);
+	set_texturebuffer_to_update_to_screen_size(&fb_outline);  // updates framebuffer on window resize
 #endif
 
 	f32 quad_verts[] = { // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
@@ -284,9 +306,12 @@ void render_scene_mouse_pick()
 {
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
+	
+	if (gamestate) { return; }
+
 	int w, h; get_window_size(&w, &h);
 	glViewport(0, 0, w / 4, h / 4);
-	bind_framebuffer(mouse_pick_fbo);
+	bind_framebuffer(&fb_mouse_pick);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 
 	mat4 view;
@@ -458,9 +483,9 @@ void render_scene_outline()
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	int w, h; get_window_size(&w, &h);
 	glViewport(0, 0, w, h);
-	bind_framebuffer(outline_fbo);
+	bind_framebuffer(&fb_outline);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
-	if (ent->id != -1 && (ent->has_model || ent->has_light || ent->has_cam))
+	if (!(gamestate && hide_gizmos) && ent->id != -1 && (ent->has_model || ent->has_light || ent->has_cam))
 	{
 
 		vec3 pos   = { 0.0f, 0.0f, 0.0f };
@@ -522,7 +547,7 @@ void render_scene_shadows()
 			continue;
 		}
 		glViewport(0, 0, l->_light.shadow_map_x, l->_light.shadow_map_y);
-		bind_framebuffer(l->_light.shadow_fbo);
+		bind_framebuffer_fbo(l->_light.shadow_fbo);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		mat4 view;
@@ -594,7 +619,8 @@ void render_scene_normal()
 	int w, h;
 	get_window_size(&w, &h);
 	glViewport(0, 0, w, h);
-	bind_framebuffer(use_msaa ? tex_aa_fbo : tex_col_fbo); // bind multisampled fbo or color texture fbo
+	// bind_framebuffer_fbo(use_msaa ? tex_aa_fbo : tex_col_fbo); // bind multisampled fbo or color texture fbo
+	bind_framebuffer(&fb_msaa); // bind multisampled fbo or color texture fbo
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
 	
 	// need to restore the opengl state after calling nuklear
@@ -646,7 +672,7 @@ void render_scene_normal()
 
 		}
 		#ifdef EDITOR_ACT
-		if (!(gamestate && hide_gizmos) && (ent->has_light || ent->has_cam || ent->has_collider))
+		if (!(gamestate && hide_gizmos) && (ent->has_light || (ent->has_cam && !gamestate) || ent->has_collider))
 		{
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
@@ -678,11 +704,26 @@ void render_scene_normal()
 			{
 				vec3 col = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
 				glm_vec3_copy(col, tint);
-				m = get_mesh("sphere_collider.obj");
-				glm_vec3_copy(GLM_VEC3_ZERO, rot);
-				vec3 s = { ent->collider.sphere.radius, ent->collider.sphere.radius, ent->collider.sphere.radius };
-				glm_vec3_copy(s, scale);
-				glm_vec3_add(pos, ent->collider.offset, pos);
+
+				if (ent->collider.type == SPHERE_COLLIDER)
+				{
+					m = get_mesh("sphere_collider.obj");
+					glm_vec3_copy(GLM_VEC3_ZERO, rot);
+					vec3 s = { ent->collider.sphere.radius, ent->collider.sphere.radius, ent->collider.sphere.radius };
+					glm_vec3_copy(s, scale);
+					glm_vec3_add(pos, ent->collider.offset, pos);
+				}
+				else if (ent->collider.type == BOX_COLLIDER)
+				{
+					m = get_mesh("box_collider.obj");
+					glm_vec3_copy(GLM_VEC3_ZERO, rot);
+					vec3 min, max;
+					glm_vec3_copy(ent->collider.box.aabb[0], min);
+					glm_vec3_copy(ent->collider.box.aabb[1], max);
+					vec3 s = { fabsf(min[0]) + fabsf(max[0]), fabsf(min[1]) + fabsf(max[1]), fabsf(min[2]) + fabsf(max[2]) };
+					glm_vec3_copy(s, scale);
+					glm_vec3_add(pos, ent->collider.offset, pos);
+				}
 			}
 			if (m == NULL) { continue; }
 			material* mat = get_material("MAT_cel");
@@ -774,7 +815,8 @@ void render_scene_normal()
 	// prepare for second pass
 	if (use_msaa)
 	{
-		blit_multisampled_framebuffer(tex_aa_fbo, tex_col_fbo); // convert multisampled buffer to normal texture
+		// blit_multisampled_framebuffer_fbo(tex_aa_fbo, tex_col_fbo); // convert multisampled buffer to normal texture
+		blit_multisampled_framebuffer(&fb_msaa, &fb_color); // convert multisampled buffer to normal texture
 	}
 	unbind_framebuffer();
 
@@ -852,11 +894,11 @@ void render_scene_screen()
 	shader_use(screen_shader);
 	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? mouse_pick_buffer : tex_col_buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
+	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? fb_mouse_pick.buffer : fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
 	shader_set_int(screen_shader, "tex", 0);
 #ifdef EDITOR_ACT
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, outline_buffer);
+	glBindTexture(GL_TEXTURE_2D, fb_outline.buffer);
 	shader_set_int(screen_shader, "outline", 1);
 #endif
 	glBindVertexArray(quad_vao);
@@ -1286,7 +1328,7 @@ int read_mouse_position_mouse_pick_buffer_color()
 	f32 pixel[1];
 
 	glGetError(); // clear any previous errors
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, mouse_pick_fbo);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fb_mouse_pick.fbo);
 	glReadPixels((int)x, (int)y, 1, 1, GL_RED, GL_FLOAT, pixel); // GL_UNSIGNED_BYTE
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 	
@@ -1302,6 +1344,7 @@ int read_mouse_position_mouse_pick_buffer_color()
 		if (error == GL_INVALID_FRAMEBUFFER_OPERATION) { printf("[OpenGL ERROR] Invalid Framebuffer Operation\n"); }
 		assert(0);
 	}
+	unbind_framebuffer();
 
 	int id = pixel[0] -1;
 	return id;
@@ -1351,7 +1394,7 @@ bee_bool* renderer_get(render_setting setting)
 f32* get_exposure()
 { return &exposure; }
 u32 get_color_buffer()
-{ return tex_col_buffer; }
+{ return fb_color.buffer; }
 void get_bg_color(vec3 col)
 {
 	glm_vec3_copy(bg_color, col);

@@ -101,7 +101,6 @@ int add_entity_direct(entity e)
 }
 int add_entity_direct_id(entity e, int id)
 {
-
 	if (e.has_model && e._material != NULL && e._material->is_transparent)
 	{
 		(*get_transparent_ids_len())++;

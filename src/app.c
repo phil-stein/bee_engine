@@ -198,43 +198,65 @@ void init()
 	*/
 
 	// load_scene("showcase06.scene");
-	load_scene("ui_test.scene");
+	load_scene("physics.scene");
 
 
 	entity* cube	  = get_entity(0);
+	entity* ground	  = get_entity(2);
 	entity* tombstone = get_entity(6);
 	
 	// rigidbody
-	rigidbody rb;
-	// glm_vec3_copy(GLM_VEC3_ZERO, rb.force);
-	vec3 f = { 100.0f, 600.0f, 0.0f };
-	glm_vec3_copy(f, rb.force);
-	glm_vec3_copy(GLM_VEC3_ZERO, rb.velocity); 
-	rb.mass = 1.0f;
+	rigidbody rb01;
+	vec3 f1 = { 100.0f, 500.0f, 0.0f };
+	glm_vec3_copy(f1, rb01.force);
+	glm_vec3_copy(GLM_VEC3_ZERO, rb01.velocity); 
+	rb01.mass = 1.0f;
 	cube->has_rb = BEE_TRUE;
-	cube->rb = rb;
+	cube->rb = rb01;
+
+	rigidbody rb02;
+	vec3 f2 = { -100.0f * 5.0f, 500.0f * 5.0f, 0.0f };
+	glm_vec3_copy(f2, rb02.force);
+	glm_vec3_copy(GLM_VEC3_ZERO, rb02.velocity);
+	rb02.mass = 5.0f;
+	// tombstone->has_rb = BEE_TRUE;
+	// tombstone->rb = rb02;
 
 	// collider
-	sphere_collider c_col, d_col;
-	c_col.radius = 1.0f;
-	d_col.radius = 1.0f;
+	sphere_collider d_col_s;
+	d_col_s.radius = 1.0f;
+	box_collider c_col, d_col, g_col;
+	glm_vec3_copy(GLM_VEC3_ZERO, c_col.aabb[0]);
+	glm_vec3_copy(GLM_VEC3_ONE,  c_col.aabb[1]);
+	glm_vec3_copy(GLM_VEC3_ZERO, d_col.aabb[0]);
+	glm_vec3_copy(GLM_VEC3_ONE,  d_col.aabb[1]);
+	vec3 min = { -5, 0, -5 };
+	vec3 max = {  5, 1,  5 };
+	glm_vec3_copy(min, g_col.aabb[0]);
+	glm_vec3_copy(max, g_col.aabb[1]);
 	
-	collider c01, c02;
-	c01.type = SPHERE_COLLIDER;
-	c01.sphere = c_col;
+	collider c01, c02, c03;
+	c01.type = BOX_COLLIDER;
+	// c01.sphere = c_col;
+	c01.box = c_col;
 	glm_vec3_copy(GLM_VEC3_ZERO, c01.offset);
-	c02.type = SPHERE_COLLIDER;
-	c02.sphere = d_col;
-	glm_vec3_copy(GLM_VEC3_ZERO, c02.offset);
+	c02.type =  BOX_COLLIDER; // SPHERE_COLLIDER;
+	// c02.sphere = d_col_s;
+	c02.box = d_col;
+	vec3 offset2 = { 0, 1, 0 };
+	glm_vec3_copy(offset2, c02.offset);
+
+	c03.type = BOX_COLLIDER;
+	c03.box = g_col;
+	vec3 offset3 = { 0, 0, 0 };
+	glm_vec3_copy(offset3, c03.offset);
 	
 	cube->has_collider = BEE_TRUE;
 	cube->collider = c01;
 	tombstone->has_collider = BEE_TRUE;
 	tombstone->collider = c02;
-
-
-	// texture screenshot_tex = get_texture("screenshot08.png");
-	// material scrrenshot_mat = make_material(shader, screenshot_tex, blank_tex, BEE_FALSE, 1.0f, tile, "MAT_screenshot");
+	ground->has_collider = BEE_TRUE;
+	ground->collider = c03;
 
 #ifdef EDITOR_ACT
 	// glfwSetCursorPosCallback(window, rotate_cam_by_mouse);

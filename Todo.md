@@ -13,23 +13,28 @@ Todo
     - [ ] dir -> rot (kinda works)
     
     
-    
   
 - buggs
 
+  - [ ] search for memory leaks & corruption using tool 
+
   - [ ] disabling msaa makes cube map be drawn over scene and the vertex info of the meshes gets all screwy  
+
+    -> analyze using RenderDoc
 
   - [ ] first object in mouse_pick_buffer is rendered behind the others 
 
-  - [ ] shader name got swapped with a script name 
+    -> analyze using RenderDoc
+
+  - [x] shader name got swapped with a script name 
 
     -> after dividing properties_window() into sub-functions
 
     -> happened after recompile
 
-  - [ ] framebuffers don't resize correctly sometimes
+  - [x] framebuffers don't resize correctly sometimes
 
-    - [ ] make framebuffer struct and use that to determine the type in resize_framebuffer_to_window()
+    - [x] make framebuffer struct and use that to determine the type in resize_framebuffer_to_window()
 
     
 
@@ -51,6 +56,11 @@ Todo
 
   - [ ] move gizmo take camera rotation into account
 
+  - [ ] themes
+
+    - [ ] light blue theme
+    - [ ] make themes affect gizmo color
+    
     
 
 - [ ] scene system
@@ -163,19 +173,26 @@ Todo
 
 - [ ] physics-system
 
-  
+
   - [x] sphere v sphere
-  
+
   - [x] dynamics
-  
-  - [ ] resolution
-  
-  - [ ] aabb v aabb
-  
+
+  - [x] aabb v aabb
+
   - [ ] aabb v sphere
-  
+
+  - [ ] resolution
+
+
+    - [x] sphere v sphere
+    - [ ] aabb v aabb // kinda, very kinda
+    - [ ] aabb v sphere
+
+  - [ ] GJK ? 
+
     
-  
+
 - [ ] particle system
   - [ ] object pooling
   

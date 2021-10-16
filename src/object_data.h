@@ -153,6 +153,11 @@ typedef struct light
 
 
 // ---- physics ----
+typedef struct box_collider
+{
+	vec3 aabb[2];
+
+}box_collider;
 typedef struct sphere_collider
 {
 	f32 radius;
@@ -160,7 +165,7 @@ typedef struct sphere_collider
 
 }sphere_collider;
 
-typedef enum collider_type { SPHERE_COLLIDER }collider_type;
+typedef enum collider_type { SPHERE_COLLIDER, BOX_COLLIDER }collider_type;
 typedef struct collider
 {
 	collider_type type;
@@ -169,7 +174,7 @@ typedef struct collider
 	union
 	{
 		sphere_collider sphere;
-		// other collider types
+		box_collider	box;
 	};
 }collider;
 

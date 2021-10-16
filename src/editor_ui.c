@@ -2994,6 +2994,27 @@ void draw_physics_components(entity* ent)
             nk_label(ctx, "Sphere Collider", NK_TEXT_LEFT);
             nk_property_float(ctx, "Radius:", 0.1f, &ent->collider.sphere.radius, 200.0f, 0.1f, 0.2f);
         }
+        if (ent->collider.type == BOX_COLLIDER)
+        {
+            nk_label(ctx, "Box Collider", NK_TEXT_LEFT);
+            
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Min", NK_MINIMIZED))
+            {
+                nk_property_float(ctx, "Min X:", -1024.0f, &ent->collider.box.aabb[0][0], 1024.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Min Y:", -1024.0f, &ent->collider.box.aabb[0][1], 1024.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Min Z:", -1024.0f, &ent->collider.box.aabb[0][2], 1024.0f, 0.1f, 0.2f);
+
+                nk_tree_pop(ctx);
+            }
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Max", NK_MINIMIZED))
+            {
+                nk_property_float(ctx, "Max X:", -1024.0f, &ent->collider.box.aabb[1][0], 1024.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Max Y:", -1024.0f, &ent->collider.box.aabb[1][1], 1024.0f, 0.1f, 0.2f);
+                nk_property_float(ctx, "Max Z:", -1024.0f, &ent->collider.box.aabb[1][2], 1024.0f, 0.1f, 0.2f);
+
+                nk_tree_pop(ctx);
+            }
+        }
 
         nk_property_float(ctx, "Offset X:", -1024.0f, &ent->collider.offset[0], 1024.0f, 0.1f, 0.2f);
         nk_property_float(ctx, "Offset Y:", -1024.0f, &ent->collider.offset[1], 1024.0f, 0.1f, 0.2f);
