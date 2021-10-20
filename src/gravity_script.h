@@ -25,8 +25,12 @@ typedef struct
 	gravity_closure_t* closure;
 	bee_bool init_closure_assigned;
 	bee_bool update_closure_assigned;
+	bee_bool trigger_closure_assigned;
+	bee_bool collision_closure_assigned;
 
 	bee_bool active;
+	bee_bool has_on_trigger;
+	bee_bool has_on_collision;
 	bee_bool has_error;
 
 }gravity_script;
@@ -41,11 +45,10 @@ const char* load_file(const char* file, size_t* size, uint32_t* fileid, void* xd
 gravity_script make_script(char* path);
 void free_script(gravity_script* script);
 
-rtn_code gravity_run(const char* source_code);
 rtn_code gravity_run_init(gravity_script* script, const char* src, int entity_index);
 rtn_code gravity_run_update(gravity_script* script, int entity_index);
-rtn_code gravity_run_cleanup(gravity_script* script, int entity_index);
-
+rtn_code gravity_run_on_trigger(gravity_script* script, int entity_index, int collision_id);
+rtn_code gravity_run_on_collision(gravity_script* script, int entity_index, int collision_id);
 
 #endif
 

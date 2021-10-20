@@ -7,6 +7,7 @@
 // #include "GLAD/glad.h"
 // #include "CGLM/cglm.h"
 
+#define  GLOBAL_H_IMPLEMENTATION
 #include "global.h"
 // #include "file_handler.h"
 #include "asset_manager.h"
@@ -70,7 +71,7 @@ int main(void)
 	renderer_init();
 	printf(" -> renderer_init() finished\n\n");
 
-	// gui console test 
+	// gui console 
 	submit_txt_console("bee_engine :)");
 	submit_txt_console("...");
 
@@ -114,7 +115,7 @@ int main(void)
 
 		entities_update(); // has to be after ui
 
-		physics_update();
+		physics_update(); // after renderer & entities
 
 		// reset last frames button state
 		input_update();

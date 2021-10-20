@@ -15,6 +15,8 @@ void serialize_material(char* buffer, int* offset, material* m);
 void serialize_mesh(char* buffer, int* offset, mesh* m);
 void serialize_camera(char* buffer, int* offset, camera* c);
 void serialize_light(char* buffer, int* offset, light* l);
+void serialize_rigidbody(char* buffer, int* offset, rigidbody* rb);
+void serialize_collider(char* buffer, int* offset, collider* c);
 
 void serialize_shader(char* buffer, int* offset, shader* s);
 void serialize_texture(char* buffer, int* offset, texture* t);
@@ -40,6 +42,8 @@ material* deserialize_material(char* buffer, int* offset);
 mesh*	  deserialize_mesh(char* buffer, int* offset);
 camera	  deserialize_camera(char* buffer, int* offset);
 light     deserialize_light(char* buffer, int* offset);
+rigidbody deserialize_rigidbody(char* buffer, int* offset);
+collider  deserialize_collider(char* buffer, int* offset);
 
 shader* deserialize_shader(char* buffer, int* offset);
 texture deserialize_texture(char* buffer, int* offset);

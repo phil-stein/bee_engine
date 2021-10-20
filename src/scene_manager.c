@@ -179,15 +179,15 @@ void add_default_scene(const char* name)
 	cam.front[2] =  0;
 	vec3 cam_pos = { 0.0f, 2.0f,  3.5f };
 	mesh* m_camera = get_mesh("camera.obj");	
-	arrput(s.entities, make_entity(cam_pos, zero, one, NULL, NULL, &cam, NULL, "camera"));
+	arrput(s.entities, make_entity(cam_pos, zero, one, NULL, NULL, &cam, NULL, NULL, NULL, "camera"));
 	s.entities_len++;
 
-	arrput(s.entities, make_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "cube"));
+	arrput(s.entities, make_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, NULL, "cube"));
 	s.entities_len++;
 
 	vec3 ground_pos   = { 0.0f, -0.5f,  0.0f };
 	vec3 ground_scale = { 10.0f, 1.0f,  10.0f };
-	arrput(s.entities, make_entity(ground_pos, zero, ground_scale, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "ground"));
+	arrput(s.entities, make_entity(ground_pos, zero, ground_scale, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, NULL, "ground"));
 	s.entities_len++;
 
 	vec3 ambient = { 0.0f, 0.0f, 0.0f };
@@ -202,10 +202,10 @@ void add_default_scene(const char* name)
 
 	vec3 pos_light01 = { 0.0f, 2.0f, 0.0f };
 	vec3 pos_light02 = { 0.75f, 0.0f, 0.0f };
-	arrput(s.entities, make_entity(pos_light01, zero, one, NULL, NULL, NULL, &dir_light, "dir_light"));
+	arrput(s.entities, make_entity(pos_light01, zero, one, NULL, NULL, NULL, &dir_light, NULL, NULL, "dir_light"));
 	s.entities_len++;
 	
-	arrput(s.entities, make_entity(pos_light02, zero, one, NULL, NULL, NULL, &point_light, "point_light"));
+	arrput(s.entities, make_entity(pos_light02, zero, one, NULL, NULL, NULL, &point_light, NULL, NULL, "point_light"));
 	s.entities_len++;
 
 	char buffer[2000];

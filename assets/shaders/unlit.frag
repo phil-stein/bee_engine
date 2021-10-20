@@ -23,5 +23,5 @@
 	void main()
 	{
 		// FragColor = vec4(material.tint, 1.0);
-		FragColor = texture(mat.diffuse, _in.tex_coords);
+		FragColor = texture(mat.diffuse, _in.tex_coords) * mat.tint;
 	}

@@ -29,9 +29,6 @@ void entities_init()
 	e.name = "x"; e.id = -1; e.id_idx = -1;
 	e.scripts_len = 0; e.children_len = 0; e.parent = 9999;
 	hmdefault(entities, e);
-	printf(" -> entities_init() called\n");
-	entity* ent = get_entity(112);
-	printf("[ent].id: %d\n", ent->id);
 }
 
 void entities_update()
@@ -40,7 +37,8 @@ void entities_update()
 
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
-		update_entity(get_entity(entity_ids[i]));
+		entity* e = get_entity(entity_ids[i]);
+		update_entity(e);
 	}
 	gravity_check_for_pending_actions(); // check if one of the run scripts requested to change scene / etc
 
@@ -78,9 +76,9 @@ void entities_clear_scene()
 }
 
 // add an entity
-int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name)
+int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, rigidbody* rb, collider* col, char* name)
 {
-	return add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, name));
+	return add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, rb, col, name));
 }
 int add_entity_direct(entity e)
 {
@@ -101,6 +99,10 @@ int add_entity_direct(entity e)
 }
 int add_entity_direct_id(entity e, int id)
 {
+	assert(id >= 0);
+	e.id = id < 0 ? entities_len : id;
+	e.id_idx = entity_ids_len;
+
 	if (e.has_model && e._material != NULL && e._material->is_transparent)
 	{
 		(*get_transparent_ids_len())++;
@@ -112,17 +114,17 @@ int add_entity_direct_id(entity e, int id)
 		switch (e._light.type)
 		{
 		case DIR_LIGHT:
-			arrput(*get_dir_light_ids_ptr(), entities_len);
+			arrput(*get_dir_light_ids_ptr(), e.id);
 			e._light.id = *get_dir_light_ids_len();
 			(*get_dir_light_ids_len())++;
 			break;
 		case POINT_LIGHT:
-			arrput(*get_point_light_ids_ptr(), entities_len);
+			arrput(*get_point_light_ids_ptr(), e.id);
 			e._light.id = *get_point_light_ids_len();
 			(*get_point_light_ids_len())++;
 			break;
 		case SPOT_LIGHT:
-			arrput(*get_spot_light_ids_ptr(), entities_len);
+			arrput(*get_spot_light_ids_ptr(), e.id);
 			e._light.id = *get_spot_light_ids_len();
 			(*get_spot_light_ids_len())++;
 			break;
@@ -137,12 +139,8 @@ int add_entity_direct_id(entity e, int id)
 			printf("Entity with Camera added but one already was present.\n");
 			return -1;
 		}
-		set_camera_ent_id(entities_len);
+		set_camera_ent_id(e.id);
 	}
-
-	assert(id >= 0);
-	e.id = id < 0 ? entities_len : id;
-	e.id_idx = entity_ids_len;
 
 	// hmput(entities, entities_len, e);
 	hmput(entities, e.id, e);
@@ -155,7 +153,7 @@ int add_entity_direct_id(entity e, int id)
 	// sets dir & front vec in light & cam
 	entity_set_rot(id, e.rot);
 
-	return entities_len - 1;
+	return e.id;
 }
 int duplicate_entity(int id)
 {
@@ -167,7 +165,6 @@ int duplicate_entity(int id)
 	}
 	entity e;
 	entity* original = get_entity(id);
-	// memcpy(&e, original, sizeof(entity));
 	e.id = -1;
 	e.id_idx = -1;
 	char* name = malloc(strlen(original->name) + 2 + 1);
@@ -197,6 +194,17 @@ int duplicate_entity(int id)
 	if (e.has_light)
 	{
 		e._light = original->_light;
+	}
+
+	e.has_rb = original->has_rb;
+	if (e.has_rb)
+	{
+		e.rb = original->rb;
+	}
+	e.has_collider = original->has_collider;
+	if (e.has_collider)
+	{
+		e.collider = original->collider;
 	}
 
 	for (int i = 0; i < e.children_len; ++i)

@@ -8,9 +8,9 @@
 
 
 // ---- vars ----
-vec3 position = { -0.15f, 2.75f,  6.50f };
+vec3 position = { -0.15f, 2.75f, 6.50f };
 vec3 front	  = { 0.0f,  -0.5f, -0.85f };
-vec3 up		  = { 0.0f,  1.0f,   0.0f  };
+vec3 up		  = { 0.0f,   1.0f,  0.0f  };
 
 vec3 target   = { 0.0, 0.0, 0.0 };
 

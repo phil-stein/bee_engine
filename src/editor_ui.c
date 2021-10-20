@@ -1644,19 +1644,19 @@ void properties_window()
             nk_layout_row_dynamic(ctx, 25, 1);
             if (nk_menu_item_label(ctx, "Empty", NK_TEXT_LEFT))
             {
-                add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "empty");
+                add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "empty");
             }
             if (nk_menu_item_label(ctx, "Trans", NK_TEXT_LEFT))
             {
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, NULL, NULL, NULL, NULL, "trans");
+                add_entity(zero, zero, one, NULL, NULL, NULL, NULL, NULL, NULL, "trans");
             }
             if (nk_menu_item_label(ctx, "Mesh", NK_TEXT_LEFT))
             {
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one  = { 1.0f, 1.0f, 1.0f };
-                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, "mesh");
+                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, NULL, "mesh");
                 get_entity(cube)->_mesh.visible = BEE_TRUE;
             }
             if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
@@ -1666,14 +1666,31 @@ void properties_window()
                 vec3 dir       = { 0.0f, 1.0f, 0.0f };
                 light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
                 light spot_light = make_spot_light(zero, one, one, dir, 1.0f, 0.09f, 0.032f, 0.91f, 0.82f); // 0.09f, 0.032f);
-                add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, "light");	// mat_blank_unlit
+                add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, NULL, NULL, "light");	// mat_blank_unlit
             }
             if (get_camera_ent_id() == -1 && nk_menu_item_label(ctx, "Camera", NK_TEXT_LEFT))
             {
                 camera cam = make_camera(45.0f, 0.1f, 100.0f);
                 vec3 zero = { 0.0f, 0.0f, 0.0f };
                 vec3 one = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, NULL, NULL, &cam, NULL, "camera");
+                add_entity(zero, zero, one, NULL, NULL, &cam, NULL, NULL, NULL, "camera");
+            }
+            if (nk_menu_item_label(ctx, "Collider", NK_TEXT_LEFT))
+            {
+                vec3 zero = { 0.0f, 0.0f, 0.0f };
+                vec3 one = { 1.0f, 1.0f, 1.0f };
+                collider c = make_box_collider(one, BEE_FALSE);
+                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, &c, "collider");
+                get_entity(cube)->_mesh.visible = BEE_TRUE;
+            }
+            if (nk_menu_item_label(ctx, "Rigidbody", NK_TEXT_LEFT))
+            {
+                vec3 zero = { 0.0f, 0.0f, 0.0f };
+                vec3 one = { 1.0f, 1.0f, 1.0f };
+                collider c = make_box_collider(one, BEE_FALSE);
+                rigidbody rb = make_rigidbody(1.0f);
+                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, &rb, &c, "rigidbody");
+                get_entity(cube)->_mesh.visible = BEE_TRUE;
             }
             nk_menu_end(ctx);
         }
@@ -1744,9 +1761,11 @@ void properties_window()
             set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
         }
         nk_label(ctx, " ", NK_TEXT_LEFT);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
+        nk_layout_row_dynamic(ctx, 25, 2);
         nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
+        static int b = 0;
+        nk_checkbox_label(ctx, " Option", &b);
+        nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
         nk_checkbox_label(ctx, " Move Gizmo", &show_move_gizmo);
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
@@ -1819,6 +1838,69 @@ void properties_window()
                         glClearColor(bg.r, bg.g, bg.b, bg.a);
                     }
                 }
+
+                nk_tree_pop(ctx);
+            }
+
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Diagnostics", NK_MINIMIZED))
+            {
+                char buf[20];
+                nk_layout_row_dynamic(ctx, 25, 1);
+                sprintf_s(buf, 20, "FPS: %d", (int)get_fps());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                sprintf_s(buf, 20, "Draw Calls: %d", *get_draw_calls_per_frame());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                sprintf_s(buf, 20, "Verts: %d", *get_verts_per_frame());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                sprintf_s(buf, 20, "Tris: %d", *get_tris_per_frame());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                nk_spacing(ctx, 1);
+                int len = 0; get_entity_ids(&len);
+                sprintf_s(buf, 20, "Entities: %d", len);
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                nk_spacing(ctx, 1);
+                sprintf_s(buf, 20, "Dir. Lights: %d",  *get_dir_light_ids_len());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                sprintf_s(buf, 20, "Point Lights: %d", *get_point_light_ids_len());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+                sprintf_s(buf, 20, "Spot Lights: %d",  *get_spot_light_ids_len());
+                nk_label(ctx, buf, NK_TEXT_LEFT);
+
+                // ----
+
+                f32 id = 0;
+                static int col_index = -1;
+                static int line_index = -1;
+                f32 step = (2 * 3.141592654f) / 32;
+
+                int i;
+                int index = -1;
+                struct nk_rect bounds;
+
+                /* line chart */
+                id = 0;
+                index = -1;
+                nk_layout_row_dynamic(ctx, 100, 1);
+                bounds = nk_widget_bounds(ctx);
+                if (nk_chart_begin(ctx, NK_CHART_LINES, 32, -1.0f, 1.0f)) {
+                    for (i = 0; i < 32; ++i) {
+                        nk_flags res = nk_chart_push(ctx, (float)cos(id));
+                        if (res & NK_CHART_HOVERING)
+                            index = (int)i;
+                        if (res & NK_CHART_CLICKED)
+                            line_index = (int)i;
+                        id += step;
+                    }
+                    nk_chart_end(ctx);
+                }
+
+                if (index != -1)
+                    nk_tooltipf(ctx, "Value: %.2f", (float)cos((float)index * step));
+                if (line_index != -1) {
+                    nk_layout_row_dynamic(ctx, 20, 1);
+                    nk_labelf(ctx, NK_TEXT_LEFT, "Selected value: %.2f", (float)cos((float)index * step));
+                }
+
 
                 nk_tree_pop(ctx);
             }
@@ -1910,58 +1992,6 @@ void properties_window()
 
                     nk_layout_row_dynamic(ctx, 25, 1);
                     nk_label(ctx, "Bloom, etc.", NK_TEXT_LEFT);
-
-                    nk_tree_pop(ctx);
-                }
-
-                if (nk_tree_push(ctx, NK_TREE_TAB, "Diagnostics", NK_MINIMIZED))
-                {
-                    char buf[20];
-                    sprintf_s(buf, 20, "FPS: %d", (int)get_fps());
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
-                    sprintf_s(buf, 20, "Draw Calls: %d", *get_draw_calls_per_frame());
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
-                    sprintf_s(buf, 20, "Verts: %d", *get_verts_per_frame());
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
-                    sprintf_s(buf, 20, "Tris: %d", *get_tris_per_frame());
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
-
-                    // ----
-
-                    float id = 0;
-                    static int col_index = -1;
-                    static int line_index = -1;
-                    float step = (2 * 3.141592654f) / 32;
-
-                    int i;
-                    int index = -1;
-                    struct nk_rect bounds;
-
-                    /* line chart */
-                    id = 0;
-                    index = -1;
-                    nk_layout_row_dynamic(ctx, 100, 1);
-                    bounds = nk_widget_bounds(ctx);
-                    if (nk_chart_begin(ctx, NK_CHART_LINES, 32, -1.0f, 1.0f)) {
-                        for (i = 0; i < 32; ++i) {
-                            nk_flags res = nk_chart_push(ctx, (float)cos(id));
-                            if (res & NK_CHART_HOVERING)
-                                index = (int)i;
-                            if (res & NK_CHART_CLICKED)
-                                line_index = (int)i;
-                            id += step;
-                        }
-                        nk_chart_end(ctx);
-                    }
-
-                    if (index != -1)
-                        nk_tooltipf(ctx, "Value: %.2f", (float)cos((float)index * step));
-                    if (line_index != -1) {
-                        nk_layout_row_dynamic(ctx, 20, 1);
-                        nk_labelf(ctx, NK_TEXT_LEFT, "Selected value: %.2f", (float)cos((float)index * step));
-                    }
-
 
                     nk_tree_pop(ctx);
                 }
@@ -2065,7 +2095,7 @@ void properties_window()
 
                     // recursively handle child-parent relation between the entities
                     for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
-                    {
+                    {                        
                         draw_entity_hierarchy_entity(entity_ids[upper_hierarchy_ents[i]], 0); // start with 0 offset
                     }
                     // assign the dropped entity detected in draw_entity_hierachy_entity()
@@ -2192,6 +2222,7 @@ void properties_window()
                 }
             
                 // ---- components ----
+
                 draw_transform_component(ent);
 
                 draw_mesh_component(ent);
@@ -2377,6 +2408,9 @@ int get_selected_entity() { return selected_entity; }
 
 void draw_entity_hierarchy_entity(int idx, int offset)
 {
+
+    entity* ent = get_entity(idx);
+
     // right-click popup
     struct nk_rect bounds = nk_widget_bounds(ctx);
     if (nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, bounds, nk_true))
@@ -2390,7 +2424,6 @@ void draw_entity_hierarchy_entity(int idx, int offset)
         entity_drag_popup_act = idx;
     }
 
-    entity* ent = get_entity(idx);
 
     // check for entity dropped 
     if (dropped_entity.handled == BEE_FALSE)
@@ -2415,6 +2448,7 @@ void draw_entity_hierarchy_entity(int idx, int offset)
 
     char buf[36]; sprintf_s(buf, 36, "%d| %s", ent->id_idx, ent->name);
     nk_selectable_label(ctx, buf, NK_TEXT_LEFT, &selected_entities[ent->id_idx]);
+
 
     // draw its children
     for (int i = 0; i < ent->children_len; ++i)
@@ -2592,8 +2626,16 @@ void draw_mesh_component(entity* ent)
     if (ent->has_model == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Mesh", NK_MINIMIZED))
     {
         char buffer[50];
-
+        
         nk_layout_row_dynamic(ctx, 25, 2);
+        if (nk_button_label(ctx, "Remove"))
+        {
+            ent->has_model = BEE_FALSE;
+            // ent->_mesh     = NULL;
+            ent->_material = NULL;
+        }
+        nk_spacing(ctx, 1);
+        
         nk_label(ctx, "Name", NK_TEXT_LEFT);
         // nk_label(ctx, prop.mesh_name, NK_TEXT_RIGHT);
         mesh* meshes = NULL;
@@ -2646,7 +2688,6 @@ void draw_mesh_component(entity* ent)
         }
         nk_tree_pop(ctx);
     }
-
 }
 
 void draw_material_component(entity* ent)
@@ -2973,6 +3014,12 @@ void draw_physics_components(entity* ent)
 
     if (ent->has_rb == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Rigidbody", NK_MINIMIZED))
     {
+        nk_layout_row_dynamic(ctx, 25, 2);
+        if (nk_button_label(ctx, "Remove"))
+        {
+            ent->has_rb = BEE_FALSE;
+        }
+        nk_layout_row_dynamic(ctx, 25, 1);
 
         nk_property_float(ctx, "Mass:", -1024.0f, &ent->rb.mass, 1024.0f, 0.1f, 0.2f);
         nk_spacing(ctx, 1);
@@ -2989,6 +3036,13 @@ void draw_physics_components(entity* ent)
 
     if (ent->has_collider == BEE_TRUE && nk_tree_push(ctx, NK_TREE_TAB, "Collider", NK_MINIMIZED))
     {
+        nk_layout_row_dynamic(ctx, 25, 2);
+        if (nk_button_label(ctx, "Remove"))
+        {
+            ent->has_collider = BEE_FALSE;
+        }
+        nk_layout_row_dynamic(ctx, 25, 1);
+
         if (ent->collider.type == SPHERE_COLLIDER)
         {
             nk_label(ctx, "Sphere Collider", NK_TEXT_LEFT);
@@ -3020,9 +3074,10 @@ void draw_physics_components(entity* ent)
         nk_property_float(ctx, "Offset Y:", -1024.0f, &ent->collider.offset[1], 1024.0f, 0.1f, 0.2f);
         nk_property_float(ctx, "Offset Z:", -1024.0f, &ent->collider.offset[2], 1024.0f, 0.1f, 0.2f);
 
+        nk_checkbox_label(ctx, " is Trigger", &ent->collider.is_trigger);
+
         nk_tree_pop(ctx);
     }
-
 
 }
 
@@ -4134,7 +4189,7 @@ void asset_browser_window()
                             name = malloc(strlen((meshes[selected_mesh].name) +1) * sizeof(char));
                             assert(name != NULL);
                             strcpy(name, meshes[selected_mesh].name);
-                            add_entity(zero, zero, one, &meshes[selected_mesh], get_material("MAT_blank"), NULL, NULL, name);
+                            add_entity(zero, zero, one, &meshes[selected_mesh], get_material("MAT_blank"), NULL, NULL, NULL, NULL, name);
                         }
                     }
                 }

@@ -17,10 +17,3 @@ func update()
 
 	// code ...
 }
-
-func cleanup()
-{
-}
-
-
-

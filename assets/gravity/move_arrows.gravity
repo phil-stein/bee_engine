@@ -1,7 +1,6 @@
 extern var Entity;
 extern var Game;
 extern var Input;
-// extern var Camera;
 extern var World;
 
 var global = 0;
@@ -61,7 +60,3 @@ func update()
 	}
 }
 
-func cleanup()
-{
-	System.print("called cleanup");
-}

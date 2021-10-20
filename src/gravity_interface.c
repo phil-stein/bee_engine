@@ -441,7 +441,7 @@ static bee_bool world_add_ent(gravity_vm* vm, gravity_value_t* args, uint16_t na
     char* mat  = VALUE_AS_CSTRING(v5);
     char* name  = VALUE_AS_CSTRING(v6);
     printf("world.add_entity mesh: %s, mat: %s, name: %s\n", _mesh, mat, name);
-    int id = add_entity(pos, zero, one, get_mesh(_mesh), get_material(mat), NULL, NULL, name);
+    int id = add_entity(pos, zero, one, get_mesh(_mesh), get_material(mat), NULL, NULL, NULL, NULL, name);
     RETURN_VALUE(VALUE_FROM_INT(id), rindex);
 }
 

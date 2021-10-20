@@ -21,7 +21,7 @@ int add_entity_direct_id(entity e, int id);
 int add_entity_direct(entity e);
 // makes entity from given properties and adds it to the engine
 // if your goal is to simply add an entity to the game use this function
-int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, char* name);
+int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, rigidbody* rb, collider* col, char* name);
 int duplicate_entity(int id);
 
 // the transform of the entity with the parents transforms, calculated recursively 

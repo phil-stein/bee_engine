@@ -12,6 +12,8 @@ Todo
     - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
+  - [ ] make mesh pointer
+  
     
   
 - buggs
@@ -26,16 +28,14 @@ Todo
 
     -> analyze using RenderDoc
 
-  - [x] shader name got swapped with a script name 
+  - [ ] normal mapped occasionally turn mostly white
 
-    -> after dividing properties_window() into sub-functions
+    -> after removing entities and serializing
 
-    -> happened after recompile
+    -> prob. something todo with deserialization
 
-  - [x] framebuffers don't resize correctly sometimes
-
-    - [x] make framebuffer struct and use that to determine the type in resize_framebuffer_to_window()
-
+    -> camera id is not its id_idx
+    
     
 
 - unfinished
@@ -56,11 +56,20 @@ Todo
 
   - [ ] move gizmo take camera rotation into account
 
+  - [ ] make first entity be right-click-able & dragable
+
   - [ ] themes
 
     - [ ] light blue theme
     - [ ] make themes affect gizmo color
     
+  - [ ] debug draw functions
+
+    - [x] sphere
+    - [x] cube
+    - [ ] line
+    - [ ] line cube
+
     
 
 - [ ] scene system
@@ -113,33 +122,41 @@ Todo
     - [ ] hot-reloading (when files edited)
     
   - [ ] !!! warn when adding f.e. a material with a name that already exists
-  
+
   - [x] ui for drag & drop imported assets
-  
+
   - [ ] editor cam v. game cam (camera component)
-  
+
     - [x] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
-  
+
   - [ ] visualize normal-direction
-  
+
   - [ ] show shader source
-  
+
+  - [ ] axis view gizmo like top-right in blender, unity, max, etc
+
   - [ ] transform gizmos
-  
-    - [ ] move
+
+    - [x] move
     - [ ] scale
     - [ ] rotate
-  
+
   - [ ] structures (prefabs)
-  
+
     - [ ] serialize entity tree
     - [ ] save & load
     - [ ] asset manager
     - [ ] ui
-  
+
+  - [ ] ui for adding / removing components
+
+    - [ ] mesh & material
+    - [ ] rigidbody
+    - [ ] collider
+
     
-  
+
 - [ ] input 
 
   - [ ] controller input
@@ -172,8 +189,6 @@ Todo
 
 
 - [ ] physics-system
-
-
   - [x] sphere v sphere
 
   - [x] dynamics
@@ -182,17 +197,23 @@ Todo
 
   - [ ] aabb v sphere
 
+  - [x] trigger
+
+  - [x] gravity interface
+  
+  - [x] make functions for rb and collider
+  
   - [ ] resolution
-
-
     - [x] sphere v sphere
     - [ ] aabb v aabb // kinda, very kinda
     - [ ] aabb v sphere
 
-  - [ ] GJK ? 
-
+  - [ ] GJK
+  
+  - [ ] EPA
+  
     
-
+  
 - [ ] particle system
   - [ ] object pooling
   

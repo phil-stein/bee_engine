@@ -27,6 +27,21 @@ typedef enum render_setting
 	RENDER_MSAA
 }render_setting;
 
+#ifdef EDITOR_ACT
+typedef enum debug_draw_type
+{
+	DEBUG_DRAW_LINE,
+	DEBUG_DRAW_SPHERE,
+	DEBUG_DRAW_CUBE
+}debug_draw_type;
+
+typedef struct debug_draw
+{
+	debug_draw_type type;
+	vec3 v1; // pos / pos1
+	vec3 v2; // scale / pos2
+}debug_draw;
+#endif
 
 void renderer_init();
 
@@ -39,6 +54,9 @@ void renderer_cleanup();
 void render_scene_mouse_pick();
 // renders the currently selected entity as white
 void render_scene_outline();
+// renders different debug-primitives defines as "debug_draw_type" & "debug_draw"
+// submit debug graphics via "debug_draw_sphere()", etc.
+void render_scene_debug();
 #endif
 // renders the shadowmap for each light
 void render_scene_shadows();
@@ -60,6 +78,16 @@ void renderer_clear_scene();
 #ifdef EDITOR_ACT
 // retrieve the entity id at the mouse position from the buffer cretated in render_scene_mouse_pick() 
 int read_mouse_position_mouse_pick_buffer_color();
+
+// submit a debug sphere to the renderer, these wont show up in the game
+// but its quicker than using an entity for f.e. testing what point your calculation spat out
+void debug_draw_sphere(vec3 pos, vec3 scale);
+// submit a debug line to the renderer, these wont show up in the game
+// f.e. nice for checking if mouse select or shooting via raycast works
+void debug_draw_line(vec3 pos, vec3 scale);
+// submit a debug cube to the renderer, these wont show up in the game
+void debug_draw_cube(vec3 pos, vec3 scale);
+// but its quicker than using an entity for f.e. testing what point your calculation spat out
 #endif
 
 // get the id of the current camera entity

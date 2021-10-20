@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 2048 2048" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="pink" transform="matrix(1,0,0,1,86.7797,-133.507)">
+        <clipPath id="_clip1">
+            <path d="M0,1024C0,1589.54 458.46,2048 1024,2048L1024,1024L0,1024Z"/>
+        </clipPath>
+        <g clip-path="url(#_clip1)">
+            <g id="Cambria_Back" transform="matrix(1,0,0,1,-374.071,838.914)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(239,41,41);">B</text>
+            </g>
+            <g id="Cambria" transform="matrix(1,0,0,1,-414.657,813.281)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(85,87,83);">B</text>
+            </g>
+            <g id="Cambria_Front" transform="matrix(1,0,0,1,-467.06,779.103)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(255,87,148);">B</text>
+            </g>
+        </g>
+    </g>
+    <g id="green" transform="matrix(1,0,0,1,86.7797,-133.507)">
+        <clipPath id="_clip2">
+            <path d="M1024,2048C1589.54,2048 2048,1589.54 2048,1024L1024,1024L1024,2048Z"/>
+        </clipPath>
+        <g clip-path="url(#_clip2)">
+            <g id="Cambria_Back1" serif:id="Cambria_Back" transform="matrix(1,0,0,1,-374.071,838.914)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(138,226,52);">B</text>
+            </g>
+            <g id="Cambria1" serif:id="Cambria" transform="matrix(1,0,0,1,-414.657,813.281)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(85,87,83);">B</text>
+            </g>
+            <g id="Cambria_Front1" serif:id="Cambria_Front" transform="matrix(1,0,0,1,-467.06,779.103)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(178,230,76);">B</text>
+            </g>
+        </g>
+    </g>
+    <g id="yellow" transform="matrix(1,0,0,1,86.7797,-133.507)">
+        <clipPath id="_clip3">
+            <path d="M2048,1024C2048,458.46 1589.54,0 1024,0L1024,1024L2048,1024Z"/>
+        </clipPath>
+        <g clip-path="url(#_clip3)">
+            <g id="Cambria_Back2" serif:id="Cambria_Back" transform="matrix(1,0,0,1,-374.071,838.914)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(252,233,79);">B</text>
+            </g>
+            <g id="Cambria2" serif:id="Cambria" transform="matrix(1,0,0,1,-414.657,813.281)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(85,87,83);">B</text>
+            </g>
+            <g id="Cambria_Front2" serif:id="Cambria_Front" transform="matrix(1,0,0,1,-467.06,779.103)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(230,219,122);">B</text>
+            </g>
+        </g>
+    </g>
+    <g id="blue" transform="matrix(1,0,0,1,86.7797,-133.507)">
+        <clipPath id="_clip4">
+            <path d="M1024,0C458.46,0 -0,458.461 0,1024L1024,1024L1024,0Z"/>
+        </clipPath>
+        <g clip-path="url(#_clip4)">
+            <g id="Cambria_Back3" serif:id="Cambria_Back" transform="matrix(1,0,0,1,-374.071,838.914)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(52,226,226);">B</text>
+            </g>
+            <g id="Cambria3" serif:id="Cambria" transform="matrix(1,0,0,1,-414.657,813.281)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(85,87,83);">B</text>
+            </g>
+            <g id="Cambria_Front3" serif:id="Cambria_Front" transform="matrix(1,0,0,1,-467.06,779.103)">
+                <text x="751.645px" y="926.54px" style="font-family:'Candara', sans-serif;font-size:2000px;fill:rgb(102,204,225);">B</text>
+            </g>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,0.000166831,60.0782)">
+        <ellipse cx="1024" cy="1711.5" rx="635.03" ry="47.891" style="fill:rgb(85,87,83);"/>
+    </g>
+</svg>

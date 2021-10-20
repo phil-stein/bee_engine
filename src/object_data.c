@@ -5,6 +5,7 @@
 #include "file_handler.h"
 #include "object_data.h"
 #include "framebuffer.h"
+#include "entities.h"
 #include "renderer.h"
 #include "shader.h"
 #include "camera.h"
@@ -359,9 +360,51 @@ light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction,
 	return _light;
 }
 
+// ---- physics ----
+
+rigidbody make_rigidbody(f32 mass)
+{
+	rigidbody rb;
+	rb.mass = mass;
+	glm_vec3_copy(GLM_VEC3_ZERO, rb.velocity);
+	glm_vec3_copy(GLM_VEC3_ZERO, rb.force);
+	return rb;
+}
+
+collider make_sphere_collider(f32 radius, bee_bool is_trigger)
+{
+	collider c;
+	c.type = SPHERE_COLLIDER;
+	glm_vec3_copy(GLM_VEC3_ZERO, c.offset);
+	c.infos = NULL;
+	c.infos_len = 0;
+	c.is_trigger = is_trigger;
+	sphere_collider s;
+	s.radius = radius;
+	c.sphere = s;
+	return c;
+}
+
+collider make_box_collider(vec3 size, bee_bool is_trigger)
+{
+	collider c;
+	c.type = BOX_COLLIDER;
+	glm_vec3_copy(GLM_VEC3_ZERO, c.offset);
+	c.infos = NULL;
+	c.infos_len = 0;
+	c.is_trigger = is_trigger;
+	box_collider b;
+	vec3 min = { -size[0] * 0.5f, -size[1] * 0.5f, -size[2] * 0.5f };
+	glm_vec3_copy(min, b.aabb[0]);
+	vec3 max = { size[0] * 0.5f, size[1] * 0.5f, size[2] * 0.5f };
+	glm_vec3_copy(max, b.aabb[1]);
+	c.box = b;
+	return c;
+}
+
 // ---- entity ----
 
-entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, camera* _cam, light* _light, char* _name)
+entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, camera* _cam, light* _light, rigidbody* rb, collider* col, char* _name)
 {
 	entity ent;
 	ent.name = _name;
@@ -392,8 +435,16 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, 
 		ent._light = *_light;
 	}
 
-	ent.has_collider = BEE_FALSE;
-	ent.has_rb		 = BEE_FALSE;
+	ent.has_rb = rb != NULL ? BEE_TRUE : BEE_FALSE;
+	if (ent.has_rb)
+	{
+		ent.rb = *rb;
+	}
+	ent.has_collider = col != NULL ? BEE_TRUE : BEE_FALSE;
+	if (ent.has_collider)
+	{
+		ent.collider = *col;
+	}
 
 	ent.scripts_len = 0;
 	ent.scripts		= NULL; // needs to be null-pointer for stb_ds
@@ -418,7 +469,10 @@ void update_entity(entity* ent)
 		if (ent->scripts[i]->has_error == BEE_TRUE)
 		{
 			ent->scripts[i]->has_error = BEE_FALSE;
-			ent->scripts[i]->init_closure_assigned = BEE_FALSE;
+			ent->scripts[i]->init_closure_assigned		= BEE_FALSE;
+			ent->scripts[i]->update_closure_assigned    = BEE_FALSE;
+			ent->scripts[i]->trigger_closure_assigned   = BEE_FALSE;
+			ent->scripts[i]->collision_closure_assigned = BEE_FALSE;
 		}
 
 		// source not yet read
@@ -434,6 +488,27 @@ void update_entity(entity* ent)
 			assert(ent->scripts[i]->vm != NULL);
 			gravity_run_update(ent->scripts[i], ent->id);
 		}
+		if (ent->has_collider && ent->collider.infos_len > 0)
+		{
+			assert(ent->scripts[i]->vm != NULL);
+
+			for (int n = 0; n < ent->collider.infos_len; ++n)
+			{
+				collision_info info = ent->collider.infos[n];
+				if (info.trigger)
+				{
+					gravity_run_on_trigger(ent->scripts[i], ent->id, ent->collider.infos[n].entity_id);
+				}
+				else 
+				{
+					gravity_run_on_collision(ent->scripts[i], ent->id, ent->collider.infos[n].entity_id);
+				}
+			}
+			arrfree(ent->collider.infos);
+			ent->collider.infos = NULL;
+			ent->collider.infos_len = 0;
+		}
+
 	}
 }
 

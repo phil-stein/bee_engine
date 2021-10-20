@@ -1,0 +1,62 @@
+extern var World;
+extern var UI;
+
+var collision 	 = false;
+var collision_id = 0;
+var trigger 	 = false;
+var trigger_id   = 0;
+
+func init()
+{
+}
+
+func update()
+{
+	var ui = UI();
+
+
+	ui.begin();
+
+	var x = 900;
+	var y = 10;
+	var w = 150;
+	var h = 120;
+	if (ui.window_begin("collision check", x, y, w, h))
+	{
+		ui.layout(25, 1);
+		if (!collision && !trigger)
+		{
+			ui.text("x");
+		}
+		if (trigger)
+		{
+			ui.text("trigger: " + trigger_id);
+		}
+		if (collision)
+		{
+			ui.text("collision: " + collision_id);
+		}
+	} ui.window_end();
+
+	ui.end();
+
+	collision = false;
+	trigger   = false;
+}
+
+func on_trigger(id)
+{
+	trigger = true;
+	trigger_id = id;
+	// var world = World();
+	// world.move_y(entity, -0.5);
+}
+func on_collision(id)
+{
+	collision = true;
+	collision_id = id;
+}
+
+
+
+

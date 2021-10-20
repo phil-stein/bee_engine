@@ -10,14 +10,6 @@
 void physics_init();
 void physics_update();
 
-typedef struct collision_info
-{
-	bee_bool collision;
-	f32	 penetration_depth;
-	vec3 normal;
-
-}collision_info;
-
 
 // taken from "WinterDev: Designing a Physics Engine in 5 minutes", "https://www.youtube.com/watch?v=-_lspRG548E&t=301s"
 void simulate_dynamics(entity* e);
@@ -32,5 +24,7 @@ collision_info collision_check_aabb_v_sphere(entity* b, entity* s);
 
 
 void collision_response(entity* e1, entity* e2, collision_info info);
+void collision_response_resolve_position(entity* e1, entity* e2, collision_info info);
+void collision_response_resolve_velocity(entity* e1, entity* e2, collision_info info);
 
 #endif

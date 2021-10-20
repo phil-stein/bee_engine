@@ -153,6 +153,15 @@ typedef struct light
 
 
 // ---- physics ----
+typedef struct collision_info
+{
+	bee_bool collision;
+	vec3 direction; // normal * depth of collision
+	int entity_id;
+	bee_bool trigger;
+
+}collision_info;
+
 typedef struct box_collider
 {
 	vec3 aabb[2];
@@ -170,12 +179,17 @@ typedef struct collider
 {
 	collider_type type;
 	vec3 offset;
+	bee_bool is_trigger; // @TODO: implement
 	// vec3 scale;
 	union
 	{
 		sphere_collider sphere;
 		box_collider	box;
 	};
+
+	collision_info* infos;
+	int infos_len;
+
 }collider;
 
 typedef struct rigidbody
@@ -273,8 +287,15 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction);
 // create a spot light
 light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction, f32 constant, f32 linear, f32 quadratic, f32 cut_off, f32 outer_cut_off);
 
+// create a rigidbody
+rigidbody make_rigidbody(f32 mass);
+// create a sphere collider
+collider make_sphere_collider(f32 radius, bee_bool is_trigger);
+// create a box collider
+collider make_box_collider(vec3 size, bee_bool is_trigger);
+
 // create an entity
-entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, camera* cam, light* _light, char* _name); //model* _model
+entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, camera* cam, light* _light, rigidbody* rb, collider* col, char* _name); //model* _model
 
 // updates all attached components
 void update_entity(entity* ent);

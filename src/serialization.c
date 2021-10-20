@@ -6,7 +6,7 @@
 #include "framebuffer.h"
 #include "scene_manager.h" // tmp
 
-#define VERSION 1.3f
+#define VERSION 1.5f
 f32 current_version = VERSION;
 
 
@@ -71,7 +71,7 @@ void serialize_scene(char* buffer, int* offset, scene* s)
 	
 	int shaders_len = 0;
 	shader* shaders = get_all_shaders(&shaders_len);
-	printf("shaders len: %d\n", shaders_len);
+	// printf("serialized %d shaders\n", shaders_len);
 
 	serialize_int(buffer, offset, shaders_len);
 
@@ -84,12 +84,14 @@ void serialize_scene(char* buffer, int* offset, scene* s)
 	material* materials = get_all_materials(&materials_len);
 	
 	serialize_int(buffer, offset, materials_len);
+	// printf("serialized %d materials\n", materials_len);
 
 	for (int i = 0; i < materials_len; ++i)
 	{
 		serialize_material(buffer, offset, &materials[i]);
 	}
 
+	// printf("serialized %d entities\n", s->entities_len);
 	serialize_int(buffer, offset, s->entities_len);
 	for (int i = 0; i < s->entities_len; ++i)
 	{
@@ -130,6 +132,19 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 	if (ent->has_light)
 	{
 		serialize_light(buffer, offset, &ent->_light);
+	}
+
+	// v1.4
+	serialize_enum(buffer, offset, ent->has_rb);
+	if (ent->has_rb)
+	{
+		serialize_rigidbody(buffer, offset, &ent->rb);
+	}
+	// v1.4
+	serialize_enum(buffer, offset, ent->has_collider);
+	if (ent->has_collider)
+	{
+		serialize_collider(buffer, offset, &ent->collider);
 	}
 
 	serialize_int(buffer, offset, ent->scripts_len);
@@ -229,6 +244,29 @@ void serialize_light(char* buffer, int* offset, light* l)
 
 	serialize_float(buffer, offset, l->cut_off);
 	serialize_float(buffer, offset, l->outer_cut_off);
+}
+
+void serialize_rigidbody(char* buffer, int* offset, rigidbody* rb)
+{
+	// not serializing velocity as always 0
+	serialize_vec3(buffer, offset, rb->force);
+	serialize_float(buffer, offset, rb->mass);
+}
+
+void serialize_collider(char* buffer, int* offset, collider* c)
+{
+	serialize_enum(buffer, offset, c->type);
+	serialize_vec3(buffer, offset, c->offset);
+	if (c->type == SPHERE_COLLIDER)
+	{
+		serialize_float(buffer, offset, c->sphere.radius);
+	}
+	else if (c->type == BOX_COLLIDER)
+	{
+		serialize_vec3(buffer, offset, c->box.aabb[0]);
+		serialize_vec3(buffer, offset, c->box.aabb[1]);
+	}
+	serialize_enum(buffer, offset, c->is_trigger); // v1.5
 }
 
 // ---- internal structs ----
@@ -398,7 +436,7 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 
 	// deserialize assets that arent defined in their own files
 	int shaders_len = deserialize_int(buffer, offset);
-	// printf("shaders len: %d\n", shaders_len);
+	// printf("derialized %d shaders\n", shaders_len);
 
 	for (int i = 0; i < shaders_len; ++i)
 	{
@@ -406,6 +444,7 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 	}
 
 	int materials_len = deserialize_int(buffer, offset);
+	// printf("derialized %d materials\n", materials_len);
 
 	for (int i = 0; i < materials_len; ++i)
 	{
@@ -415,9 +454,11 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 	// deserialize entities
 	s.entities = NULL;
 	s.entities_len = deserialize_int(buffer, offset);
+	// printf("derialized %d entities\n", s.entities_len);
 	for (int i = 0; i < s.entities_len; ++i)
 	{
 		arrput(s.entities, deserialize_entity(buffer, offset));
+		// printf("deserialized entity: %s, id: %d\n", s.entities[i].name, s.entities[i].id);
 	}
 
 	*success = BEE_OK;
@@ -427,8 +468,6 @@ scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 entity deserialize_entity(char* buffer, int* offset)
 {
 	entity e;
-	e.has_collider = BEE_FALSE; // tmp
-	e.has_rb	   = BEE_FALSE; // tmp
 
 	e.name = deserialize_str(buffer, offset);
 
@@ -461,6 +500,25 @@ entity deserialize_entity(char* buffer, int* offset)
 	if (e.has_light)
 	{
 		e._light = deserialize_light(buffer, offset);
+	}
+
+	if (current_version >= 1.4f)
+	{
+		e.has_rb = deserialize_enum(buffer, offset);
+		if (e.has_rb)
+		{
+			e.rb = deserialize_rigidbody(buffer, offset);
+		}
+		e.has_collider = deserialize_enum(buffer, offset);
+		if (e.has_collider)
+		{
+			e.collider = deserialize_collider(buffer, offset);
+		}
+	}
+	else
+	{
+		e.has_collider = BEE_FALSE;
+		e.has_rb = BEE_FALSE;
 	}
 
 	e.scripts = NULL; // for stb_ds
@@ -601,6 +659,45 @@ light deserialize_light(char* buffer, int* offset)
 	create_framebuffer_shadowmap(&l.shadow_map, &l.shadow_fbo, l.shadow_map_x, l.shadow_map_y);
 
 	return l;
+}
+
+rigidbody deserialize_rigidbody(char* buffer, int* offset)
+{
+	rigidbody rb;
+	deserialize_vec3(buffer, offset, rb.force);
+	rb.mass = deserialize_float(buffer, offset);
+	glm_vec3_copy(GLM_VEC3_ZERO, rb.velocity);
+	return rb;
+}
+
+collider deserialize_collider(char* buffer, int* offset)
+{
+	collider c;
+	c.type = deserialize_enum(buffer, offset);
+	deserialize_vec3(buffer, offset, c.offset);
+	if (c.type == SPHERE_COLLIDER)
+	{
+		sphere_collider s;
+		s.radius = deserialize_float(buffer, offset);
+		c.sphere = s;
+	}
+	else if (c.type == BOX_COLLIDER)
+	{
+		box_collider b;
+		deserialize_vec3(buffer, offset, b.aabb[0]);
+		deserialize_vec3(buffer, offset, b.aabb[1]);
+		c.box = b;
+	}
+	if (current_version >= 1.5f)
+	{
+		c.is_trigger = deserialize_enum(buffer, offset);
+	}
+	else { c.is_trigger = BEE_FALSE; }
+
+	c.infos = NULL;
+	c.infos_len = 0;
+
+	return c;
 }
 
 // ---- internal structs ----

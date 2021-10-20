@@ -27,11 +27,8 @@
 
 // ---- vars ----
 GLFWwindow* window;
-// bee_bool wireframe_switch = BEE_FALSE;
-// bee_bool maximized_enabled = BEE_FALSE;
-// bee_bool maximized_switch = BEE_FALSE;
+
 bee_bool fly_enabled = BEE_FALSE;
-// bee_bool fly_switch = BEE_FALSE;
 
 // settings
 f32 free_look_mouse_sensitivity = 0.125;
@@ -198,9 +195,10 @@ void init()
 	*/
 
 	// load_scene("showcase06.scene");
-	load_scene("physics.scene");
+	load_scene("physics05.scene");
 
-
+	// generate physics components old
+	/*
 	entity* cube	  = get_entity(0);
 	entity* ground	  = get_entity(2);
 	entity* tombstone = get_entity(6);
@@ -257,6 +255,8 @@ void init()
 	tombstone->collider = c02;
 	ground->has_collider = BEE_TRUE;
 	ground->collider = c03;
+	*/
+
 
 #ifdef EDITOR_ACT
 	// glfwSetCursorPosCallback(window, rotate_cam_by_mouse);

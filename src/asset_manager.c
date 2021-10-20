@@ -1098,7 +1098,7 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 
 			shaders_data[shget(shaders, name)] = s;
 		}
-		printf("[ERROR] Shader \"%s\" already exists\n", name);
+		// printf("[ERROR] Shader \"%s\" already exists\n", name);
 		return get_shader(name);
 	}
 

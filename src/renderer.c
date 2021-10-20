@@ -74,6 +74,13 @@ vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
 shader* modes_shader;
 #endif
 
+#ifdef EDITOR_ACT
+// debug draw
+debug_draw* debug_calls = NULL;
+int debug_calls_len = 0;
+#endif
+
+
 // post processing
 shader* screen_shader;
 u32 quad_vao, quad_vbo;
@@ -287,6 +294,7 @@ void renderer_update()
 #endif
 #ifdef EDITOR_ACT
 	render_scene_outline();
+	render_scene_debug();
 #endif
 	render_scene_screen();
 
@@ -521,6 +529,44 @@ void render_scene_outline()
 		
 	}
 	unbind_framebuffer();
+}
+
+void render_scene_debug()
+{
+	printf("%d debug calls\n", debug_calls_len);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	int w, h; get_window_size(&w, &h);
+	glViewport(0, 0, w, h);
+	bind_framebuffer(&fb_color);
+	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
+	for (int i = 0; i < debug_calls_len; ++i)
+	{
+		mesh* m = NULL;
+		if (debug_calls[i].type == DEBUG_DRAW_SPHERE)
+		{
+			m = get_mesh("sphere_poles.obj");
+		}
+		else if (debug_calls[i].type == DEBUG_DRAW_LINE)
+		{
+			// TODO: add capability to render lines
+		}
+		else if (debug_calls[i].type == DEBUG_DRAW_CUBE)
+		{
+			m = get_mesh("cube.obj");
+		}
+		if (m == NULL) { printf("aborted draw call\n");  return; }
+		// material* mat = get_material("MAT_blank_unlit");
+		material* mat = get_material("MAT_cel");
+
+		vec3 one  = GLM_VEC3_ONE_INIT;
+		vec3 zero = GLM_VEC3_ZERO_INIT;
+		vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
+		draw_mesh(m ,mat, debug_calls[i].v1, zero, debug_calls[i].v2, BEE_TRUE, BEE_TRUE, tint);
+	}
+	unbind_framebuffer();
+	arrfree(debug_calls);
+	debug_calls = NULL;
+	debug_calls_len = 0;
 }
 #endif
 
@@ -1351,6 +1397,35 @@ int read_mouse_position_mouse_pick_buffer_color()
 	//	entity* e = get_entity(id);
 	// printf(" -> id: %d, entity: %s, float: %f\n", id, e->name, pixel[0]);
 }
+
+void debug_draw_sphere(vec3 pos, vec3 scale)
+{
+	debug_draw d;
+	d.type = DEBUG_DRAW_SPHERE;
+	glm_vec3_copy(pos, d.v1);
+	glm_vec3_copy(scale, d.v2);
+	arrput(debug_calls, d);
+	debug_calls_len++;
+}
+void debug_draw_line(vec3 pos1, vec3 pos2)
+{
+	debug_draw d;
+	d.type = DEBUG_DRAW_LINE;
+	glm_vec3_copy(pos1, d.v1);
+	glm_vec3_copy(pos2, d.v2);
+	arrput(debug_calls, d);
+	debug_calls_len++;
+}
+void debug_draw_cube(vec3 pos, vec3 scale)
+{
+	debug_draw d;
+	d.type = DEBUG_DRAW_CUBE;
+	glm_vec3_copy(pos, d.v1);
+	glm_vec3_copy(scale, d.v2);
+	arrput(debug_calls, d);
+	debug_calls_len++;
+}
+
 #endif
 
 // get -----------------------------------------------------------
@@ -1448,6 +1523,7 @@ void set_gamestate(bee_bool play, bee_bool _hide_gizmos)
 		save_scene_state();
 		// set in-game cam to be act
 		entity* ent_cam = get_entity(camera_ent_idx);
+		printf("camera id: %d\n", camera_ent_idx);
 		if (ent_cam == NULL || ent_cam->has_cam == BEE_FALSE) 
 		{ 
 			printf("[ERROR] No Camera in Scene.\n");  
