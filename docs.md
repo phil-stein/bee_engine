@@ -1,5 +1,7 @@
 # bee engine documentation <br>
 
+_**[ !!! still being written !!! ]**_
+
 ## table
   1. [general](https://github.com/phil-stein/bee_engine/blob/main/docs.md#general-)
   2. [gravity (scripting)](https://github.com/phil-stein/bee_engine/blob/main/docs.md#gravity-)
@@ -30,6 +32,7 @@ extern var Input;
 extern var UI;
 
 var check;
+var btn = false;
 
 func init()
 {
@@ -39,10 +42,10 @@ func init()
 func update()
 {
   // these vars expose the functions hooked into bee engine
-	var this  = Entity();
+  var this  = Entity();
   var world = World();
-	var game  = Game();
-	var input = Input();
+  var game  = Game();
+  var input = Input();
   var ui = UI();
   
 	// ---- code ----
@@ -56,18 +59,14 @@ func update()
 
 	ui.begin();
 
-	var x = 900;
-	var y = 10;
-	var w = 300;
-	var h = 250;
-	if (ui.window_begin("in game nuklear ui", x, y, w, h))
+	if (ui.window_begin("in game nuklear ui", 900, 10, 300, 250))
 	{
 		ui.layout(25, 1);
-		if (ui.button("menu01"))
+		if (ui.button("button"))
 		{
-			btn_menu01 = !btn_menu01;
+			btn = !btn;
 		}
-		if (btn_menu01)
+		if (btn)
 		{
 			ui.layout(25, 2);
 			ui.text("checkbox describtion");
