@@ -7,9 +7,8 @@
 #include <corecrt_math.h>
 
 
-// "global.h" is included everywhere, so this will def / undef globally
+// "global.h" is included everywhere, so this will def globaly
 // #define EDITOR_ACT
-// #undef  EDITOR_ACT
 
 
 // define NULL as a void pointer
@@ -59,12 +58,12 @@ typedef double				f64;	// 64 bit floating point number | double
 // void function template with no args, used for calllbacks
 typedef void (*empty_callback)();
 
+// 
+// util / helpers --------------------------------------------------------
+// 
 
 #ifdef GLOBAL_H_IMPLEMENTATION // defined in main.c
 
-// 
-// util ------------------------------------------------------------------
-// 
 
 // magnitude / length of vec3, didnt find a glm function
 f32 vec3_magnitude(f32 v[3])
@@ -74,17 +73,35 @@ f32 vec3_magnitude(f32 v[3])
 				 (v[2] * v[2]));
 }
 
-// multiplies vec3 with float
 void vec3_mul_f(f32 v[3], f32 f)
 {
 	v[0] *= f; v[1] *= f; v[2] *= f;
 }
-
 void vec3_add_f(f32 v[3], f32 f)
 {
 	v[0] += f; v[1] += f; v[2] += f;
 }
+
+// void extract_rotation_from_matrix(mat4 rot_m, vec3 rot)
+// {
+// 	// ...
+// }
 #else
+
+// values
+#define VEC3_X    (vec3){ 1.0f, 0.0f, 0.0f }
+#define VEC3_Y    (vec3){ 0.0f, 1.0f, 0.0f }
+#define VEC3_Z    (vec3){ 0.0f, 0.0f, 1.0f }
+#define VEC3_ONE  (vec3){ 1.0f, 1.0f, 1.0f }
+#define VEC3_ZERO (vec3){ 0.0f, 0.0f, 0.0f }
+
+// initializers
+#define VEC3_X_INIT    { 1.0f, 0.0f, 0.0f }
+#define VEC3_Y_INIT    { 0.0f, 1.0f, 0.0f }
+#define VEC3_Z_INIT    { 0.0f, 0.0f, 1.0f }
+#define VEC3_ONE_INIT  { 1.0f, 1.0f, 1.0f }
+#define VEC3_ZERO_INIT { 0.0f, 0.0f, 0.0f }
+
 // magnitude / length of vec3, didnt find a glm function
 f32 vec3_magnitude(f32 v[3]);
 #define vec3_length(v) vec3_magnitude(v)
@@ -94,6 +111,10 @@ void vec3_mul_f(f32 v[3], f32 f);
 
 // add float to x,y,z of vec3
 void vec3_add_f(f32 v[3], f32 f);
+
+// TODO: not implemented
+// extracts the x, y, z rotation values from affine matrix in degrees
+// void extract_rotation_from_matrix(mat4 rot_m, vec3 rot);
 #endif
 
 #endif

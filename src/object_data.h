@@ -214,6 +214,7 @@ typedef struct entity
 	bee_bool has_trans;
 	vec3 pos;
 	vec3 rot;
+	mat4 rot_mat;
 	vec3 scale;
 
 	bee_bool rotate_global;

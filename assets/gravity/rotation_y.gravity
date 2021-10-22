@@ -1,0 +1,18 @@
+extern var Entity;
+extern var Game;
+// extern var Input;
+// extern var Camera;
+
+
+func init()
+{
+}
+
+func update()
+{
+	var this = Entity();
+	var game = Game(); 
+
+	var speed = 100 * game.get_delta_t();
+	this.rotate_y(speed);
+}

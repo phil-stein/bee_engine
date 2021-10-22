@@ -2,20 +2,32 @@ Todo
 
 - general
   - [ ] setup release build
-  
+
   - [ ] setup x86 build
-  
-  - [ ] parent child rotation (vqs or v, mat, s)
-  
+
+  - [ ] parent child rotation (vqs or v, mat, s) 
+
+    - [x] basics
+
+    - [ ] child rotation on axis rotated by parent
+
+      -> decompose rotation in "get_entity_global_transform()"
+
+      -> maybe look at glm (not cglm) repo for example
+
+    - [ ] recursive, multiple childs affecting each other
+
+      -> above needs to be finished
+
   - [ ] turn dir vec into rotation and reverse
-  
+
     - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
-  - [ ] make mesh pointer
-  
+  - [ ] make mesh in entity pointer
+
     
-  
+
 - buggs
 
   - [ ] search for memory leaks & corruption using tool 
@@ -28,17 +40,11 @@ Todo
 
     -> analyze using RenderDoc
 
-  - [ ] normal mapped occasionally turn mostly white
-
-    -> after removing entities and serializing
-
-    -> prob. something todo with deserialization
-
-    -> camera id is not its id_idx
-    
     
 
 - unfinished
+
+  - [ ] make_grid_mesh()
 
   - [ ] mixing of the different light sources looks weird in ambient areas & shadows
 
@@ -49,26 +55,31 @@ Todo
   - [ ] in-game ui doesnt scroll or take keyboard input while editor is act
 
     -> because editor ui ctx is in focus
-    
-  - [ ] divide big ui functions into sub-functions
 
   - [ ] revamp the uniform system to be less cumbersome
 
+    -> directly use uniform from shader, without having to add them in the material as well
+
   - [ ] move gizmo take camera rotation into account
 
-  - [ ] make first entity be right-click-able & dragable
+  - [ ] make first entity be right-click-able & drag-able
 
   - [ ] themes
 
     - [ ] light blue theme
+      - [ ] different color for node tab / tree tab 
     - [ ] make themes affect gizmo color
-    
+
   - [ ] debug draw functions
 
     - [x] sphere
     - [x] cube
     - [ ] line
     - [ ] line cube
+    - [ ] text
+      - [ ] text renderer "stb_truetype.h"
+      - [ ] transform to world pos (scale by z pos
+      - [ ] make this available to rest of engine, for f.e. player names above their heads
 
     
 
@@ -141,22 +152,27 @@ Todo
     - [x] move
     - [ ] scale
     - [ ] rotate
-
+    - [ ] snap to grid
+  
+  - [ ] show grid in scene
+  
   - [ ] structures (prefabs)
-
+  
     - [ ] serialize entity tree
     - [ ] save & load
     - [ ] asset manager
     - [ ] ui
-
-  - [ ] ui for adding / removing components
-
-    - [ ] mesh & material
-    - [ ] rigidbody
-    - [ ] collider
-
+  
+  - [x] ui for adding / removing components
+  
+    - [x] mesh & material
+    - [x] rigidbody
+    - [x] collider
+  
+  - [x] make entity hierarchy / properties & scene properties groups, so play button doesn't get scrolled up when scrolling entity properties, etc.
+  
     
-
+  
 - [ ] input 
 
   - [ ] controller input
@@ -189,31 +205,26 @@ Todo
 
 
 - [ ] physics-system
-  - [x] sphere v sphere
-
-  - [x] dynamics
-
-  - [x] aabb v aabb
 
   - [ ] aabb v sphere
 
-  - [x] trigger
+  - [ ] add collision point to "collision_info" ?
 
-  - [x] gravity interface
-  
-  - [x] make functions for rb and collider
-  
   - [ ] resolution
     - [x] sphere v sphere
-    - [ ] aabb v aabb // kinda, very kinda
-    - [ ] aabb v sphere
-
-  - [ ] GJK
-  
-  - [ ] EPA
-  
     
-  
+    - [ ] aabb v aabb // kinda, very kinda
+
+      -> prob. use 3d elastic collision newtonian 
+    
+    - [ ] aabb v sphere
+    
+  - [ ] GJK
+
+  - [ ] EPA
+
+    
+
 - [ ] particle system
   - [ ] object pooling
   

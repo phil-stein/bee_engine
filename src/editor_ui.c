@@ -16,6 +16,7 @@
 #define NK_KEYSTATE_BASED_INPUT
 #include "nuklear/nuklear.h"
 #include "nuklear/nuklear_glfw_gl3.h"
+#include "ui_util.h" // util functions / typedefs
 
 #include "stb/stb_ds.h"
 #include "tinyfd/tinyfiledialogs.h"
@@ -31,6 +32,9 @@
 #include "input.h"
 #include "app.h"
 
+
+#pragma region VARIABLES
+
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
@@ -38,13 +42,13 @@
 int window_w;
 int window_h;
 
-struct nk_color red = { 255, 0, 0, 255 };
+ui_color red = { 255, 0, 0, 255 };
 
 // ---- demo --- 
-struct nk_glfw glfw = { 0 };
+ui_glfw glfw = { 0 };
 int width = 0, height = 0;
-struct nk_context* ctx;
-struct nk_colorf bg;
+ui_context* ctx;
+ui_colorf bg;
 
 
 // ---- overview ----
@@ -77,21 +81,21 @@ bee_bool show_move_gizmo = BEE_TRUE;
 
 // ---- right-click ----
 int ent_right_click_popup = 9999; // 9999 = inactive, otherwise entity id
-struct nk_rect ent_right_click_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
+ui_rect ent_right_click_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
 // ---- entity-drag ----
-int            entity_drag_popup_act = 9999;
-struct nk_rect entity_drag_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
-float          entity_drag_timer = 0.0f;
+int     entity_drag_popup_act = 9999;
+ui_rect entity_drag_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
+f32     entity_drag_timer = 0.0f;
 entity_drop dropped_entity;
 // ---- texture insprect -----
 u32 texture_inspect_popup = 9999; // 9999 = inactive, otherwise texture handle
-struct nk_rect texture_inspect_popup_bounds = { 0.0f, 0.0f, 260, 280 };
+ui_rect texture_inspect_popup_bounds = { 0.0f, 0.0f, 260, 280 };
 
 // ---- asset drag ----
-int            asset_drag_popup_act = 9999;
-asset_type     asset_drag_type = TEXTURE_ASSET;
-struct nk_rect asset_drag_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
-float          asset_drag_timer = 0.0f;
+int         asset_drag_popup_act = 9999;
+asset_type  asset_drag_type = TEXTURE_ASSET;
+ui_rect     asset_drag_popup_bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
+f32         asset_drag_timer = 0.0f;
 
 // ---- console ----
 char box_buffer[512];
@@ -135,7 +139,7 @@ int   drag_and_drop_import_path_count = 0;
 char* drag_and_drop_import_paths[10];
 
 
-struct nk_image image;
+ui_image image;
 
 // ---- all ----
 nk_flags window_flags = NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE;
@@ -143,30 +147,31 @@ nk_flags window_flags = NK_WINDOW_BORDER | NK_WINDOW_MINIMIZABLE | NK_WINDOW_TIT
 // ---- asset-browser ----
 typedef struct
 {
-    struct nk_image logged_texture;
-    struct nk_image mesh;
-    struct nk_image logged_mesh;
-    struct nk_image shader;
-    struct nk_image material; // ???
-    struct nk_image script;
-    struct nk_image scene;
+    ui_image logged_texture;
+    ui_image mesh;
+    ui_image logged_mesh;
+    ui_image shader;
+    ui_image material; // ???
+    ui_image script;
+    ui_image scene;
 
 }icon_collection;
 icon_collection icons;
 
 
 // ---- mouse entity select ----
-struct nk_rect properties_window_rect;
-struct nk_rect asset_browser_window_rect;
-struct nk_rect console_window_rect;
-struct nk_rect pause_button_window_rect;
-struct nk_rect error_popup_window_rect;
-struct nk_rect source_code_window_rect;
-struct nk_rect add_shader_window_rect;
-struct nk_rect scene_context_window_rect;
-struct nk_rect edit_asset_window_rect;
-struct nk_rect drag_and_drop_import_window_rect;
+ui_rect properties_window_rect;
+ui_rect asset_browser_window_rect;
+ui_rect console_window_rect;
+ui_rect pause_button_window_rect;
+ui_rect error_popup_window_rect;
+ui_rect source_code_window_rect;
+ui_rect add_shader_window_rect;
+ui_rect scene_context_window_rect;
+ui_rect edit_asset_window_rect;
+ui_rect drag_and_drop_import_window_rect;
 
+#pragma endregion
 
 
 void ui_init()
@@ -196,7 +201,7 @@ void ui_init()
 
     // set default theme
     bg.r = 0.1f; bg.g = 0.1f; bg.b = 0.1f; bg.a = 1.0f;
-    set_style(ctx, THEME_RED);
+    set_style(ctx, THEME_LIGHT_BLUE);
 
     dropped_asset.handled   = BEE_TRUE;
     dropped_entity.handled  = BEE_TRUE;
@@ -321,9 +326,9 @@ void ui_update()
     {
         // @TODO: this works when looking straight at the object but when the camera it rotated it doesnt
 
+        entity* e = get_entity(get_selected_entity());
         if (move_gizmo_axis == 1) // x
         {
-            entity* e = get_entity(get_selected_entity());
             f32 x = e->pos[0];
             int w, h; get_window_size(&w, &h);
             x += (get_mouse_delta_x() / w) * 11;
@@ -332,7 +337,6 @@ void ui_update()
         }
         if (move_gizmo_axis == 2) // y
         {
-            entity* e = get_entity(get_selected_entity());
             f32 y = e->pos[1];
             int w, h; get_window_size(&w, &h);
             y += (get_mouse_delta_y() / h) * 11;
@@ -341,7 +345,6 @@ void ui_update()
         }
         if (move_gizmo_axis == 3) // z
         {
-            entity* e = get_entity(get_selected_entity());
             f32 z = e->pos[2];
             int w, h; get_window_size(&w, &h);
             z += (get_mouse_delta_y() / h) * -11;
@@ -1582,775 +1585,331 @@ void properties_window()
     get_entity_len(&ent_len);
     
     // less height because the window bar on top and below
-    const float w_ratio = 350.0f  / 1920.0f;
-    const float h_ratio = 1000.0f / 1020.0f;
-    const float x_ratio = 10.0f   / 1920.0f;
-    const float y_ratio = 10.0f   / 1020.0f;
+    const f32 w_ratio = 350.0f  / 1920.0f;
+    const f32 h_ratio = 1000.0f / 1020.0f;
+    const f32 x_ratio = 10.0f   / 1920.0f;
+    const f32 y_ratio = 10.0f   / 1020.0f;
 
     properties_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
-    if (nk_begin(ctx, "Properties", properties_window_rect, window_flags))
+    if (nk_begin(ctx, "Properties", properties_window_rect, window_flags | NK_WINDOW_NO_SCROLLBAR))
         // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
         static int gamestate_act = 0;
-        static float property_pos_x = 0.0f;
-        static float property_pos_y = 0.0f;
-        static float property_pos_z = 0.0f;
-        static const float ratio[] = { 120, 150 };
+        static f32 property_pos_x = 0.0f;
+        static f32 property_pos_y = 0.0f;
+        static f32 property_pos_z = 0.0f;
+        static const f32 ratio[] = { 120, 150 };
         char buffer[50];
 
         static char name_edit_buffer[64];
 
-        // ---- theme menu ----
-        
-        nk_menubar_begin(ctx);
-        nk_layout_row_begin(ctx, NK_STATIC, 35, 4);
-        nk_layout_row_push(ctx, 45);
-        if (nk_menu_begin_label(ctx, "Scene", NK_TEXT_LEFT, nk_vec2(80, 200)))
-        {
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_menu_item_label(ctx, "Save", NK_TEXT_LEFT))
-            {
-                if (str_find_last_of(get_active_scene_name(), ".scene") == NULL)
-                {
-                    scene_context_act = BEE_TRUE;
-                }
-                else
-                {
-                    save_scene(get_active_scene_name());
-                }
-            }
-            if (nk_menu_item_label(ctx, "Save As", NK_TEXT_LEFT))
-            {
-                scene_context_act = BEE_TRUE;
-            }
-            if (nk_menu_item_label(ctx, "Import", NK_TEXT_LEFT))
-            {
-                char* path = tinyfd_openFileDialog(
-                    "Load Scene", NULL, 0, // "C:\\Workspace\\C\\BeeEngine\\assets", 0 (2 in the following example)
-                    NULL, // NULL or char const * lFilterPatterns[2]={"*.png","*.jpg"};
-                    NULL, // NULL or "image files"
-                    BEE_FALSE);
+        // ---- menu bar ----
+        draw_properties_menu_bar();
 
-                if (path != NULL)
-                {
-                    add_file_to_project(path);
-                }
-            }
-            nk_menu_end(ctx);
-        }
-        nk_layout_row_push(ctx, 80);
-        if (nk_menu_begin_label(ctx, "Add Entity", NK_TEXT_LEFT, nk_vec2(80, 200)))
-        {
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_menu_item_label(ctx, "Empty", NK_TEXT_LEFT))
-            {
-                add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "empty");
-            }
-            if (nk_menu_item_label(ctx, "Trans", NK_TEXT_LEFT))
-            {
-                vec3 zero = { 0.0f, 0.0f, 0.0f };
-                vec3 one = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, NULL, NULL, NULL, NULL, NULL, NULL, "trans");
-            }
-            if (nk_menu_item_label(ctx, "Mesh", NK_TEXT_LEFT))
-            {
-                vec3 zero = { 0.0f, 0.0f, 0.0f };
-                vec3 one  = { 1.0f, 1.0f, 1.0f };
-                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, NULL, "mesh");
-                get_entity(cube)->_mesh.visible = BEE_TRUE;
-            }
-            if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
-            {
-                vec3 zero      = { 0.0f, 0.0f, 0.0f };
-                vec3 one       = { 1.0f, 1.0f, 1.0f };
-                vec3 dir       = { 0.0f, 1.0f, 0.0f };
-                light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
-                light spot_light = make_spot_light(zero, one, one, dir, 1.0f, 0.09f, 0.032f, 0.91f, 0.82f); // 0.09f, 0.032f);
-                add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, NULL, NULL, "light");	// mat_blank_unlit
-            }
-            if (get_camera_ent_id() == -1 && nk_menu_item_label(ctx, "Camera", NK_TEXT_LEFT))
-            {
-                camera cam = make_camera(45.0f, 0.1f, 100.0f);
-                vec3 zero = { 0.0f, 0.0f, 0.0f };
-                vec3 one = { 1.0f, 1.0f, 1.0f };
-                add_entity(zero, zero, one, NULL, NULL, &cam, NULL, NULL, NULL, "camera");
-            }
-            if (nk_menu_item_label(ctx, "Collider", NK_TEXT_LEFT))
-            {
-                vec3 zero = { 0.0f, 0.0f, 0.0f };
-                vec3 one = { 1.0f, 1.0f, 1.0f };
-                collider c = make_box_collider(one, BEE_FALSE);
-                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, &c, "collider");
-                get_entity(cube)->_mesh.visible = BEE_TRUE;
-            }
-            if (nk_menu_item_label(ctx, "Rigidbody", NK_TEXT_LEFT))
-            {
-                vec3 zero = { 0.0f, 0.0f, 0.0f };
-                vec3 one = { 1.0f, 1.0f, 1.0f };
-                collider c = make_box_collider(one, BEE_FALSE);
-                rigidbody rb = make_rigidbody(1.0f);
-                int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, &rb, &c, "rigidbody");
-                get_entity(cube)->_mesh.visible = BEE_TRUE;
-            }
-            nk_menu_end(ctx);
-        }
-        nk_layout_row_push(ctx, 80);
-        if (nk_menu_begin_label(ctx, "Add Asset", NK_TEXT_LEFT, nk_vec2(80, 200)))
-        {
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
-            {
-                add_default_scene("new.scene");
-                load_scene("new.scene");
-            }
+        // ---- gamestate ----
+        draw_play_pause_and_settings();
 
-            if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
-            {
-                printf("not yet implemented\n");
-                assert(0);
-            }
-            if (nk_menu_item_label(ctx, "Material", NK_TEXT_LEFT))
-            {
-                vec2 tile = { 1.0f, 1.0f };
-                vec3 tint = { 1.0f, 1.0f, 1.0f };
-                add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material", BEE_FALSE);
-            }
-            if (nk_menu_item_label(ctx, "Shader", NK_TEXT_LEFT))
-            {
-                shader_add_popup_act = BEE_TRUE;
-            }
-            nk_menu_end(ctx);
-        }
-        nk_layout_row_push(ctx, 50);
-        if (nk_menu_begin_label(ctx, "Theme", NK_TEXT_LEFT, nk_vec2(80, 200)))
-        {
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_menu_item_label(ctx, "black", NK_TEXT_LEFT))
-            {
-                set_style(ctx, THEME_BLACK);
-            }
-            if (nk_menu_item_label(ctx, "white", NK_TEXT_LEFT))
-            {
-                set_style(ctx, THEME_WHITE);
-            }
-            if (nk_menu_item_label(ctx, "red", NK_TEXT_LEFT))
-            {
-                set_style(ctx, THEME_RED);
-            }
-            if (nk_menu_item_label(ctx, "blue", NK_TEXT_LEFT))
-            {
-                set_style(ctx, THEME_BLUE);
-            }
-            if (nk_menu_item_label(ctx, "dark", NK_TEXT_LEFT))
-            {
-                set_style(ctx, THEME_DARK);
-            }
-            if (nk_menu_item_label(ctx, "light blue", NK_TEXT_LEFT))
-            {
-                set_style(ctx, THEME_LIGHT_BLUE);
-            }
-            nk_menu_end(ctx);
-        }
-        // nk_layout_row_push(ctx, 70);
-        nk_menubar_end(ctx);
-
-        // ---- play / pause ---
-        nk_layout_row_dynamic(ctx, 25, 2);
-        if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
-        {
-            set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
-        }
-        nk_label(ctx, " ", NK_TEXT_LEFT);
-        nk_layout_row_dynamic(ctx, 25, 2);
-        nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
-        static int b = 0;
-        nk_checkbox_label(ctx, " Option", &b);
-        nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
-        nk_checkbox_label(ctx, " Move Gizmo", &show_move_gizmo);
-        // spacing
-        nk_layout_row_static(ctx, 5, 10, 1);
-        nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
-
-        // --------------------
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Scene", NK_MINIMIZED))
-        {
-
-            if (nk_tree_push(ctx, NK_TREE_TAB, "Settings", NK_MINIMIZED))
-            {
-                settings _settings = get_settings();
-
-                nk_layout_row_dynamic(ctx, 25, 1);
-                nk_label(ctx, "free-look mode", NK_TEXT_LEFT);
-                nk_property_float(ctx, "mosue sensitivity", -1.0f, _settings.free_look_mouse_sensitivity, 1.0f, 0.1f, 0.01f);
-
-                nk_property_float(ctx, "exposure", 0.001f, get_exposure(), 10.0f, 0.1f, 0.01f);
-
-                // spacing
-                nk_layout_row_static(ctx, 5, 10, 1);
-                nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
-
-                int* skybox_enabled = renderer_get(RENDER_CUBEMAP);
-                nk_layout_row_dynamic(ctx, 15, 1);
-                nk_checkbox_label(ctx, " draw skybox", skybox_enabled);
-
-                int* msaa_enabled = renderer_get(RENDER_MSAA);
-                nk_layout_row_dynamic(ctx, 15, 1);
-                nk_checkbox_label(ctx, " MSAA", msaa_enabled);
-
-                nk_layout_row_dynamic(ctx, 30, 1);
-                nk_label(ctx, "background color", NK_TEXT_LEFT);
-                nk_layout_row_dynamic(ctx, 25, 1);
-
-                struct nk_colorf old_bg = bg;
-
-                // complex color combobox
-                if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(200, 400))) 
-                {
-                    enum color_mode { COL_RGB, COL_HSV };
-                    static int col_mode = COL_RGB;
-
-                    nk_layout_row_dynamic(ctx, 120, 1);
-                    bg = nk_color_picker(ctx, bg, NK_RGB);
-
-                    nk_layout_row_dynamic(ctx, 25, 2);
-                    col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                    col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    if (col_mode == COL_RGB) {
-                        bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-                        bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-                        bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-                    }
-                    else {
-                        float hsva[4];
-                        nk_colorf_hsva_fv(hsva, bg);
-                        hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                        hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                        hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                        bg = nk_hsva_colorfv(hsva);
-                    }
-                    nk_combo_end(ctx);
-
-                    // check if the color was changed
-                    if (bg.r != old_bg.r || bg.g != old_bg.g || bg.b != old_bg.b || bg.a != old_bg.a)
-                    {
-                        glClearColor(bg.r, bg.g, bg.b, bg.a);
-                    }
-                }
-
-                nk_tree_pop(ctx);
-            }
-
-            if (nk_tree_push(ctx, NK_TREE_TAB, "Diagnostics", NK_MINIMIZED))
-            {
-                char buf[20];
-                nk_layout_row_dynamic(ctx, 25, 1);
-                sprintf_s(buf, 20, "FPS: %d", (int)get_fps());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                sprintf_s(buf, 20, "Draw Calls: %d", *get_draw_calls_per_frame());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                sprintf_s(buf, 20, "Verts: %d", *get_verts_per_frame());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                sprintf_s(buf, 20, "Tris: %d", *get_tris_per_frame());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                nk_spacing(ctx, 1);
-                int len = 0; get_entity_ids(&len);
-                sprintf_s(buf, 20, "Entities: %d", len);
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                nk_spacing(ctx, 1);
-                sprintf_s(buf, 20, "Dir. Lights: %d",  *get_dir_light_ids_len());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                sprintf_s(buf, 20, "Point Lights: %d", *get_point_light_ids_len());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-                sprintf_s(buf, 20, "Spot Lights: %d",  *get_spot_light_ids_len());
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-
-                // ----
-
-                f32 id = 0;
-                static int col_index = -1;
-                static int line_index = -1;
-                f32 step = (2 * 3.141592654f) / 32;
-
-                int i;
-                int index = -1;
-                struct nk_rect bounds;
-
-                /* line chart */
-                id = 0;
-                index = -1;
-                nk_layout_row_dynamic(ctx, 100, 1);
-                bounds = nk_widget_bounds(ctx);
-                if (nk_chart_begin(ctx, NK_CHART_LINES, 32, -1.0f, 1.0f)) {
-                    for (i = 0; i < 32; ++i) {
-                        nk_flags res = nk_chart_push(ctx, (float)cos(id));
-                        if (res & NK_CHART_HOVERING)
-                            index = (int)i;
-                        if (res & NK_CHART_CLICKED)
-                            line_index = (int)i;
-                        id += step;
-                    }
-                    nk_chart_end(ctx);
-                }
-
-                if (index != -1)
-                    nk_tooltipf(ctx, "Value: %.2f", (float)cos((float)index * step));
-                if (line_index != -1) {
-                    nk_layout_row_dynamic(ctx, 20, 1);
-                    nk_labelf(ctx, NK_TEXT_LEFT, "Selected value: %.2f", (float)cos((float)index * step));
-                }
-
-
-                nk_tree_pop(ctx);
-            }
-
-            if (nk_tree_push(ctx, NK_TREE_TAB, "Debug", NK_MINIMIZED))
-            {
-                renderer_properties prop = get_renderer_properties();
-
-                const struct nk_input* in = &ctx->input;
-                struct nk_rect bounds;
-
-                int* wireframe_mode_enabled = renderer_get(RENDER_WIREFRAME);
-                nk_layout_row_dynamic(ctx, 15, 1);
-                bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "Wireframe", wireframe_mode_enabled);
-                if (nk_input_is_mouse_hovering_rect(in, bounds))
-                    nk_tooltip(ctx, " Activate Wireframe-Mode, you can also use Tab.");
-
-                int* normal_mode_enabled = renderer_get(RENDER_NORMAL);
-                nk_layout_row_dynamic(ctx, 15, 1);
-                bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "Normals", normal_mode_enabled);
-                if (nk_input_is_mouse_hovering_rect(in, bounds))
-                    nk_tooltip(ctx, " Not implemented yet.");
-
-                int* uv_mode_enabled = renderer_get(RENDER_UV);
-                nk_layout_row_dynamic(ctx, 15, 1);
-                bounds = nk_widget_bounds(ctx);
-                nk_checkbox_label(ctx, "UVs", uv_mode_enabled);
-                if (nk_input_is_mouse_hovering_rect(in, bounds))
-                    nk_tooltip(ctx, " Not implemented yet.");
-
-
-                // complex color combobox
-                struct nk_colorf col = { *prop.wireframe_col_r, *prop.wireframe_col_g, *prop.wireframe_col_b, 0.0f };
-                struct nk_colorf old_col = col;
-                nk_layout_row_dynamic(ctx, 30, 1);
-                nk_label(ctx, "wireframe color", NK_TEXT_LEFT);
-                nk_layout_row_dynamic(ctx, 25, 1);
-                if (nk_combo_begin_color(ctx, nk_rgb_cf(col), nk_vec2(200, 400)))
-                {
-                    enum color_mode { COL_RGB, COL_HSV };
-                    static int col_mode = COL_RGB;
-
-                    nk_layout_row_dynamic(ctx, 120, 1);
-                    col = nk_color_picker(ctx, col, NK_RGB);
-
-                    nk_layout_row_dynamic(ctx, 25, 2);
-                    col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
-                    col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    if (col_mode == COL_RGB) {
-                        col.r = nk_propertyf(ctx, "#R:", 0, col.r, 1.0f, 0.01f, 0.005f);
-                        col.g = nk_propertyf(ctx, "#G:", 0, col.g, 1.0f, 0.01f, 0.005f);
-                        col.b = nk_propertyf(ctx, "#B:", 0, col.b, 1.0f, 0.01f, 0.005f);
-                    }
-                    else {
-                        float hsva[4];
-                        nk_colorf_hsva_fv(hsva, col);
-                        hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
-                        hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
-                        hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
-                        col = nk_hsva_colorfv(hsva);
-                    }
-
-                    // check if the color was changed
-                    if (col.r != old_col.r || col.g != old_col.g || col.b != old_col.b || col.a != old_col.a)
-                    {
-                        *prop.wireframe_col_r = col.r;
-                        *prop.wireframe_col_g = col.g;
-                        *prop.wireframe_col_b = col.b;
-                    }
-
-                    nk_combo_end(ctx);
-                }
-
-                if (nk_tree_push(ctx, NK_TREE_TAB, "Render Stages", NK_MINIMIZED))
-                {
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_label(ctx, "HDR Color Buffer: ", NK_TEXT_LEFT);
-
-                    int w, h; get_window_size(&w, &h);
-                    f32 ratio = (float)w / (float)h;
-                    struct nk_image img = nk_image_id(get_color_buffer());
-                    nk_layout_row_static(ctx, 150, 150 * ratio, 1);
-                    // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
-                    nk_image(ctx, img);
-
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_label(ctx, "Bloom, etc.", NK_TEXT_LEFT);
-
-                    nk_tree_pop(ctx);
-                }
-
-
-                nk_tree_pop(ctx);
-            }
-
-            if (nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
-            {
-                renderer_properties prop = get_renderer_properties();
-
-                if (nk_tree_push(ctx, NK_TREE_NODE, "Position", NK_MINIMIZED))
-                {
-                    static vec3 old_pos;
-                    vec3 pos;
-                    get_editor_camera_pos(pos);
-
-                    nk_property_float(ctx, "Editor Pos X:", -1024.0f, &pos[0], 1024.0f, 0.1f, 0.2f);
-
-                    nk_property_float(ctx, "Editor Pos Y:", -1024.0f, &pos[1], 1024.0f, 0.1f, 0.2f);
-
-                    nk_property_float(ctx, "Editor Pos Z:", -1024.0f, &pos[2], 1024.0f, 0.1f, 0.2f);
-
-                    if (old_pos != pos)
-                    {
-                        set_editor_camera_pos(pos);
-                        glm_vec3_copy(pos, old_pos);
-                    }
-
-                    nk_tree_pop(ctx);
-                }
-
-                if (nk_tree_push(ctx, NK_TREE_NODE, "Direction", NK_MINIMIZED))
-                {
-                    static vec3 old_front;
-                    vec3 front;
-                    get_editor_camera_front(front);
-
-                    nk_property_float(ctx, "Editor Dir X:", -1024.0f, &front[0], 1024.0f, 0.1f, 0.2f);
-                                            
-                    nk_property_float(ctx, "Editor Dir Y:", -1024.0f, &front[1], 1024.0f, 0.1f, 0.2f);
-                                            
-                    nk_property_float(ctx, "Editor Dir Z:", -1024.0f, &front[2], 1024.0f, 0.1f, 0.2f);
-
-                    if (old_front != front)
-                    {
-                        set_editor_camera_front(front);
-                        glm_vec3_copy(front, old_front);
-                    }
-
-                    nk_tree_pop(ctx);
-                }
-
-
-                nk_property_float(ctx, "Editor Perspective:", 1.0f, prop.perspective, 200.0f, 0.1f, 0.2f);
-                
-                nk_property_float(ctx, "Editor Near Plane:", 0.0001f, prop.near_plane, 10.0f, 0.1f, 0.01f);
-                
-                nk_property_float(ctx, "Editor Far Plane:", 1.0f, prop.far_plane, 500.0f, 0.1f, 0.2f);
-
-                nk_tree_pop(ctx);
-            }
-
-            nk_tree_pop(ctx);
-        }
+        // ---- scene properties ----
+        draw_scene_properties();
 
         // spacing
         nk_layout_row_static(ctx, 5, 10, 1);
         nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
         // ---- entity tree ----
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) // NK_MAXIMIZED: open on start
+        nk_layout_row_static(ctx, properties_window_rect.h + 200, properties_window_rect.w, 10, 1);
+        if (nk_group_begin(ctx, "entity_hierarchy", 0))
         {
-            int entity_ids_len = 0;
-            int* entity_ids = get_entity_ids(&entity_ids_len);
-
-            if (ent_len <= 0)
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) // NK_MAXIMIZED: open on start
             {
-                nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
-                nk_label_colored(ctx, "no entities", NK_TEXT_LEFT, red);
-                ent_right_click_popup = 9999;
-            }
-            else
-            {
-                // nk_layout_row_static(ctx, 18, 100, 2);
-                nk_layout_row_dynamic(ctx, entity_ids_len * 25, 2); // wrapping row
+                int entity_ids_len = 0;
+                int* entity_ids = get_entity_ids(&entity_ids_len);
 
-                int* upper_hierarchy_ents = NULL;
-                if (nk_group_begin(ctx, "entites", NK_WINDOW_NO_SCROLLBAR)) 
-                { 
-                    // use recursion and search for only parents / neither parent nor child first
-                    for (int i = 0; i < ent_len; ++i)
+                if (ent_len <= 0)
+                {
+                    nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                    nk_label_colored(ctx, "no entities", NK_TEXT_LEFT, red);
+                    ent_right_click_popup = 9999;
+                }
+                else
+                {
+                    // nk_layout_row_static(ctx, 18, 100, 2);
+                    nk_layout_row_dynamic(ctx, entity_ids_len * 25, 2); // wrapping row
+
+                    int* upper_hierarchy_ents = NULL;
+                    if (nk_group_begin(ctx, "entites", NK_WINDOW_NO_SCROLLBAR))
                     {
-                        entity* ent = get_entity(entity_ids[i]);
-                        if (ent->parent == 9999)
+                        // use recursion and search for only parents / neither parent nor child first
+                        for (int i = 0; i < ent_len; ++i)
                         {
-                            arrput(upper_hierarchy_ents, i);
+                            entity* ent = get_entity(entity_ids[i]);
+                            if (ent->parent == 9999)
+                            {
+                                arrput(upper_hierarchy_ents, i);
+                            }
                         }
-                    }
 
-                    // recursively handle child-parent relation between the entities
-                    for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
-                    {                        
-                        draw_entity_hierarchy_entity(entity_ids[upper_hierarchy_ents[i]], 0); // start with 0 offset
-                    }
-                    // assign the dropped entity detected in draw_entity_hierachy_entity()
-                    if (dropped_entity.handled == BEE_TRUE && dropped_entity.assigned == BEE_FALSE)
-                    {
-                        entity_set_parent(dropped_entity.child_idx, dropped_entity.parent_idx);
+                        // recursively handle child-parent relation between the entities
+                        for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
+                        {
+                            draw_entity_hierarchy_entity(entity_ids[upper_hierarchy_ents[i]], 0); // start with 0 offset
+                        }
+                        // assign the dropped entity detected in draw_entity_hierachy_entity()
+                        if (dropped_entity.handled == BEE_TRUE && dropped_entity.assigned == BEE_FALSE)
+                        {
+                            entity_set_parent(dropped_entity.child_idx, dropped_entity.parent_idx);
+                            dropped_entity.assigned = BEE_TRUE;
+                        }
+                        // all entites checked if dropped_entity still not handled it was dropped over nothing
+                        dropped_entity.handled = BEE_TRUE;
                         dropped_entity.assigned = BEE_TRUE;
+
+                        nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
+
+                        nk_group_end(ctx);
                     }
-                    // all entites checked if dropped_entity still not handled it was dropped over nothing
-                    dropped_entity.handled  = BEE_TRUE;
-                    dropped_entity.assigned = BEE_TRUE;
 
-                    nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
-
-                    nk_group_end(ctx);
-                }
-
-                if (nk_group_begin(ctx, "type", NK_WINDOW_NO_SCROLLBAR)) 
-                {  
-                    // recursively handle child-parent relation between the entities
-                    for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
+                    if (nk_group_begin(ctx, "type", NK_WINDOW_NO_SCROLLBAR))
                     {
-                        draw_entity_hierarchy_type(entity_ids[upper_hierarchy_ents[i]]);
+                        // recursively handle child-parent relation between the entities
+                        for (int i = 0; i < arrlen(upper_hierarchy_ents); ++i)
+                        {
+                            draw_entity_hierarchy_type(entity_ids[upper_hierarchy_ents[i]]);
+                        }
+
+                        nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
+
+                        nk_group_end(ctx);
                     }
+                    arrfree(upper_hierarchy_ents);
 
-                    nk_layout_row_dynamic(ctx, 200, 2); // wrapping row
-
-                    nk_group_end(ctx);
                 }
-                arrfree(upper_hierarchy_ents);
-           
-            }
 
-            // ent drag popup
-            if (entity_drag_popup_act != 9999)
-            {
-                // submit_txt_console("clicked on ent");
-                entity_drag_timer += get_delta_time();
-                entity_drag_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 50, 110, 30);
-
-                if (!nk_input_is_mouse_down(&ctx->input, NK_BUTTON_LEFT))
+                // ent drag popup
+                if (entity_drag_popup_act != 9999)
                 {
-                    if (entity_drag_timer > 0.35f)
+                    // submit_txt_console("clicked on ent");
+                    entity_drag_timer += get_delta_time();
+                    entity_drag_popup_bounds = nk_rect(ctx->input.mouse.pos.x, ctx->input.mouse.pos.y - 50, 110, 30);
+
+                    if (!nk_input_is_mouse_down(&ctx->input, NK_BUTTON_LEFT))
                     {
-                        // remember infos about dropped entity
-                        dropped_entity.handled  = BEE_FALSE;
-                        dropped_entity.assigned = BEE_FALSE;
-                        dropped_entity.child_idx = entity_drag_popup_act;
-                        dropped_entity.pos[0] = ctx->input.mouse.pos.x;
-                        dropped_entity.pos[1] = ctx->input.mouse.pos.y;
-                    }
-                    // close popup
-                    entity_drag_popup_act = 9999; entity_drag_timer = 0.0f; 
-                }
-            }
-            // spacing
-            nk_layout_row_static(ctx, 5, 10, 1);
-            nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
-            
-            check_entity_selection();
-
-            nk_bool is_selected = nk_false;
-            for (int i = 0; i < ent_len; ++i)
-            {
-                if (selected_entities[i] == nk_true)
-                {
-                    is_selected = nk_true;
-                    break;
-                }
-            }
-
-            if (is_selected == nk_false || selected_entity == -999 || selected_entity < 0) // || selected_entity >= ent_len 
-            {
-                // nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
-                // nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);
-            }
-            else 
-            {
-                const struct nk_input* in = &ctx->input;
-                struct nk_rect bounds;
-
-                // entity_properties prop = get_entity_properties(selected_entity);
-                entity* ent = get_entity(selected_entity);
-
-                nk_layout_row_dynamic(ctx, 30, 2);
-                nk_label(ctx, "Name: ", NK_TEXT_LEFT);
-                static nk_flags event = NK_EDIT_DEACTIVATED;
-                if(event == NK_EDIT_DEACTIVATED || event == NK_EDIT_INACTIVE) { strcpy(name_edit_buffer, ent->name); }
-                event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
-                // set ent name on commit
-                if (event == NK_EDIT_COMMITED || is_key_pressed(KEY_Enter))
-                {
-                    // copy name and path as passed name might be deleted
-                    char* name_cpy = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
-                    assert(name_cpy != NULL);
-                    strcpy(name_cpy, name_edit_buffer);
-                    ent->name = name_cpy;
-                    event = NK_EDIT_INACTIVE;
-                }
-
-                nk_layout_row_dynamic(ctx, 30, 2);
-                nk_label(ctx, "ID:", NK_TEXT_LEFT);
-                char buf[4]; sprintf_s(buf, 4, "%d", ent->id);
-                nk_label(ctx, buf, NK_TEXT_LEFT);
-
-
-                if (ent->parent != 9999)
-                {
-                    entity* parent = get_entity(ent->parent);
-                    nk_layout_row_dynamic(ctx, 30, 4);
-                    nk_label(ctx, "Parent:", NK_TEXT_LEFT);
-                    nk_spacing(ctx, 1);
-                    char buf[4]; sprintf_s(buf, 4, "%d", ent->parent);
-                    nk_label(ctx, buf, NK_TEXT_LEFT);
-                    nk_label(ctx, parent->name, NK_TEXT_LEFT);
-
-
-                    nk_layout_row_dynamic(ctx, 30, 2);
-                    nk_spacing(ctx, 1);
-                    if (nk_button_label(ctx, "Remove Parent"))
-                    {
-                        entity_remove_child(ent->parent, selected_entity);
+                        if (entity_drag_timer > 0.35f)
+                        {
+                            // remember infos about dropped entity
+                            dropped_entity.handled = BEE_FALSE;
+                            dropped_entity.assigned = BEE_FALSE;
+                            dropped_entity.child_idx = entity_drag_popup_act;
+                            dropped_entity.pos[0] = ctx->input.mouse.pos.x;
+                            dropped_entity.pos[1] = ctx->input.mouse.pos.y;
+                        }
+                        // close popup
+                        entity_drag_popup_act = 9999; entity_drag_timer = 0.0f;
                     }
                 }
-            
-                // ---- components ----
-
-                draw_transform_component(ent);
-
-                draw_mesh_component(ent);
-
-                draw_material_component(ent);
-
-                draw_physics_components(ent);
-                
-                draw_camera_component(ent);
-
-                draw_light_component(ent);
-
-                // scritps always the last element
-                sprintf(buffer, "Scripts [%d]", ent->scripts_len);
-                struct nk_rect scripts_bounds = nk_widget_bounds(ctx);
-                if (ent->scripts_len > 0 && nk_tree_push(ctx, NK_TREE_TAB, ent->scripts_len == 1 ? "Script" : buffer , NK_MINIMIZED))
-                {
-                    gravity_script* scripts = NULL;
-                    int scripts_len = 0;
-                    scripts = get_all_scripts(&scripts_len);
-                    static int selected_script = 0;
-                    int selected_script_old = selected_script;
-                    char** scripts_names = malloc(scripts_len * sizeof(char*));
-                    assert(scripts_names != NULL);
-
-                    for (int i = 0; i < scripts_len; ++i)
-                    {
-                        scripts_names[i] = malloc((strlen(scripts[i].name) + 1) * sizeof(char));
-                        strcpy(scripts_names[i], scripts[i].name);
-                    }
-
-                    for (int i = 0; i < ent->scripts_len; ++i)
-                    {
-                        if (ent->scripts[i]->path_valid == BEE_FALSE)
-                        {
-                            nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
-                            nk_label_colored(ctx, "path not valid", NK_TEXT_LEFT, red);
-                        }
-                        else if (ent->scripts[i]->has_error == BEE_TRUE)
-                        {
-                            nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
-                            nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
-                        }
-
-                        selected_script = get_script_idx(ent->scripts[i]->name);
-                        selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
-
-                        // doesnt work because the script holds the entity index
-                        if (selected_script_old != selected_script) { ent->scripts[i] = &scripts[selected_script]; }
-                        scripts_bounds.h += 25; // combo
-
-
-                        if (ent->scripts[i]->path_valid == BEE_TRUE)
-                        {
-                            nk_layout_row_dynamic(ctx, 25, 1);
-                            if (nk_button_label(ctx, "Source Code"))
-                            {
-                                char* src = read_text_file(ent->scripts[i]->path);
-                                set_source_code_window(src);
-                            }
-                            scripts_bounds.h += 25; // button
-                        }
-
-                        if (ent->scripts[i]->path_valid == BEE_TRUE && ent->scripts[i]->has_error == BEE_FALSE)
-                        {
-                            nk_layout_row_dynamic(ctx, 25, 1);
-                            if (nk_button_label(ctx, ent->scripts[i]->active == BEE_TRUE ? "Pause" : "Continue"))
-                            {
-                                ent->scripts[i]->active = !ent->scripts[i]->active;
-                            }
-                            scripts_bounds.h += 25; // button
-                        }
-
-                        nk_layout_row_dynamic(ctx, 25, 1);
-                        if (nk_button_label(ctx, "Remove"))
-                        {
-                            entity_remove_script(selected_entity, i);
-                        }
-                        scripts_bounds.h += 25; // button
-
-                    }
-
-                    // check for assets dropped from the asset browser
-                    if (dropped_asset.type == SCRIPT_ASSET && dropped_asset.handled == BEE_FALSE)
-                    {
-                        // collision 
-                        if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], scripts_bounds.x, scripts_bounds.y, scripts_bounds.w, scripts_bounds.h))
-                        {
-                            printf("dropped asset dropped over scripts\n");
-                            entity_add_script(selected_entity, scripts[dropped_asset.asset_idx].name);
-                            dropped_asset.handled = BEE_TRUE;
-                        }
-                    }
-
-                    nk_tree_pop(ctx);
-                    
-                }
-                
                 // spacing
                 nk_layout_row_static(ctx, 5, 10, 1);
                 nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
-                nk_layout_row(ctx, NK_STATIC, 25, 2, ratio);
-                nk_label(ctx, "Attach Script", NK_TEXT_LEFT);
-                gravity_script* scripts = NULL;
-                int scripts_len = 0;
-                scripts = get_all_scripts(&scripts_len);
-                int selected_script = 0;
-                int selected_script_old = selected_script;
-                char** scripts_names = malloc((scripts_len +1) * sizeof(char*));
-                assert(scripts_names != NULL);
+                check_entity_selection();
 
-                scripts_names[0] = malloc((strlen("Select Script") + 1) * sizeof(char));
-                strcpy(scripts_names[0], "Select Script");
-                for (int i = 1; i < scripts_len +1; ++i)
+                nk_bool is_selected = nk_false;
+                for (int i = 0; i < ent_len; ++i)
                 {
-                    scripts_names[i] = malloc((strlen(scripts[i -1].name) + 1) * sizeof(char));
-                    strcpy(scripts_names[i], scripts[i -1].name);
+                    if (selected_entities[i] == nk_true)
+                    {
+                        is_selected = nk_true;
+                        break;
+                    }
                 }
 
-                selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
-
-                if (selected_script != 0)
+                if (is_selected == nk_false || selected_entity == -999 || selected_entity < 0) // || selected_entity >= ent_len 
                 {
-                    entity_add_script(selected_entity, scripts_names[selected_script]);
+                    // nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                    // nk_label_colored(ctx, "no entity selected", NK_TEXT_LEFT, red);
                 }
-}
-            nk_tree_pop(ctx);
+                else
+                {
+                    const struct nk_input* in = &ctx->input;
+                    struct nk_rect bounds;
+
+                    // entity_properties prop = get_entity_properties(selected_entity);
+                    entity* ent = get_entity(selected_entity);
+
+                    nk_layout_row_dynamic(ctx, 30, 2);
+                    nk_label(ctx, "Name: ", NK_TEXT_LEFT);
+                    static nk_flags event = NK_EDIT_DEACTIVATED;
+                    if (event == NK_EDIT_DEACTIVATED || event == NK_EDIT_INACTIVE) { strcpy(name_edit_buffer, ent->name); }
+                    event = nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD | NK_EDIT_AUTO_SELECT, name_edit_buffer, sizeof(name_edit_buffer), nk_filter_ascii);
+                    // set ent name on commit
+                    if (event == NK_EDIT_COMMITED || is_key_pressed(KEY_Enter))
+                    {
+                        // copy name and path as passed name might be deleted
+                        char* name_cpy = calloc(strlen(name_edit_buffer) + 1, sizeof(char));
+                        assert(name_cpy != NULL);
+                        strcpy(name_cpy, name_edit_buffer);
+                        ent->name = name_cpy;
+                        event = NK_EDIT_INACTIVE;
+                    }
+
+                    nk_layout_row_dynamic(ctx, 30, 2);
+                    nk_label(ctx, "ID:", NK_TEXT_LEFT);
+                    char buf[4]; sprintf_s(buf, 4, "%d", ent->id);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+
+
+                    if (ent->parent != 9999)
+                    {
+                        entity* parent = get_entity(ent->parent);
+                        nk_layout_row_dynamic(ctx, 30, 4);
+                        nk_label(ctx, "Parent:", NK_TEXT_LEFT);
+                        nk_spacing(ctx, 1);
+                        char buf[4]; sprintf_s(buf, 4, "%d", ent->parent);
+                        nk_label(ctx, buf, NK_TEXT_LEFT);
+                        nk_label(ctx, parent->name, NK_TEXT_LEFT);
+
+
+                        nk_layout_row_dynamic(ctx, 30, 2);
+                        nk_spacing(ctx, 1);
+                        if (nk_button_label(ctx, "Remove Parent"))
+                        {
+                            entity_remove_child(ent->parent, selected_entity);
+                        }
+                    }
+
+                    // ---- components ----
+
+                    draw_transform_component(ent);
+
+                    draw_mesh_component(ent);
+
+                    draw_material_component(ent);
+
+                    draw_physics_components(ent);
+
+                    draw_camera_component(ent);
+
+                    draw_light_component(ent);
+
+                    // scritps always the last element
+                    sprintf(buffer, "Scripts [%d]", ent->scripts_len);
+                    struct nk_rect scripts_bounds = nk_widget_bounds(ctx);
+                    if (ent->scripts_len > 0 && nk_tree_push(ctx, NK_TREE_TAB, ent->scripts_len == 1 ? "Script" : buffer, NK_MINIMIZED))
+                    {
+                        gravity_script* scripts = NULL;
+                        int scripts_len = 0;
+                        scripts = get_all_scripts(&scripts_len);
+                        static int selected_script = 0;
+                        int selected_script_old = selected_script;
+                        char** scripts_names = malloc(scripts_len * sizeof(char*));
+                        assert(scripts_names != NULL);
+
+                        for (int i = 0; i < scripts_len; ++i)
+                        {
+                            scripts_names[i] = malloc((strlen(scripts[i].name) + 1) * sizeof(char));
+                            strcpy(scripts_names[i], scripts[i].name);
+                        }
+
+                        for (int i = 0; i < ent->scripts_len; ++i)
+                        {
+                            if (ent->scripts[i]->path_valid == BEE_FALSE)
+                            {
+                                nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                                nk_label_colored(ctx, "path not valid", NK_TEXT_LEFT, red);
+                            }
+                            else if (ent->scripts[i]->has_error == BEE_TRUE)
+                            {
+                                nk_layout_row(ctx, NK_STATIC, 25, 1, ratio);
+                                nk_label_colored(ctx, "has error", NK_TEXT_LEFT, red);
+                            }
+
+                            selected_script = get_script_idx(ent->scripts[i]->name);
+                            selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
+
+                            // doesnt work because the script holds the entity index
+                            if (selected_script_old != selected_script) { ent->scripts[i] = &scripts[selected_script]; }
+                            scripts_bounds.h += 25; // combo
+
+
+                            if (ent->scripts[i]->path_valid == BEE_TRUE)
+                            {
+                                nk_layout_row_dynamic(ctx, 25, 1);
+                                if (nk_button_label(ctx, "Source Code"))
+                                {
+                                    char* src = read_text_file(ent->scripts[i]->path);
+                                    set_source_code_window(src);
+                                }
+                                scripts_bounds.h += 25; // button
+                            }
+
+                            if (ent->scripts[i]->path_valid == BEE_TRUE && ent->scripts[i]->has_error == BEE_FALSE)
+                            {
+                                nk_layout_row_dynamic(ctx, 25, 1);
+                                if (nk_button_label(ctx, ent->scripts[i]->active == BEE_TRUE ? "Pause" : "Continue"))
+                                {
+                                    ent->scripts[i]->active = !ent->scripts[i]->active;
+                                }
+                                scripts_bounds.h += 25; // button
+                            }
+
+                            nk_layout_row_dynamic(ctx, 25, 1);
+                            if (nk_button_label(ctx, "Remove"))
+                            {
+                                entity_remove_script(selected_entity, i);
+                            }
+                            scripts_bounds.h += 25; // button
+
+                        }
+
+                        // check for assets dropped from the asset browser
+                        if (dropped_asset.type == SCRIPT_ASSET && dropped_asset.handled == BEE_FALSE)
+                        {
+                            // collision 
+                            if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], scripts_bounds.x, scripts_bounds.y, scripts_bounds.w, scripts_bounds.h))
+                            {
+                                printf("dropped asset dropped over scripts\n");
+                                entity_add_script(selected_entity, scripts[dropped_asset.asset_idx].name);
+                                dropped_asset.handled = BEE_TRUE;
+                            }
+                        }
+
+                        nk_tree_pop(ctx);
+
+                    }
+
+                    // spacing
+                    nk_layout_row_static(ctx, 5, 10, 1);
+                    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
+                    nk_layout_row(ctx, NK_STATIC, 25, 2, ratio);
+                    nk_label(ctx, "Attach Script", NK_TEXT_LEFT);
+                    gravity_script* scripts = NULL;
+                    int scripts_len = 0;
+                    scripts = get_all_scripts(&scripts_len);
+                    int selected_script = 0;
+                    int selected_script_old = selected_script;
+                    char** scripts_names = malloc((scripts_len + 1) * sizeof(char*));
+                    assert(scripts_names != NULL);
+
+                    scripts_names[0] = malloc((strlen("Select Script") + 1) * sizeof(char));
+                    strcpy(scripts_names[0], "Select Script");
+                    for (int i = 1; i < scripts_len + 1; ++i)
+                    {
+                        scripts_names[i] = malloc((strlen(scripts[i - 1].name) + 1) * sizeof(char));
+                        strcpy(scripts_names[i], scripts[i - 1].name);
+                    }
+
+                    selected_script = nk_combo(ctx, scripts_names, scripts_len, selected_script, 25, nk_vec2(200, 200));
+
+                    if (selected_script != 0)
+                    {
+                        entity_add_script(selected_entity, scripts_names[selected_script]);
+                    }
+                }
+                nk_tree_pop(ctx);
+            }
+            
+            nk_group_end(ctx);
         }
 
         // extra spacing to scroll
@@ -2405,6 +1964,471 @@ void deselect_entity()
 }
 
 int get_selected_entity() { return selected_entity; }
+
+void draw_properties_menu_bar()
+{
+    nk_menubar_begin(ctx);
+    nk_layout_row_begin(ctx, NK_STATIC, 35, 4);
+    nk_layout_row_push(ctx, 45);
+    if (nk_menu_begin_label(ctx, "Scene", NK_TEXT_LEFT, nk_vec2(80, 200)))
+    {
+        nk_layout_row_dynamic(ctx, 25, 1);
+        if (nk_menu_item_label(ctx, "Save", NK_TEXT_LEFT))
+        {
+            if (str_find_last_of(get_active_scene_name(), ".scene") == NULL)
+            {
+                scene_context_act = BEE_TRUE;
+            }
+            else
+            {
+                save_scene(get_active_scene_name());
+            }
+        }
+        if (nk_menu_item_label(ctx, "Save As", NK_TEXT_LEFT))
+        {
+            scene_context_act = BEE_TRUE;
+        }
+        if (nk_menu_item_label(ctx, "Import", NK_TEXT_LEFT))
+        {
+            char* path = tinyfd_openFileDialog(
+                "Load Scene", NULL, 0, // "C:\\Workspace\\C\\BeeEngine\\assets", 0 (2 in the following example)
+                NULL, // NULL or char const * lFilterPatterns[2]={"*.png","*.jpg"};
+                NULL, // NULL or "image files"
+                BEE_FALSE);
+
+            if (path != NULL)
+            {
+                add_file_to_project(path);
+            }
+        }
+        nk_menu_end(ctx);
+    }
+    nk_layout_row_push(ctx, 80);
+    if (nk_menu_begin_label(ctx, "Add Entity", NK_TEXT_LEFT, nk_vec2(80, 200)))
+    {
+        nk_layout_row_dynamic(ctx, 25, 1);
+        if (nk_menu_item_label(ctx, "Empty", NK_TEXT_LEFT))
+        {
+            add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "empty");
+        }
+        if (nk_menu_item_label(ctx, "Trans", NK_TEXT_LEFT))
+        {
+            vec3 zero = { 0.0f, 0.0f, 0.0f };
+            vec3 one = { 1.0f, 1.0f, 1.0f };
+            add_entity(zero, zero, one, NULL, NULL, NULL, NULL, NULL, NULL, "trans");
+        }
+        if (nk_menu_item_label(ctx, "Mesh", NK_TEXT_LEFT))
+        {
+            vec3 zero = { 0.0f, 0.0f, 0.0f };
+            vec3 one = { 1.0f, 1.0f, 1.0f };
+            int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, NULL, "mesh");
+            get_entity(cube)->_mesh.visible = BEE_TRUE;
+        }
+        if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
+        {
+            vec3 zero = { 0.0f, 0.0f, 0.0f };
+            vec3 one = { 1.0f, 1.0f, 1.0f };
+            vec3 dir = { 0.0f, 1.0f, 0.0f };
+            light point_light = make_point_light(zero, one, one, 1.0f, 0.14f, 0.13f); // 0.09f, 0.032f);
+            light spot_light = make_spot_light(zero, one, one, dir, 1.0f, 0.09f, 0.032f, 0.91f, 0.82f); // 0.09f, 0.032f);
+            add_entity(zero, zero, one, NULL, NULL, NULL, &point_light, NULL, NULL, "light");	// mat_blank_unlit
+        }
+        if (get_camera_ent_id() == -1 && nk_menu_item_label(ctx, "Camera", NK_TEXT_LEFT))
+        {
+            camera cam = make_camera(45.0f, 0.1f, 100.0f);
+            vec3 zero = { 0.0f, 0.0f, 0.0f };
+            vec3 one = { 1.0f, 1.0f, 1.0f };
+            add_entity(zero, zero, one, NULL, NULL, &cam, NULL, NULL, NULL, "camera");
+        }
+        if (nk_menu_item_label(ctx, "Collider", NK_TEXT_LEFT))
+        {
+            vec3 zero = { 0.0f, 0.0f, 0.0f };
+            vec3 one = { 1.0f, 1.0f, 1.0f };
+            collider c = make_box_collider(one, BEE_FALSE);
+            int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, &c, "collider");
+            get_entity(cube)->_mesh.visible = BEE_TRUE;
+        }
+        if (nk_menu_item_label(ctx, "Rigidbody", NK_TEXT_LEFT))
+        {
+            vec3 zero = { 0.0f, 0.0f, 0.0f };
+            vec3 one = { 1.0f, 1.0f, 1.0f };
+            collider c = make_box_collider(one, BEE_FALSE);
+            rigidbody rb = make_rigidbody(1.0f);
+            int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, &rb, &c, "rigidbody");
+            get_entity(cube)->_mesh.visible = BEE_TRUE;
+        }
+        nk_menu_end(ctx);
+    }
+    nk_layout_row_push(ctx, 80);
+    if (nk_menu_begin_label(ctx, "Add Asset", NK_TEXT_LEFT, nk_vec2(80, 200)))
+    {
+        nk_layout_row_dynamic(ctx, 25, 1);
+        if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
+        {
+            add_default_scene("new.scene");
+            load_scene("new.scene");
+        }
+
+        if (nk_menu_item_label(ctx, "Scene", NK_TEXT_LEFT))
+        {
+            printf("not yet implemented\n");
+            assert(0);
+        }
+        if (nk_menu_item_label(ctx, "Material", NK_TEXT_LEFT))
+        {
+            vec2 tile = { 1.0f, 1.0f };
+            vec3 tint = { 1.0f, 1.0f, 1.0f };
+            add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material", BEE_FALSE);
+        }
+        if (nk_menu_item_label(ctx, "Shader", NK_TEXT_LEFT))
+        {
+            shader_add_popup_act = BEE_TRUE;
+        }
+        nk_menu_end(ctx);
+    }
+    nk_layout_row_push(ctx, 50);
+    if (nk_menu_begin_label(ctx, "Theme", NK_TEXT_LEFT, nk_vec2(80, 200)))
+    {
+        nk_layout_row_dynamic(ctx, 25, 1);
+        if (nk_menu_item_label(ctx, "black", NK_TEXT_LEFT))
+        {
+            set_style(ctx, THEME_BLACK);
+        }
+        if (nk_menu_item_label(ctx, "white", NK_TEXT_LEFT))
+        {
+            set_style(ctx, THEME_WHITE);
+        }
+        if (nk_menu_item_label(ctx, "red", NK_TEXT_LEFT))
+        {
+            set_style(ctx, THEME_RED);
+        }
+        if (nk_menu_item_label(ctx, "blue", NK_TEXT_LEFT))
+        {
+            set_style(ctx, THEME_BLUE);
+        }
+        if (nk_menu_item_label(ctx, "dark", NK_TEXT_LEFT))
+        {
+            set_style(ctx, THEME_DARK);
+        }
+        if (nk_menu_item_label(ctx, "light blue", NK_TEXT_LEFT))
+        {
+            set_style(ctx, THEME_LIGHT_BLUE);
+        }
+        nk_menu_end(ctx);
+    }
+    // nk_layout_row_push(ctx, 70);
+    nk_menubar_end(ctx);
+}
+
+void draw_play_pause_and_settings()
+{
+    // ---- play / pause ---
+    nk_layout_row_dynamic(ctx, 25, 2);
+    if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
+    {
+        set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
+    }
+    nk_label(ctx, " ", NK_TEXT_LEFT);
+    nk_layout_row_dynamic(ctx, 25, 2);
+    nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
+    static int b = 0;
+    nk_checkbox_label(ctx, " Option", &b);
+    nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
+    nk_checkbox_label(ctx, " Move Gizmo", &show_move_gizmo);
+    // spacing
+    nk_layout_row_static(ctx, 5, 10, 1);
+    nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+}
+
+void draw_scene_properties()
+{
+    if (nk_tree_push(ctx, NK_TREE_TAB, "Scene", NK_MINIMIZED))
+    {
+
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Settings", NK_MINIMIZED))
+        {
+            settings _settings = get_settings();
+
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_label(ctx, "free-look mode", NK_TEXT_LEFT);
+            nk_property_float(ctx, "mosue sensitivity", -1.0f, _settings.free_look_mouse_sensitivity, 1.0f, 0.1f, 0.01f);
+
+            nk_property_float(ctx, "exposure", 0.001f, get_exposure(), 10.0f, 0.1f, 0.01f);
+
+            // spacing
+            nk_layout_row_static(ctx, 5, 10, 1);
+            nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+
+            int* skybox_enabled = renderer_get(RENDER_CUBEMAP);
+            nk_layout_row_dynamic(ctx, 15, 1);
+            nk_checkbox_label(ctx, " draw skybox", skybox_enabled);
+
+            int* msaa_enabled = renderer_get(RENDER_MSAA);
+            nk_layout_row_dynamic(ctx, 15, 1);
+            nk_checkbox_label(ctx, " MSAA", msaa_enabled);
+
+            nk_layout_row_dynamic(ctx, 30, 1);
+            nk_label(ctx, "background color", NK_TEXT_LEFT);
+            nk_layout_row_dynamic(ctx, 25, 1);
+
+            struct nk_colorf old_bg = bg;
+
+            // complex color combobox
+            if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(200, 400)))
+            {
+                enum color_mode { COL_RGB, COL_HSV };
+                static int col_mode = COL_RGB;
+
+                nk_layout_row_dynamic(ctx, 120, 1);
+                bg = nk_color_picker(ctx, bg, NK_RGB);
+
+                nk_layout_row_dynamic(ctx, 25, 2);
+                col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+                col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                if (col_mode == COL_RGB) {
+                    bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
+                    bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
+                    bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
+                }
+                else {
+                    float hsva[4];
+                    nk_colorf_hsva_fv(hsva, bg);
+                    hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                    hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                    hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                    bg = nk_hsva_colorfv(hsva);
+                }
+                nk_combo_end(ctx);
+
+                // check if the color was changed
+                if (bg.r != old_bg.r || bg.g != old_bg.g || bg.b != old_bg.b || bg.a != old_bg.a)
+                {
+                    glClearColor(bg.r, bg.g, bg.b, bg.a);
+                }
+            }
+
+            nk_tree_pop(ctx);
+        }
+
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Diagnostics", NK_MINIMIZED))
+        {
+            char buf[20];
+            nk_layout_row_dynamic(ctx, 25, 1);
+            sprintf_s(buf, 20, "FPS: %d", (int)get_fps());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            sprintf_s(buf, 20, "Draw Calls: %d", *get_draw_calls_per_frame());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            sprintf_s(buf, 20, "Verts: %d", *get_verts_per_frame());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            sprintf_s(buf, 20, "Tris: %d", *get_tris_per_frame());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            nk_spacing(ctx, 1);
+            int len = 0; get_entity_ids(&len);
+            sprintf_s(buf, 20, "Entities: %d", len);
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            nk_spacing(ctx, 1);
+            sprintf_s(buf, 20, "Dir. Lights: %d", *get_dir_light_ids_len());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            sprintf_s(buf, 20, "Point Lights: %d", *get_point_light_ids_len());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+            sprintf_s(buf, 20, "Spot Lights: %d", *get_spot_light_ids_len());
+            nk_label(ctx, buf, NK_TEXT_LEFT);
+
+            // ----
+
+            f32 id = 0;
+            static int col_index = -1;
+            static int line_index = -1;
+            f32 step = (2 * 3.141592654f) / 32;
+
+            int i;
+            int index = -1;
+            struct nk_rect bounds;
+
+            /* line chart */
+            id = 0;
+            index = -1;
+            nk_layout_row_dynamic(ctx, 100, 1);
+            bounds = nk_widget_bounds(ctx);
+            if (nk_chart_begin(ctx, NK_CHART_LINES, 32, -1.0f, 1.0f)) {
+                for (i = 0; i < 32; ++i) {
+                    nk_flags res = nk_chart_push(ctx, (float)cos(id));
+                    if (res & NK_CHART_HOVERING)
+                        index = (int)i;
+                    if (res & NK_CHART_CLICKED)
+                        line_index = (int)i;
+                    id += step;
+                }
+                nk_chart_end(ctx);
+            }
+
+            if (index != -1)
+                nk_tooltipf(ctx, "Value: %.2f", (float)cos((float)index * step));
+            if (line_index != -1) {
+                nk_layout_row_dynamic(ctx, 20, 1);
+                nk_labelf(ctx, NK_TEXT_LEFT, "Selected value: %.2f", (float)cos((float)index * step));
+            }
+
+
+            nk_tree_pop(ctx);
+        }
+
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Debug", NK_MINIMIZED))
+        {
+            renderer_properties prop = get_renderer_properties();
+
+            const struct nk_input* in = &ctx->input;
+            struct nk_rect bounds;
+
+            int* wireframe_mode_enabled = renderer_get(RENDER_WIREFRAME);
+            nk_layout_row_dynamic(ctx, 15, 1);
+            bounds = nk_widget_bounds(ctx);
+            nk_checkbox_label(ctx, "Wireframe", wireframe_mode_enabled);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, " Activate Wireframe-Mode, you can also use Tab.");
+
+            int* normal_mode_enabled = renderer_get(RENDER_NORMAL);
+            nk_layout_row_dynamic(ctx, 15, 1);
+            bounds = nk_widget_bounds(ctx);
+            nk_checkbox_label(ctx, "Normals", normal_mode_enabled);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, " Not implemented yet.");
+
+            int* uv_mode_enabled = renderer_get(RENDER_UV);
+            nk_layout_row_dynamic(ctx, 15, 1);
+            bounds = nk_widget_bounds(ctx);
+            nk_checkbox_label(ctx, "UVs", uv_mode_enabled);
+            if (nk_input_is_mouse_hovering_rect(in, bounds))
+                nk_tooltip(ctx, " Not implemented yet.");
+
+
+            // complex color combobox
+            struct nk_colorf col = { *prop.wireframe_col_r, *prop.wireframe_col_g, *prop.wireframe_col_b, 0.0f };
+            struct nk_colorf old_col = col;
+            nk_layout_row_dynamic(ctx, 30, 1);
+            nk_label(ctx, "wireframe color", NK_TEXT_LEFT);
+            nk_layout_row_dynamic(ctx, 25, 1);
+            if (nk_combo_begin_color(ctx, nk_rgb_cf(col), nk_vec2(200, 400)))
+            {
+                enum color_mode { COL_RGB, COL_HSV };
+                static int col_mode = COL_RGB;
+
+                nk_layout_row_dynamic(ctx, 120, 1);
+                col = nk_color_picker(ctx, col, NK_RGB);
+
+                nk_layout_row_dynamic(ctx, 25, 2);
+                col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+                col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                if (col_mode == COL_RGB) {
+                    col.r = nk_propertyf(ctx, "#R:", 0, col.r, 1.0f, 0.01f, 0.005f);
+                    col.g = nk_propertyf(ctx, "#G:", 0, col.g, 1.0f, 0.01f, 0.005f);
+                    col.b = nk_propertyf(ctx, "#B:", 0, col.b, 1.0f, 0.01f, 0.005f);
+                }
+                else {
+                    float hsva[4];
+                    nk_colorf_hsva_fv(hsva, col);
+                    hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                    hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                    hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                    col = nk_hsva_colorfv(hsva);
+                }
+
+                // check if the color was changed
+                if (col.r != old_col.r || col.g != old_col.g || col.b != old_col.b || col.a != old_col.a)
+                {
+                    *prop.wireframe_col_r = col.r;
+                    *prop.wireframe_col_g = col.g;
+                    *prop.wireframe_col_b = col.b;
+                }
+
+                nk_combo_end(ctx);
+            }
+
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Render Stages", NK_MINIMIZED))
+            {
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "HDR Color Buffer: ", NK_TEXT_LEFT);
+
+                int w, h; get_window_size(&w, &h);
+                f32 ratio = (float)w / (float)h;
+                struct nk_image img = nk_image_id(get_color_buffer());
+                nk_layout_row_static(ctx, 150, 150 * ratio, 1);
+                // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
+                nk_image(ctx, img);
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "Bloom, etc.", NK_TEXT_LEFT);
+
+                nk_tree_pop(ctx);
+            }
+
+
+            nk_tree_pop(ctx);
+        }
+
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Camera", NK_MINIMIZED))
+        {
+            renderer_properties prop = get_renderer_properties();
+
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Position", NK_MINIMIZED))
+            {
+                static vec3 old_pos;
+                vec3 pos;
+                get_editor_camera_pos(pos);
+
+                nk_property_float(ctx, "Editor Pos X:", -1024.0f, &pos[0], 1024.0f, 0.1f, 0.2f);
+
+                nk_property_float(ctx, "Editor Pos Y:", -1024.0f, &pos[1], 1024.0f, 0.1f, 0.2f);
+
+                nk_property_float(ctx, "Editor Pos Z:", -1024.0f, &pos[2], 1024.0f, 0.1f, 0.2f);
+
+                if (old_pos != pos)
+                {
+                    set_editor_camera_pos(pos);
+                    glm_vec3_copy(pos, old_pos);
+                }
+
+                nk_tree_pop(ctx);
+            }
+
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Direction", NK_MINIMIZED))
+            {
+                static vec3 old_front;
+                vec3 front;
+                get_editor_camera_front(front);
+
+                nk_property_float(ctx, "Editor Dir X:", -1024.0f, &front[0], 1024.0f, 0.1f, 0.2f);
+
+                nk_property_float(ctx, "Editor Dir Y:", -1024.0f, &front[1], 1024.0f, 0.1f, 0.2f);
+
+                nk_property_float(ctx, "Editor Dir Z:", -1024.0f, &front[2], 1024.0f, 0.1f, 0.2f);
+
+                if (old_front != front)
+                {
+                    set_editor_camera_front(front);
+                    glm_vec3_copy(front, old_front);
+                }
+
+                nk_tree_pop(ctx);
+            }
+
+
+            nk_property_float(ctx, "Editor Perspective:", 1.0f, prop.perspective, 200.0f, 0.1f, 0.2f);
+
+            nk_property_float(ctx, "Editor Near Plane:", 0.0001f, prop.near_plane, 10.0f, 0.1f, 0.01f);
+
+            nk_property_float(ctx, "Editor Far Plane:", 1.0f, prop.far_plane, 500.0f, 0.1f, 0.2f);
+
+            nk_tree_pop(ctx);
+        }
+
+        nk_tree_pop(ctx);
+    }
+}
 
 void draw_entity_hierarchy_entity(int idx, int offset)
 {
@@ -3326,10 +3350,10 @@ void properties_popups()
     get_entity_len(&ent_len);
 
     // less height because the window bar on top and below
-    const float w_ratio = 350.0f / 1920.0f;
-    const float h_ratio = 1000.0f / 1020.0f;
-    const float x_ratio = 10.0f / 1920.0f;
-    const float y_ratio = 10.0f / 1020.0f;
+    const f32 w_ratio = 350.0f / 1920.0f;
+    const f32 h_ratio = 1000.0f / 1020.0f;
+    const f32 x_ratio = 10.0f / 1920.0f;
+    const f32 y_ratio = 10.0f / 1020.0f;
 
     if (nk_begin(ctx, "Properties Popups", nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h), window_flags))
     {
@@ -3393,28 +3417,30 @@ void pause_button_window()
 
 
     // less height because the window bar on top and below
-    const float w_ratio = 140.0f / 1920.0f;
-    const float h_ratio = 95.0f / 1020.0f;
-    const float x_ratio = 10.0f / 1920.0f;
-    const float y_ratio = 10.0f / 1020.0f;
+    const f32 w_ratio = 240.0f / 1920.0f;
+    const f32 h_ratio = 95.0f / 1020.0f;
+    const f32 x_ratio = 10.0f / 1920.0f;
+    const f32 y_ratio = 10.0f / 1020.0f;
 
     pause_button_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "", pause_button_window_rect, NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR)) // to title
         // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
         // ---- play / pause ---
-        nk_layout_row_dynamic(ctx, 25, 1);
-        if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
-        {
-            set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
-        }
-        // nk_label(ctx, " ", NK_TEXT_LEFT);
+        draw_play_pause_and_settings();
+        
         // nk_layout_row_dynamic(ctx, 25, 1);
-        nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
-        nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
-        // spacing
-        nk_layout_row_static(ctx, 5, 10, 1);
-        nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
+        // if (nk_button_label(ctx, get_gamestate() == BEE_FALSE ? "Play" : "Pause"))
+        // {
+        //     set_gamestate(BEE_SWITCH, hide_gizmos_on_play);
+        // }
+        // // nk_label(ctx, " ", NK_TEXT_LEFT);
+        // // nk_layout_row_dynamic(ctx, 25, 1);
+        // nk_checkbox_label(ctx, " Hide Gizmos", &hide_gizmos_on_play);
+        // nk_checkbox_label(ctx, " Hide UI", &hide_ui_on_play);
+        // // spacing
+        // nk_layout_row_static(ctx, 5, 10, 1);
+        // nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
     }
     nk_end(ctx);
 }
@@ -3426,10 +3452,10 @@ void console_window()
 
 
     // less height because the window bar on top and below
-    const float w_ratio = 300.0f  / 1920.0f;
-    const float h_ratio = 310.0f  / 1020.0f;
-    const float x_ratio = 1600.0f / 1920.0f;
-    const float y_ratio = 700.0f  / 1020.0f;
+    const f32 w_ratio = 300.0f  / 1920.0f;
+    const f32 h_ratio = 310.0f  / 1020.0f;
+    const f32 x_ratio = 1600.0f / 1920.0f;
+    const f32 y_ratio = 700.0f  / 1020.0f;
 
     console_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "Console", console_window_rect, window_flags | NK_WINDOW_NO_SCROLLBAR)) 
@@ -3507,10 +3533,10 @@ void asset_browser_window()
     get_window_size(&w, &h);
 
     // less height because the window bar on top and below
-    const float w_ratio = 1200.0f / 1920.0f;
-    const float h_ratio = 310.0f / 1020.0f;
-    const float x_ratio = 380.0f / 1920.0f;
-    const float y_ratio = 700.0f / 1020.0f;
+    const f32 w_ratio = 1200.0f / 1920.0f;
+    const f32 h_ratio = 310.0f / 1020.0f;
+    const f32 x_ratio = 380.0f / 1920.0f;
+    const f32 y_ratio = 700.0f / 1020.0f;
 
     asset_browser_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "Asset Browser", asset_browser_window_rect, window_flags))
@@ -4429,10 +4455,10 @@ void asset_browser_popups(texture* textures, mesh* meshes, gravity_script* scrip
 
 
     // less height because the window bar on top and below
-    const float w_ratio = 1200.0f / 1920.0f;
-    const float h_ratio = 310.0f / 1020.0f;
-    const float x_ratio = 380.0f / 1920.0f;
-    const float y_ratio = 700.0f / 1020.0f;
+    const f32 w_ratio = 1200.0f / 1920.0f;
+    const f32 h_ratio = 310.0f / 1020.0f;
+    const f32 x_ratio = 380.0f / 1920.0f;
+    const f32 y_ratio = 700.0f / 1020.0f;
 
     // int x = 380;
     // int y = 700;
@@ -4494,10 +4520,10 @@ void error_popup_window()
     get_window_size(&w, &h);
 
     // less height because the window bar on top and below
-    const float w_ratio = 300.0f / 1920.0f;
-    const float h_ratio = 300.0f / 1020.0f;
-    const float x_ratio = 800.0f / 1920.0f;
-    const float y_ratio = 200.0f / 1020.0f;
+    const f32 w_ratio = 300.0f / 1920.0f;
+    const f32 h_ratio = 300.0f / 1020.0f;
+    const f32 x_ratio = 800.0f / 1920.0f;
+    const f32 y_ratio = 200.0f / 1020.0f;
 
     error_popup_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     char* title = error_popop_type == GENERAL_ERROR ? "Error" : error_popop_type == GRAVITY_ERROR ? "Gravity Error" : "Error";
@@ -4527,10 +4553,10 @@ void source_code_window()
     get_window_size(&w, &h);
 
     // less height because the window bar on top and below
-    const float w_ratio = 600.0f  / 1920.0f;
-    const float h_ratio = 1000.0f / 1020.0f;
-    const float x_ratio = 380.0f  / 1920.0f;
-    const float y_ratio = 10.0f   / 1020.0f;
+    const f32 w_ratio = 600.0f  / 1920.0f;
+    const f32 h_ratio = 1000.0f / 1020.0f;
+    const f32 x_ratio = 380.0f  / 1920.0f;
+    const f32 y_ratio = 10.0f   / 1020.0f;
 
     source_code_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "Source Code", source_code_window_rect, window_flags | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))
@@ -4609,10 +4635,10 @@ void add_shader_window()
     get_window_size(&w, &h);
 
     // less height because the window bar on top and below
-    const float w_ratio = 400.0f / 1920.0f;
-    const float h_ratio = 245.0f / 1020.0f;
-    const float x_ratio = 710.0f / 1920.0f;
-    const float y_ratio = 10.0f  / 1020.0f;
+    const f32 w_ratio = 400.0f / 1920.0f;
+    const f32 h_ratio = 245.0f / 1020.0f;
+    const f32 x_ratio = 710.0f / 1920.0f;
+    const f32 y_ratio = 10.0f  / 1020.0f;
 
     add_shader_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "Add Shader", add_shader_window_rect, window_flags | NK_WINDOW_NO_SCROLLBAR))
@@ -4681,10 +4707,10 @@ void scene_context_window()
     get_window_size(&w, &h);
 
     // less height because the window bar on top and below
-    const float w_ratio = 180.0f / 1920.0f;
-    const float h_ratio = 225.0f / 1020.0f;
-    const float x_ratio = 360.0f / 1920.0f;
-    const float y_ratio = 10.0f / 1020.0f;
+    const f32 w_ratio = 180.0f / 1920.0f;
+    const f32 h_ratio = 225.0f / 1020.0f;
+    const f32 x_ratio = 360.0f / 1920.0f;
+    const f32 y_ratio = 10.0f / 1020.0f;
 
     scene_context_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "Save Scene", scene_context_window_rect, window_flags | NK_WINDOW_NO_SCROLLBAR))
@@ -4727,10 +4753,10 @@ void edit_asset_window()
     static bee_bool tall = BEE_FALSE;
 
     // less height because the window bar on top and below
-    const float w_ratio = 500.0f / 1920.0f;
-    const float h_ratio = 700.0f / 1020.0f;
-    const float x_ratio = 710.0f / 1920.0f;
-    const float y_ratio = 10.0f / 1020.0f;
+    const f32 w_ratio = 500.0f / 1920.0f;
+    const f32 h_ratio = 700.0f / 1020.0f;
+    const f32 x_ratio = 710.0f / 1920.0f;
+    const f32 y_ratio = 10.0f / 1020.0f;
 
     edit_asset_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
     if (nk_begin(ctx, "Edit Asset", edit_asset_window_rect, window_flags))
@@ -5333,12 +5359,15 @@ static void set_style(struct nk_context* ctx, enum ui_theme theme)
     if (theme == THEME_LIGHT_BLUE) 
     {
         // struct nk_color c       = nk_rgba(11, 255, 249, 255);
-        struct nk_color c_dark  = nk_rgba(7, 166, 162, 255);
-        struct nk_color c       = nk_rgba(11, 230, 228, 255);
-        struct nk_color c_light = nk_rgba(30, 255, 255, 255);
-        struct nk_color c_white = nk_rgba(150, 255, 255, 255);
+        ui_color c_dark     = nk_rgba(23, 204, 203, 255);
+        ui_color c          = nk_rgba(11, 230, 228, 255);
+        ui_color c_light    = nk_rgba(30, 255, 255, 255);
+        ui_color c_white    = nk_rgba(150, 255, 255, 255);
+        ui_color text_light = nk_rgba(230, 230, 230, 255);
+        ui_color text       = nk_rgba(190, 190, 190, 255);
+        ui_color text_dark  = nk_rgba(51, 55, 67, 255);
 
-        table[NK_COLOR_TEXT] = nk_rgba(190, 190, 190, 255);
+        table[NK_COLOR_TEXT]   = text;
         table[NK_COLOR_WINDOW] = nk_rgba(30, 33, 40, 255);  // a: 215
         table[NK_COLOR_HEADER] = c_dark; // nk_rgba(181, 45, 69, 255); // a: 220 
         table[NK_COLOR_BORDER] = nk_rgba(51, 55, 67, 255);
@@ -5368,14 +5397,16 @@ static void set_style(struct nk_context* ctx, enum ui_theme theme)
         table[NK_COLOR_TAB_HEADER] = c_dark; // nk_rgba(181, 45, 69, 255); // a: 220
         nk_style_from_table(ctx, table);
 
-        ctx->style.tab.text = nk_rgba(51, 55, 67, 255);
-        ctx->style.window.header.label_active = nk_rgba(51, 55, 67, 255);
-        ctx->style.window.header.label_hover  = nk_rgba(51, 55, 67, 255);
-        ctx->style.window.header.label_normal = nk_rgba(51, 55, 67, 255);
-        ctx->style.selectable.text_pressed    = nk_rgba(51, 55, 67, 255);
-        ctx->style.button.text_active         = nk_rgba(51, 55, 67, 255);
-        ctx->style.button.text_hover          = nk_rgba(51, 55, 67, 255);
-        ctx->style.button.text_normal         = nk_rgba(51, 55, 67, 255);
+        ctx->style.tab.text                   = text; // text_light; // nk_rgba(51, 55, 67, 255);
+        ctx->style.window.header.label_active = text_dark; // text_light; // nk_rgba(51, 55, 67, 255);
+        ctx->style.window.header.label_hover  = text_dark; // text_light; // nk_rgba(51, 55, 67, 255);
+        ctx->style.window.header.label_normal = text_dark; // text_light; // nk_rgba(51, 55, 67, 255);
+        ctx->style.button.text_active = text_dark; // nk_rgba(51, 55, 67, 255);
+        ctx->style.button.text_hover  = text_dark; // nk_rgba(51, 55, 67, 255);
+        ctx->style.button.text_normal = text_dark; // nk_rgba(51, 55, 67, 255);
+        ctx->style.selectable.text_pressed_active = text_dark; // nk_rgba(51, 55, 67, 255);
+        ctx->style.selectable.text_hover_active   = text_dark; // nk_rgba(51, 55, 67, 255);
+        ctx->style.selectable.text_normal_active  = text_dark; // nk_rgba(51, 55, 67, 255);
     }
     else if (theme == THEME_WHITE) 
     {

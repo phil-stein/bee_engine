@@ -195,7 +195,7 @@ void init()
 	*/
 
 	// load_scene("showcase06.scene");
-	load_scene("physics05.scene");
+	load_scene("rotation01.scene");
 
 	// generate physics components old
 	/*
@@ -267,11 +267,6 @@ void init()
 
 void update()
 {
-#ifdef EDITOR_ACT
-	// ---- input ----
-	process_input(window);
-#endif
-	
 	// ---- fps ----
 	
 	char title[50];
@@ -282,6 +277,13 @@ void update()
 
 	// -------------
 
+	debug_draw_line(VEC3_ZERO, VEC3_ONE);
+	
+
+#ifdef EDITOR_ACT
+	// ---- input ----
+	process_input(window);
+#endif
 }
 
 void cleanup()

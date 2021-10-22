@@ -152,6 +152,9 @@
     <ClInclude Include="src\physics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\blinn_phong.frag">

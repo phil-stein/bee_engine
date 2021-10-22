@@ -68,7 +68,10 @@ void render_scene_skybox();
 void render_scene_screen();
 
 // renderes a single mesh, causing one draw-call
-void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col);
+void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col);
+// create model matrix from position, rotation and scale
+// output passed to matrix "model", doesnt need to be identity
+void make_model_matrix(int entity_id, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, mat4 model);
 // sets all the uniforms for a shader
 void set_shader_uniforms(material* mat);
 
@@ -84,7 +87,7 @@ int read_mouse_position_mouse_pick_buffer_color();
 void debug_draw_sphere(vec3 pos, vec3 scale);
 // submit a debug line to the renderer, these wont show up in the game
 // f.e. nice for checking if mouse select or shooting via raycast works
-void debug_draw_line(vec3 pos, vec3 scale);
+void debug_draw_line(vec3 pos1, vec3 pos2);
 // submit a debug cube to the renderer, these wont show up in the game
 void debug_draw_cube(vec3 pos, vec3 scale);
 // but its quicker than using an entity for f.e. testing what point your calculation spat out

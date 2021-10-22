@@ -208,6 +208,7 @@
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\str_util.h" />
     <ClInclude Include="src\editor_ui.h" />
+    <ClInclude Include="src\ui_util.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>

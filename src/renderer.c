@@ -107,6 +107,9 @@ shader* mouse_pick_shader;
 
 // outline 
 framebuffer fb_outline;
+
+// debug draw
+shader* line_shader;
 #endif
 
 
@@ -116,6 +119,7 @@ void renderer_init()
 	
 #ifdef EDITOR_ACT
 	screen_shader = add_shader("screen.vert", "screen_editor.frag", "SHADER_framebuffer", BEE_TRUE);
+	line_shader   = add_shader("billboard.vert", "unlit.frag", "SHADER_line", BEE_TRUE);
 #else
 	screen_shader = add_shader("screen.vert", "screen.frag", "SHADER_framebuffer", BEE_TRUE);
 #endif
@@ -287,14 +291,13 @@ void renderer_update()
 	render_scene_shadows();
 	render_scene_normal();
 #ifdef EDITOR_ACT
+	render_scene_outline();
+	render_scene_debug();
+
 	if (wireframe_mode_enabled == BEE_TRUE)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-#endif
-#ifdef EDITOR_ACT
-	render_scene_outline();
-	render_scene_debug();
 #endif
 	render_scene_screen();
 
@@ -363,19 +366,8 @@ void render_scene_mouse_pick()
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(entity_ids[i], pos, rot, scale);
 
-			mat4 model = GLM_MAT4_IDENTITY_INIT;
-			f32 x = rot[0];  glm_make_rad(&x);
-			f32 y = rot[1];  glm_make_rad(&y);
-			f32 z = rot[2];  glm_make_rad(&z);
-
-			const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
-			const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
-			const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
-			glm_rotate_at(model, pos, x, x_axis);
-			glm_rotate_at(model, pos, y, y_axis);
-			glm_rotate_at(model, pos, z, z_axis);
-			glm_translate(model, pos);
-			glm_scale(model, scale);
+			mat4 model;
+			make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
 			shader_use(mouse_pick_shader);
 			shader_set_mat4(mouse_pick_shader, "model", model);
@@ -433,19 +425,8 @@ void render_scene_mouse_pick()
 		glm_vec3_copy(GLM_VEC3_ZERO, rot);
 		glm_vec3_copy(GLM_VEC3_ONE, scale);
 
-		mat4 model = GLM_MAT4_IDENTITY_INIT;
-		f32 x = rot[0];  glm_make_rad(&x);
-		f32 y = rot[1];  glm_make_rad(&y);
-		f32 z = rot[2];  glm_make_rad(&z);
-
-		const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
-		const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
-		const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
-		glm_rotate_at(model, pos, x, x_axis);
-		glm_rotate_at(model, pos, y, y_axis);
-		glm_rotate_at(model, pos, z, z_axis);
-		glm_translate(model, pos);
-		glm_scale(model, scale);
+		mat4 model;
+		make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
 		shader_use(mouse_pick_shader);
 		shader_set_mat4(mouse_pick_shader, "model", model);
@@ -525,7 +506,7 @@ void render_scene_outline()
 		{
 			m = get_mesh("camera.obj");
 		}
-		draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint);
+		draw_mesh(id, m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint);
 		
 	}
 	unbind_framebuffer();
@@ -533,35 +514,105 @@ void render_scene_outline()
 
 void render_scene_debug()
 {
-	printf("%d debug calls\n", debug_calls_len);
+	// printf("%d debug calls\n", debug_calls_len);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	int w, h; get_window_size(&w, &h);
 	glViewport(0, 0, w, h);
 	bind_framebuffer(&fb_color);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
+
 	for (int i = 0; i < debug_calls_len; ++i)
 	{
 		mesh* m = NULL;
+		// material* mat = get_material("MAT_blank_unlit");
+		material* mat = get_material("MAT_cel");
+		vec3 one  = VEC3_ONE_INIT;
+		vec3 zero = VEC3_ZERO_INIT;
+		vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
+
 		if (debug_calls[i].type == DEBUG_DRAW_SPHERE)
 		{
 			m = get_mesh("sphere_poles.obj");
+			if (m == NULL) { printf("aborted draw call\n");  return; }
+			draw_mesh(-1, m, mat, debug_calls[i].v1, zero, debug_calls[i].v2, BEE_TRUE, BEE_TRUE, tint);
 		}
 		else if (debug_calls[i].type == DEBUG_DRAW_LINE)
 		{
 			// TODO: add capability to render lines
+			u32 vao, vbo;
+			const f32 lw = 0.2f; // line width
+			f32 vertices[] = { 0.5f * lw, 2, 0,   // right top
+							   -.5f * lw, 2, 0,   // left top
+							   -.5f * lw, 0, 0,   // left bottom
+							   -.5f * lw, 0, 0,   // left bottom			   
+							   0.5f * lw, 0, 0,	  // right bottom
+							   0.5f * lw, 2, 0 }; // right top
+							   
+			const u32 vertices_len = 3 * 6; // 3 f32 per vert, 6 verts total
+
+			glGenVertexArrays(1, &vao);
+			glGenBuffers(1, &vbo);
+			glBindVertexArray(vao);
+
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			glBufferData(GL_ARRAY_BUFFER, vertices_len * sizeof(f32), vertices, GL_STATIC_DRAW);
+
+			// vertex position attribute
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
+			glEnableVertexAttribArray(0);
+
+			// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			mat4 model;
+			make_model_matrix(0, VEC3_ZERO, VEC3_ZERO, VEC3_ONE, BEE_FALSE, model);
+			
+			mat4 view;
+			if (gamestate)
+			{
+				get_camera_view_mat(get_entity(camera_ent_idx), &view[0]);
+			}
+			else
+			{
+				get_editor_camera_view_mat(&view[0]);
+			}
+
+			mat4 proj;
+
+			entity* cam = get_entity(camera_ent_idx);
+			f32 deg_pers = cam->_camera.perspective;
+			f32 near_p   = cam->_camera.near_plane;
+			f32 far_p    = cam->_camera.far_plane;
+#ifdef EDITOR_ACT
+			if (!gamestate) // play-mode
+			{
+				deg_pers = perspective;
+				near_p = near_plane;
+				far_p = far_plane;
+			}
+#endif
+			glm_make_rad(&deg_pers);
+			int w, h; get_window_size(&w, &h);
+			glm_perspective(deg_pers, ((f32)w / (f32)h), near_p, far_p, proj);
+
+			// set shader uniforms ------------------------------
+			shader_use(line_shader);
+			shader_set_mat4(line_shader, "model",    model);
+			shader_set_mat4(line_shader, "view",     view);
+			shader_set_mat4(line_shader, "proj",     proj);
+			shader_set_int(line_shader, "just_tint", 1);
+			shader_set_vec3(line_shader, "mat.tint", tint);
+			glBindVertexArray(vao);
+			glDrawArrays(GL_TRIANGLES, 0, 18); // each vertices consist of 3 floats
+
 		}
 		else if (debug_calls[i].type == DEBUG_DRAW_CUBE)
 		{
 			m = get_mesh("cube.obj");
+			if (m == NULL) { printf("aborted draw call\n");  return; }
+			draw_mesh(-1, m, mat, debug_calls[i].v1, zero, debug_calls[i].v2, BEE_TRUE, BEE_TRUE, tint);
 		}
-		if (m == NULL) { printf("aborted draw call\n");  return; }
-		// material* mat = get_material("MAT_blank_unlit");
-		material* mat = get_material("MAT_cel");
+		// draw_mesh(-1, m ,mat, debug_calls[i].v1, zero, debug_calls[i].v2, BEE_TRUE, BEE_TRUE, tint);
 
-		vec3 one  = GLM_VEC3_ONE_INIT;
-		vec3 zero = GLM_VEC3_ZERO_INIT;
-		vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
-		draw_mesh(m ,mat, debug_calls[i].v1, zero, debug_calls[i].v2, BEE_TRUE, BEE_TRUE, tint);
 	}
 	unbind_framebuffer();
 	arrfree(debug_calls);
@@ -613,24 +664,13 @@ void render_scene_shadows()
 			if (ent->has_model && ent->_mesh.visible)
 			{
 				// MVP for mesh
-				vec3 pos = { 0.0f, 0.0f, 0.0f };
-				vec3 rot = { 0.0f, 0.0f, 0.0f };
+				vec3 pos   = { 0.0f, 0.0f, 0.0f };
+				vec3 rot   = { 0.0f, 0.0f, 0.0f };
 				vec3 scale = { 0.0f, 0.0f, 0.0f };
 				get_entity_global_transform(entity_ids[i], pos, rot, scale);
 
-				mat4 model = GLM_MAT4_IDENTITY_INIT;
-				f32 x = rot[0];  glm_make_rad(&x);
-				f32 y = rot[1];  glm_make_rad(&y);
-				f32 z = rot[2];  glm_make_rad(&z);
-
-				const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
-				const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
-				const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
-				glm_rotate_at(model, pos, x, x_axis);
-				glm_rotate_at(model, pos, y, y_axis);
-				glm_rotate_at(model, pos, z, z_axis);
-				glm_translate(model, pos);
-				glm_scale(model, scale);
+				mat4 model;
+				make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
 				shader_use(shadow_shader);
 				shader_set_mat4(shadow_shader, "model", model);
@@ -713,8 +753,8 @@ void render_scene_normal()
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(entity_ids[i], pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
-			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
+			get_entity_global_transform(entity_ids[i], pos, rot, scale); vec3 v = VEC3_ZERO_INIT;
+			draw_mesh(ent->id, &ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
 
 		}
 		#ifdef EDITOR_ACT
@@ -773,7 +813,7 @@ void render_scene_normal()
 			}
 			if (m == NULL) { continue; }
 			material* mat = get_material("MAT_cel");
-			draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
+			draw_mesh(ent->id, m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
 		}
 		#endif
 	}
@@ -824,8 +864,8 @@ void render_scene_normal()
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
-			get_entity_global_transform(i, pos, rot, scale); vec3 v = GLM_VEC2_ZERO_INIT;
-			draw_mesh(&ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v);
+			get_entity_global_transform(i, pos, rot, scale); vec3 v = VEC3_ZERO_INIT;
+			draw_mesh(ent->id, &ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v);
 		}
 	}
 	// ------------------------------------------------------------------------
@@ -852,7 +892,7 @@ void render_scene_normal()
 		m = get_mesh("move_gizmo.obj");
 
 		material* mat = get_material("MAT_cel");
-		draw_mesh(m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
+		draw_mesh(get_selected_entity(), m, mat, pos, rot, scale, ent->rotate_global, BEE_TRUE, tint); // entities[i].pos, entities[i].rot, entities[i].scalef
 		glEnable(GL_DEPTH_TEST);
 	}
 #endif
@@ -940,7 +980,7 @@ void render_scene_screen()
 	shader_use(screen_shader);
 	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? fb_mouse_pick.buffer : fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
+	glBindTexture(GL_TEXTURE_2D, fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
 	shader_set_int(screen_shader, "tex", 0);
 #ifdef EDITOR_ACT
 	glActiveTexture(GL_TEXTURE1);
@@ -953,7 +993,7 @@ void render_scene_screen()
 	// ------------------------------------------------------------------------
 }
 
-void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col)
+void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col)
 {
 	if (_mesh->visible == BEE_FALSE)
 	{
@@ -964,30 +1004,8 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		glDisable(GL_CULL_FACE);
 	}
 
-	mat4 model = GLM_MAT4_IDENTITY_INIT;
-	f32 x = rot[0];  glm_make_rad(&x);
-	f32 y = rot[1];  glm_make_rad(&y);
-	f32 z = rot[2];  glm_make_rad(&z);
-
-	if (rotate_global == BEE_TRUE)
-	{
-		const vec3 x_axis = { 1.0f, 0.0f, 0.0f };
-		const vec3 y_axis = { 0.0f, 1.0f, 0.0f };
-		const vec3 z_axis = { 0.0f, 0.0f, 1.0f };
-		glm_rotate_at(model, pos, x, x_axis);
-		glm_rotate_at(model, pos, y, y_axis);
-		glm_rotate_at(model, pos, z, z_axis);
-	}
-	else
-	{
-		glm_rotate_x(model, x, model);
-		glm_rotate_y(model, y, model);
-		glm_rotate_z(model, z, model);
-	}
-
-	glm_translate(model, pos);
-
-	glm_scale(model, scale);
+	mat4 model;
+	make_model_matrix(entity_id, pos, rot, scale, rotate_global, model);
 
 	mat4 view;
 	if (gamestate)
@@ -1098,6 +1116,79 @@ void draw_mesh(mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_b
 		tris_per_frame  += _mesh->indices_elems;
 	}
 #endif
+}
+
+void make_model_matrix(int entity_id, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, mat4 model)
+{
+	glm_mat4_copy(GLM_MAT4_IDENTITY, model);
+
+	// parent-child rotation
+	bee_bool rotated_around_parent = BEE_FALSE;
+	vec3 offset;
+
+	f32 x = rot[0];  glm_make_rad(&x);
+	f32 y = rot[1];  glm_make_rad(&y);
+	f32 z = rot[2];  glm_make_rad(&z);
+
+	if (rotate_global == BEE_TRUE)
+	{
+		// rotate around parent
+		entity* ent = get_entity(entity_id);
+		if (entity_id >= 0 && ent->id != -1 && ent->parent != 9999 && get_entity(ent->parent)->has_trans)
+		{
+			// @TODO: make recursive
+
+			vec3 parent_pos   = { 0.0f, 0.0f, 0.0f };
+			vec3 parent_rot   = { 0.0f, 0.0f, 0.0f };
+			vec3 parent_scale = { 0.0f, 0.0f, 0.0f };
+			entity* parent = get_entity(ent->parent);
+			get_entity_global_transform(ent->parent, parent_pos, parent_rot, parent_scale);
+
+			// vec3 parent_offset;
+			// glm_vec3_sub(parent_pos, ent->pos, parent_offset);
+			glm_vec3_add(parent_pos, ent->pos, offset);
+
+			f32 x_p = parent_rot[0];  glm_make_rad(&x_p);
+			f32 y_p = parent_rot[1];  glm_make_rad(&y_p);
+			f32 z_p = parent_rot[2];  glm_make_rad(&z_p);
+			glm_rotate_at(model, parent_pos, x_p, VEC3_X);
+			glm_rotate_at(model, parent_pos, y_p, VEC3_Y);
+			glm_rotate_at(model, parent_pos, z_p, VEC3_Z);
+		
+			rotated_around_parent = BEE_TRUE;
+
+			// normal rotation
+			glm_rotate_at(model, pos, x, VEC3_X); // axis is wrong
+			glm_rotate_at(model, pos, y, VEC3_Y); // @TODO: up axis
+			glm_rotate_at(model, pos, z, VEC3_Z);
+		}
+		else
+		{
+			glm_rotate_at(model, pos, x, VEC3_X);
+			glm_rotate_at(model, pos, y, VEC3_Y);
+			glm_rotate_at(model, pos, z, VEC3_Z);
+		}
+
+	}
+	else
+	{
+		// rotates around center (0, 0, 0)
+		glm_rotate_x(model, x, model);
+		glm_rotate_y(model, y, model);
+		glm_rotate_z(model, z, model);
+	}
+
+	if (rotated_around_parent)
+	{
+		glm_translate(model, offset);
+	}
+	else
+	{
+		glm_translate(model, pos);
+	}
+
+	glm_scale(model, scale);
+
 }
 
 void set_shader_uniforms(material* mat)
@@ -1282,42 +1373,6 @@ void set_shader_uniforms(material* mat)
 		}
 	}
 
-}
-
-void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale)
-{
-	entity* ent = get_entity(idx);
-	if (ent->has_trans && ent->parent != 9999 && (get_entity(ent->parent))->has_trans)
-	{
-		vec3 parent_pos   = { 0.0f, 0.0f, 0.0f };
-		vec3 parent_rot   = { 0.0f, 0.0f, 0.0f };
-		vec3 parent_scale = { 0.0f, 0.0f, 0.0f };
-		get_entity_global_transform(ent->parent, parent_pos, parent_rot, parent_scale);
-
-		glm_vec3_add(parent_pos, ent->pos, *pos);
-
-		// need to rotate the object around its parents position by the parents rotation
-		// glm_vec3_copy(ent->rot, *rot); // ??? lol
-		glm_vec3_add(parent_rot, ent->rot, *rot); // ??? lol
-		
-		glm_vec3_mul(parent_scale, ent->scale, *scale);
-	}
-	else if (ent->has_trans)
-	{
-		// just use the entities transform
-		glm_vec3_copy(ent->pos, *pos);
-		glm_vec3_copy(ent->rot, *rot);
-		glm_vec3_copy(ent->scale, *scale);
-	}
-	else 
-	{
-		// just use a default transform
-		vec3 zero = { 0.0f, 0.0f, 0.0f };
-		vec3 one  = { 1.0f, 1.0f, 1.0f };
-		glm_vec3_copy(zero, *pos);
-		glm_vec3_copy(zero, *rot);
-		glm_vec3_copy(one,  *scale);
-	}
 }
 
 void renderer_cleanup()

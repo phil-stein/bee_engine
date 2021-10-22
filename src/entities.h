@@ -25,7 +25,7 @@ int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material,
 int duplicate_entity(int id);
 
 // the transform of the entity with the parents transforms, calculated recursively 
-void get_entity_global_transform(int idx, vec3* pos, vec3* rot, vec3* scale);
+void get_entity_global_transform(int idx, vec3 pos, vec3 rot, vec3 scale);
 
 // switch the light type of an entity
 void entity_switch_light_type(int entity_id, light_type new_type);

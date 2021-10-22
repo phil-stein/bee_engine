@@ -19,9 +19,18 @@
 	};
 
 	uniform material mat;	
+	uniform int just_tint;
 
 	void main()
 	{
-		// FragColor = vec4(material.tint, 1.0);
-		FragColor = texture(mat.diffuse, _in.tex_coords) * mat.tint;
+		vec4 col;
+		if (just_tint == 1)
+		{
+			col = vec4(mat.tint, 1.0);
+		}
+		else
+		{
+			col = texture(mat.diffuse, _in.tex_coords) * vec4(mat.tint, 1.0);
+		}
+		FragColor = col;
 	}

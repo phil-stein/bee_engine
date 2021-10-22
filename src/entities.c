@@ -75,6 +75,69 @@ void entities_clear_scene()
 	hmdefault(entities, e);
 }
 
+void get_entity_global_transform(int idx, vec3 pos, vec3 rot, vec3 scale)
+{
+	entity* ent = get_entity(idx);
+	if (ent->has_trans && ent->parent != 9999 && (get_entity(ent->parent))->has_trans)
+	{
+		vec3 parent_pos   = { 0.0f, 0.0f, 0.0f };
+		vec3 parent_rot   = { 0.0f, 0.0f, 0.0f };
+		vec3 parent_scale = { 0.0f, 0.0f, 0.0f };
+		get_entity_global_transform(ent->parent, parent_pos, parent_rot, parent_scale);
+		entity* parent = get_entity(ent->parent);
+
+		// copy current transfom values, to avoid floating values
+		glm_vec3_copy(ent->pos, pos);
+		glm_vec3_copy(ent->rot, rot);
+		glm_vec3_copy(ent->scale, scale);
+
+		// // calc model matrix, decompose and get the new position & rotation
+		// vec3 offset;
+		// glm_vec3_add(parent_pos, ent->pos, offset);
+		// 
+		// mat4 rot_mat = GLM_MAT4_IDENTITY_INIT;
+		// f32 x_p = parent_rot[0];  glm_make_rad(&x_p);
+		// f32 y_p = parent_rot[1];  glm_make_rad(&y_p);
+		// f32 z_p = parent_rot[2];  glm_make_rad(&z_p);
+		// glm_rotate_at(rot_mat, parent_pos, x_p, VEC3_X);
+		// glm_rotate_at(rot_mat, parent_pos, y_p, VEC3_Y);
+		// glm_rotate_at(rot_mat, parent_pos, z_p, VEC3_Z);
+		// 
+		// vec4 n_pos;
+		// mat4 n_rot;
+		// vec3 n_scale;
+		// glm_decompose(rot_mat, n_pos, n_rot, n_scale);
+
+		// extract_rotation_from_matrix(new_rot_m, new_rot);
+
+		// take position after parent rotation
+		glm_vec3_add(parent_pos, ent->pos, pos);
+		// vec3 n_pos3; glm_vec3(n_pos, n_pos3);
+		// glm_vec3_add(n_pos3, ent->pos, n_pos3);
+		// glm_vec3_copy(n_pos3, pos);
+
+		// need to rotate the object around its parents position by the parents rotation
+		// glm_vec3_add(parent->rot, ent->rot, rot); // ??? lol
+
+		glm_vec3_mul(parent_scale, ent->scale, scale);
+	}
+	else if (ent->has_trans)
+	{
+		// just use the entities transform
+		glm_vec3_copy(ent->pos, pos);
+		glm_vec3_copy(ent->rot, rot);
+		glm_vec3_copy(ent->scale, scale);
+	}
+	else
+	{
+		// just use a default transform
+		glm_vec3_copy(VEC3_ZERO, pos);
+		glm_vec3_copy(VEC3_ZERO, rot);
+		glm_vec3_copy(VEC3_ONE, scale);
+	}
+}
+
+
 // add an entity
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, rigidbody* rb, collider* col, char* name)
 {
@@ -372,6 +435,7 @@ void entity_remove_child(int parent, int child)
 	vec3 pos = { 0.0f, 0.0f, 0.0f };
 	vec3 rot = { 0.0f, 0.0f, 0.0f };
 	vec3 scale = { 0.0f, 0.0f, 0.0f };
+	mat4 rot_m;
 	get_entity_global_transform(child, pos, rot, scale);
 	entity* child_ent = (get_entity(child));
 	printf("removed child: \"%s\" of parent: \"%s\"\n", child_ent->name, (get_entity(parent))->name);
