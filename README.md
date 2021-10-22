@@ -1,5 +1,5 @@
-# bee engine
-<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/#internal/bee_engine_logo.svg" alt="logo" width="50"> simple 3d game-engine in C ( C89 ), using OpenGL 4.6 <br>
+# <img src="https://github.com/phil-stein/bee_engine/blob/main/assets/%23internal/icons/bee_engine_logo.svg" alt="logo" width="50">ee engine
+simple 3d game-engine in C ( C89 ), using OpenGL 4.6 <br>
 **still under development | unstable**
 
 using    [glfw3](https://www.glfw.org/), [glad](https://glad.dav1d.de/), [cglm](https://github.com/recp/cglm), [stb_image & stb_ds](https://github.com/nothings/stb), [nuklear](https://github.com/Immediate-Mode-UI/Nuklear), [assimp](http://assimp.org/), [gravity](https://github.com/marcobambini/gravity), [tiny file dialogs](https://sourceforge.net/p/tinyfiledialogs/code/ci/master/tree/)<br>
