@@ -75,9 +75,9 @@ void entities_clear_scene()
 	hmdefault(entities, e);
 }
 
-void get_entity_global_transform(int idx, vec3 pos, vec3 rot, vec3 scale)
+void get_entity_global_transform(int id, vec3 pos, vec3 rot, vec3 scale)
 {
-	entity* ent = get_entity(idx);
+	entity* ent = get_entity(id);
 	if (ent->has_trans && ent->parent != 9999 && (get_entity(ent->parent))->has_trans)
 	{
 		vec3 parent_pos   = { 0.0f, 0.0f, 0.0f };
@@ -115,9 +115,6 @@ void get_entity_global_transform(int idx, vec3 pos, vec3 rot, vec3 scale)
 		// vec3 n_pos3; glm_vec3(n_pos, n_pos3);
 		// glm_vec3_add(n_pos3, ent->pos, n_pos3);
 		// glm_vec3_copy(n_pos3, pos);
-
-		// need to rotate the object around its parents position by the parents rotation
-		// glm_vec3_add(parent->rot, ent->rot, rot); // ??? lol
 
 		glm_vec3_mul(parent_scale, ent->scale, scale);
 	}

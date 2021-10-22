@@ -537,17 +537,27 @@ void render_scene_debug()
 		}
 		else if (debug_calls[i].type == DEBUG_DRAW_LINE)
 		{
-			// TODO: add capability to render lines
+			// TODO: this is yank, do better
 			u32 vao, vbo;
-			const f32 lw = 0.2f; // line width
-			f32 vertices[] = { 0.5f * lw, 2, 0,   // right top
-							   -.5f * lw, 2, 0,   // left top
-							   -.5f * lw, 0, 0,   // left bottom
-							   -.5f * lw, 0, 0,   // left bottom			   
-							   0.5f * lw, 0, 0,	  // right bottom
-							   0.5f * lw, 2, 0 }; // right top
+			const f32 lw = 0.05f; // line width
+			// pointers, access the same vec3
+			f32* p1 = debug_calls[i].v1;
+			f32* p2 = debug_calls[i].v2; 
+			f32 vertices[] = { (0.5f * lw) + p2[0], p2[1], p2[2],   // front, right top
+							   (-.5f * lw) + p2[0], p2[1], p2[2],   // front, left top
+							   (-.5f * lw) + p1[0], p1[1], p1[2],   // front, left bottom
+							   (-.5f * lw) + p1[0], p1[1], p1[2],   // front, left bottom			   
+							   (0.5f * lw) + p1[0], p1[1], p1[2],	// front, right bottom
+							   (0.5f * lw) + p2[0], p2[1], p2[2],   // front, right top
+							
+							   p2[0], p2[1], (0.5f * lw) + p2[2],   // left, right top
+							   p2[0], p2[1], (-.5f * lw) + p2[2],   // left, left top
+							   p1[0], p1[1], (-.5f * lw) + p1[2],   // left, left bottom
+							   p1[0], p1[1], (-.5f * lw) + p1[2],   // left, left bottom			   
+							   p1[0], p1[1], (0.5f * lw) + p1[2],	// left, right bottom
+							   p2[0], p2[1], (0.5f * lw) + p2[2]};  // left, right top
 							   
-			const u32 vertices_len = 3 * 6; // 3 f32 per vert, 6 verts total
+			const u32 vertices_len = 3 * 12; // 3 f32 per vert, 6 verts total
 
 			glGenVertexArrays(1, &vao);
 			glGenBuffers(1, &vbo);
@@ -562,6 +572,8 @@ void render_scene_debug()
 
 			// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			glDisable(GL_CULL_FACE);
 
 			mat4 model;
 			make_model_matrix(0, VEC3_ZERO, VEC3_ZERO, VEC3_ONE, BEE_FALSE, model);
@@ -604,6 +616,7 @@ void render_scene_debug()
 			glBindVertexArray(vao);
 			glDrawArrays(GL_TRIANGLES, 0, 18); // each vertices consist of 3 floats
 
+			glEnable(GL_CULL_FACE);
 		}
 		else if (debug_calls[i].type == DEBUG_DRAW_CUBE)
 		{

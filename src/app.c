@@ -276,8 +276,6 @@ void update()
 	set_window_title(title);
 
 	// -------------
-
-	debug_draw_line(VEC3_ZERO, VEC3_ONE);
 	
 
 #ifdef EDITOR_ACT

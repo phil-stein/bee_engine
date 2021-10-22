@@ -128,6 +128,15 @@ void simulate_dynamics(entity* e)
 
 	// reset force to (0, 0, 0)
 	glm_vec3_copy(GLM_VEC3_ZERO, e->rb.force);
+
+#ifdef EDITOR_ACT
+	vec3 pos, rot, scale, v_scaled, v_pos;
+	get_entity_global_transform(e->id, pos, rot, scale);
+	glm_vec3_copy(e->rb.velocity, v_scaled);  
+	vec3_mul_f(v_scaled, 0.2f);
+	glm_vec3_add(pos, v_scaled, v_pos);
+	debug_draw_line(pos, v_pos);
+#endif
 }
 
 // ---- collision checks ----
