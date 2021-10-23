@@ -1,4 +1,4 @@
-Todo
+# Todo
 
 - general
   - [ ] setup release build
@@ -60,7 +60,7 @@ Todo
 
     -> directly use uniform from shader, without having to add them in the material as well
 
-  - [ ] move gizmo take camera rotation into account
+  - [ ] move gizmo take camera orientation into account
 
   - [ ] make first entity be right-click-able & drag-able
 
@@ -74,21 +74,15 @@ Todo
 
     - [x] sphere
     - [x] cube
-    - [ ] line
+    - [x] line
     - [ ] line cube
     - [ ] text
       - [ ] text renderer "stb_truetype.h"
       - [ ] transform to world pos (scale by z pos
       - [ ] make this available to rest of engine, for f.e. player names above their heads
 
-    
 
-- [ ] scene system
-  - [ ] serialization
 
-    - [ ] add cubemap  to scene header
-
-      
 
 - graphics
   - [ ] sort geometry of transparent objects
@@ -99,9 +93,9 @@ Todo
   
     - [x] shadow mapping
     - [ ] point shadows
-    - [ ] cascaded shadow mapping
+    - [ ] cascaded shadow mapping (in guest articles on learnopengl.com)
     
-  - [ ] parallax mapping
+  - [ ] parallax mapping ?
   
   - [ ] bloom (as in the cherno video)
   
@@ -177,7 +171,23 @@ Todo
 
   - [ ] controller input
 
-  
+    
+
+- [ ] audio
+
+  - [ ] load file
+
+  - [ ] play clip
+
+  - [ ] loop
+
+  - [ ] 3d audio
+
+  - [ ] mixing
+
+  - [ ] reverb, pitch and that sort of stuff ( i is expert)
+
+    
 
 - [ ] gravity scripting
 

@@ -1,4 +1,4 @@
-# <img src="https://github.com/phil-stein/bee_engine/blob/main/assets/%23internal/icons/bee_engine_logo.svg" alt="logo" width="50">ee engine
+# <img src="https://github.com/phil-stein/bee_engine/blob/main/assets/%23internal/icons/bee_engine_logo.svg" alt="logo" width="60">ee engine
 simple 3d game-engine in C ( C89 ), using OpenGL 4.6 <br>
 **still under development | unstable**
 
