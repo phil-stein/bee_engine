@@ -106,6 +106,8 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 	serialize_str(buffer, offset, ent->name);
 	serialize_int(buffer, offset, ent->id);
 
+	serialize_enum(buffer, offset, ent->visible);
+
 	serialize_enum(buffer, offset, ent->has_trans);
 	if (ent->has_trans)
 	{
@@ -118,7 +120,8 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 	serialize_enum(buffer, offset, ent->has_model);
 	if (ent->has_model)
 	{
-		serialize_mesh(buffer, offset, ent->_mesh);
+		serialize_str(buffer, offset, ent->_mesh->name);
+		// serialize_mesh(buffer, offset, ent->_mesh);
 		serialize_str(buffer, offset, ent->_material->name);
 		// serialize_material(buffer, offset, ent->_material);
 	}
@@ -412,9 +415,8 @@ void serialize_vec3(char* buffer, int* offset, vec3 val)
 scene deserialize_scene(char* buffer, int* offset, rtn_code* success)
 {
 	// serialization version number
-	f32 ver = deserialize_float(buffer, offset);
-	current_version = ver;
-	printf("deserializing scene using version: %f\n", ver);
+	current_version = deserialize_float(buffer, offset);
+	printf("deserializing scene using version: %f\n", current_version);
 
 	scene s;
 	if (current_version >= 1.3f)
@@ -470,12 +472,22 @@ entity deserialize_entity(char* buffer, int* offset)
 	entity e;
 
 	e.name = deserialize_str(buffer, offset);
+	printf("deserialized entity.name: %s\n", e.name);
 
 	if (current_version >= 0.2f)
 	{
 		e.id = deserialize_int(buffer, offset);
 	}
+	else { e.id = -1; }
+	if (current_version >= 1.6f)
+	{
+		e.visible = deserialize_enum(buffer, offset);
+		printf("deserialized entity.visible: %d\n", e.visible);
+	}
+	else { e.visible = BEE_TRUE; }
+
 	e.has_trans = deserialize_enum(buffer, offset);
+	printf("deserialized entity.has_trans: %d\n", e.has_trans);
 	if (e.has_trans)
 	{
 		deserialize_vec3(buffer, offset, e.pos);
@@ -485,14 +497,24 @@ entity deserialize_entity(char* buffer, int* offset)
 	e.rotate_global = deserialize_enum(buffer, offset);
 
 	e.has_model = deserialize_enum(buffer, offset);
+	printf("deserialized entity.has_model: %d\n", e.has_model);
 	if (e.has_model)
 	{
-		e._mesh     = deserialize_mesh(buffer, offset);
+		if (current_version <= 1.5f)
+		{
+			e._mesh     = deserialize_mesh(buffer, offset);
+		}
+		else
+		{
+			e._mesh = get_mesh(deserialize_str(buffer, offset));
+		}
 		e._material = get_material(deserialize_str(buffer, offset));
 	}
 
 	e.has_cam   = deserialize_enum(buffer, offset);
 	e.has_light = deserialize_enum(buffer, offset);
+	printf("deserialized entity.has_cam: %d\n", e.has_cam);
+	printf("deserialized entity.has_light: %d\n", e.has_light);
 	if (e.has_cam)
 	{
 		e._camera = deserialize_camera(buffer, offset);
@@ -592,11 +614,9 @@ material* deserialize_material(char* buffer, int* offset)
 
 mesh* deserialize_mesh(char* buffer, int* offset)
 {
-	if (current_version <= 1.5f)
-	{
-		bee_bool visible = deserialize_enum(buffer, offset);
-	}
+	bee_bool visible = deserialize_enum(buffer, offset);
 	char* name = deserialize_str(buffer, offset);
+	printf("deserialized mesh.name: %s\n", name);
 	mesh* m = get_mesh(name);
 	// m->visible = visible;
 	return m;
@@ -724,7 +744,7 @@ shader* deserialize_shader(char* buffer, int* offset)
 			uniform_def def = deserialize_uniform_def(buffer, offset);
 			arrput(uniform_defs, def);
 		}
-		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniform_defs_len, uniform_defs, BEE_TRUE);
+		return add_shader_specific(vert_name, frag_name, name, use_lighting, uniform_defs_len, uniform_defs, BEE_FALSE); // BEE_TRUE
 	}
 	else if (current_version >= 0.6f)
 	{
@@ -744,7 +764,7 @@ shader* deserialize_shader(char* buffer, int* offset)
 			deserialize_uniform(buffer, offset, get_shader(name));
 		}
 	}
-	return add_shader(vert_name, frag_name, name, BEE_TRUE); 
+	return add_shader(vert_name, frag_name, name, BEE_FALSE); // BEE_TRUE
 }
 
 texture deserialize_texture(char* buffer, int* offset)

@@ -469,6 +469,13 @@ void render_scene_outline()
 	int id = get_selected_entity();
 	entity* ent = get_entity(id);
 	// printf("selected entity: \"%s\", id: %d, entity id: %d\n", ent->name, id, ent->id);
+#ifdef EDITOR_ACT
+// draw in solid-mode for fbo
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+#endif+
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	int w, h; get_window_size(&w, &h);
 	glViewport(0, 0, w, h);
@@ -993,7 +1000,7 @@ void render_scene_screen()
 	shader_use(screen_shader);
 	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
+	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? fb_outline.buffer : fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
 	shader_set_int(screen_shader, "tex", 0);
 #ifdef EDITOR_ACT
 	glActiveTexture(GL_TEXTURE1);

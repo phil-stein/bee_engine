@@ -199,6 +199,7 @@ void init()
 	// load_scene("showcase06.scene");
 	load_scene("physics05.scene");
 	// load_scene("rotation01.scene");
+	// load_scene("tmp02.scene");
 
 	// generate physics components old
 	/*
