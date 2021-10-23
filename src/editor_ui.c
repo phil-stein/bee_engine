@@ -171,7 +171,7 @@ ui_rect scene_context_window_rect;
 ui_rect edit_asset_window_rect;
 ui_rect drag_and_drop_import_window_rect;
 
-#pragma endregion
+#pragma endregion // vars
 
 
 void ui_init()
@@ -1756,6 +1756,8 @@ void properties_window()
                     nk_label(ctx, "ID:", NK_TEXT_LEFT);
                     char buf[4]; sprintf_s(buf, 4, "%d", ent->id);
                     nk_label(ctx, buf, NK_TEXT_LEFT);
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_checkbox_label(ctx, " visible", &ent->visible);
 
 
                     if (ent->parent != 9999)
@@ -2022,7 +2024,6 @@ void draw_properties_menu_bar()
             vec3 zero = { 0.0f, 0.0f, 0.0f };
             vec3 one = { 1.0f, 1.0f, 1.0f };
             int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, NULL, "mesh");
-            get_entity(cube)->_mesh.visible = BEE_TRUE;
         }
         if (nk_menu_item_label(ctx, "Light", NK_TEXT_LEFT))
         {
@@ -2046,7 +2047,6 @@ void draw_properties_menu_bar()
             vec3 one = { 1.0f, 1.0f, 1.0f };
             collider c = make_box_collider(one, BEE_FALSE);
             int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, NULL, &c, "collider");
-            get_entity(cube)->_mesh.visible = BEE_TRUE;
         }
         if (nk_menu_item_label(ctx, "Rigidbody", NK_TEXT_LEFT))
         {
@@ -2055,7 +2055,6 @@ void draw_properties_menu_bar()
             collider c = make_box_collider(one, BEE_FALSE);
             rigidbody rb = make_rigidbody(1.0f);
             int cube = add_entity(zero, zero, one, get_mesh("cube.obj"), get_material("MAT_blank"), NULL, NULL, &rb, &c, "rigidbody");
-            get_entity(cube)->_mesh.visible = BEE_TRUE;
         }
         nk_menu_end(ctx);
     }
@@ -2655,7 +2654,7 @@ void draw_mesh_component(entity* ent)
         if (nk_button_label(ctx, "Remove"))
         {
             ent->has_model = BEE_FALSE;
-            // ent->_mesh     = NULL;
+            ent->_mesh     = NULL;
             ent->_material = NULL;
         }
         nk_spacing(ctx, 1);
@@ -2666,7 +2665,7 @@ void draw_mesh_component(entity* ent)
         int meshes_len = 0;
         meshes = get_all_meshes(&meshes_len);
         static int selected_mesh = 0;
-        selected_mesh = get_mesh_idx(ent->_mesh.name);
+        selected_mesh = get_mesh_idx(ent->_mesh->name);
         int selected_mesh_old = selected_mesh;
         char** meshes_names = malloc(meshes_len * sizeof(char*));
         assert(meshes_names != NULL);
@@ -2679,23 +2678,20 @@ void draw_mesh_component(entity* ent)
 
         selected_mesh = nk_combo(ctx, meshes_names, meshes_len, selected_mesh, 25, nk_vec2(200, 200));
 
-        if (selected_mesh_old != selected_mesh) { ent->_mesh = meshes[selected_mesh]; }
-
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_checkbox_label(ctx, " visible", &ent->_mesh.visible);
+        if (selected_mesh_old != selected_mesh) { ent->_mesh = &meshes[selected_mesh]; }
 
         nk_layout_row_dynamic(ctx, 25, 2);
 
-        sprintf(buffer, "%d", ent->_mesh.vertices_elems);
+        sprintf(buffer, "%d", ent->_mesh->vertices_elems);
         nk_label(ctx, "Vertices: ", NK_TEXT_LEFT);
         nk_label(ctx, buffer, NK_TEXT_RIGHT);
 
-        sprintf(buffer, "%d", ent->_mesh.indices_elems);
+        sprintf(buffer, "%d", ent->_mesh->indices_elems);
         nk_label(ctx, "Indices: ", NK_TEXT_LEFT);
         nk_label(ctx, buffer, NK_TEXT_RIGHT);
 
         nk_label(ctx, "Indexed: ", NK_TEXT_LEFT);
-        nk_label(ctx, ent->_mesh.indexed == BEE_FALSE ? "false" : "true", NK_TEXT_RIGHT);
+        nk_label(ctx, ent->_mesh->indexed == BEE_FALSE ? "false" : "true", NK_TEXT_RIGHT);
 
 
         mesh_bounds.h += 6 * 25; // six elements 25 high
@@ -2706,7 +2702,7 @@ void draw_mesh_component(entity* ent)
             if (NK_INBOX(dropped_asset.pos[0], dropped_asset.pos[1], mesh_bounds.x, mesh_bounds.y, mesh_bounds.w, mesh_bounds.h))
             {
                 printf("dropped asset dropped over mesh\n");
-                ent->_mesh = meshes[dropped_asset.asset_idx];
+                ent->_mesh = &meshes[dropped_asset.asset_idx];
                 dropped_asset.handled = BEE_TRUE;
             }
         }

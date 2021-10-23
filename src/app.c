@@ -43,13 +43,13 @@ void init()
 
 	// ---- populate scene ----
 	/*
-	shader* shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default");
+	shader* shader_default = add_shader("basic.vert", "blinn_phong.frag", "SHADER_default", BEE_TRUE);
 
-	shader* shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit");
+	shader* shader_unlit   = add_shader("basic.vert", "unlit.frag", "SHADER_unlit", BEE_TRUE);
 						  
-	shader* shader_cel     = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel");
+	shader* shader_cel     = add_shader("basic.vert", "cel_shading.frag", "SHADER_cel", BEE_TRUE);
 						  
-	shader* shader_noise   = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise");
+	shader* shader_noise   = add_shader("basic.vert", "basic_noise.frag", "SHADER_noise", BEE_TRUE);
 	
 
 	vec2 tile = { 1.0f, 1.0f };
@@ -100,11 +100,11 @@ void init()
 	vec3 cam_rot   = { 0, 0, 0 };
 	vec3 cam_scale = { 1, 1, 1 };
 	mesh* m_camera = get_mesh("camera.obj");
-	// add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_cel"), &cam, NULL, "camera");
-	add_entity(cam_pos, cam_rot, cam_scale, NULL, NULL, &cam, NULL, "camera");
+	//  add_entity(cam_pos, cam_rot, cam_scale, m_camera, get_material("MAT_cel"), &cam, NULL, "camera");
+	// add_entity(cam_pos, cam_rot, cam_scale, NULL, NULL, &cam, NULL, NULL, NULL, "camera");
 
-	int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
-	entity_add_script(ent_empty, "game_controller_tmp.gravity");
+	// int ent_empty = add_entity(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, "game controller");
+	// entity_add_script(ent_empty, "game_controller_tmp.gravity");
 
 
 	vec3 ambient      = { 0.0f, 0.0f, 0.0f };
@@ -123,13 +123,13 @@ void init()
 	vec3 rot_light	   = { 0.0f, 0.0f,  0.0f };
 	vec3 scale		   = { 1.0f, 1.0f, 1.0f };
 	glm_vec3_copy(diffuse01, mat_blank->tint);
-	// add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_cel"), NULL, &dir_light,   "dir_light");	// mat_blank_unlit
-	add_entity(pos_light01, rot_light, scale, NULL, NULL, NULL, &dir_light,   "dir_light");	// mat_blank_unlit
-	// add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_cel"), NULL, &spot_light,  "spot_light");	// mat_blank_unlit
-	add_entity(pos_light03, rot_light, scale, NULL, NULL, NULL, &spot_light,  "spot_light");	// mat_blank_unlit
+	//  add_entity(pos_light01, rot_light, scale_light02, m_arrow,      get_material("MAT_cel"), NULL, &dir_light,   "dir_light");	// mat_blank_unlit
+	// add_entity(pos_light01, rot_light, scale, NULL, NULL, NULL, &dir_light, NULL, NULL, "dir_light");	// mat_blank_unlit
+	//  add_entity(pos_light03, rot_light, scale_light02, m_flashlight, get_material("MAT_cel"), NULL, &spot_light,  "spot_light");	// mat_blank_unlit
+	// add_entity(pos_light03, rot_light, scale, NULL, NULL, NULL, &spot_light, NULL, NULL, "spot_light");	// mat_blank_unlit
 	glm_vec3_copy(diffuse02, mat_blank->tint);
-	// add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
-	add_entity(pos_light02, rot_light, scale, NULL, NULL, NULL, &point_light, "point_light");	// mat_blank_unlit
+	//  add_entity(pos_light02, rot_light, scale_light01, m_lightbulb, get_material("MAT_cel"), NULL, &point_light, "point_light");	// mat_blank_unlit
+	// add_entity(pos_light02, rot_light, scale, NULL, NULL, NULL, &point_light, NULL, NULL, "point_light");	// mat_blank_unlit
 	glm_vec3_copy(specular, mat_blank->tint); // all 1.0f
 
 	// plane
@@ -141,26 +141,28 @@ void init()
 	vec3 rot01 = { 0.0f, 0.0f, 0.0f };
 	vec3 scale01;
 	glm_vec3_scale(scale, 5.0f, scale01);
-	add_entity(pos01, rot01, scale01, &m_plane, get_material("MAT_grass"), NULL, NULL, "ground");  // mat_grass
-	int ent_win01 = add_entity(pos02, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, NULL, "window_01"); // mat_glass
-	int ent_win02 = add_entity(pos03, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, NULL, "window_02"); // mat_glass
-	int ent_win03 = add_entity(pos04, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, NULL, "window_03"); // mat_glass
-	entity_set_parent(ent_win03, ent_win02);
-	entity_set_parent(ent_win02, ent_win01);
+	// add_entity(pos01, rot01, scale01, &m_plane, get_material("MAT_grass"), NULL, NULL, NULL, NULL, "ground");  // mat_grass
+	// int ent_win01 = add_entity(pos02, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, NULL, NULL, NULL, "window_01"); // mat_glass
+	// int ent_win02 = add_entity(pos03, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, NULL, NULL, NULL, "window_02"); // mat_glass
+	// int ent_win03 = add_entity(pos04, rot01, scale, &m_plane, get_material("MAT_glass"), NULL, NULL, NULL, NULL, "window_03"); // mat_glass
+	// entity_set_parent(ent_win03, ent_win02);
+	// entity_set_parent(ent_win02, ent_win01);
 
 	mesh* m_crate = get_mesh("crate01.obj");
+	printf("mesh->name: %s\n", m_crate->name);
 	vec3 pos05 = { 1.0f, 0.0f, 1.0f };
 	vec3 scale02;
 	glm_vec3_scale(scale, 0.5f, scale02);
-	int ent_crate = add_entity(pos05, rot01, scale02, m_crate, get_material("MAT_crate"), NULL, NULL, "crate"); // mat_crate
-	entity* crate_ptr = get_entity(ent_crate);
-	crate_ptr->_mesh.visible = BEE_FALSE;
+	int ent_crate = add_entity(pos05, rot01, scale02, m_crate, get_material("MAT_crate"), NULL, NULL, NULL, NULL, "crate"); // mat_crate
+	printf("ent->mesh->name: %s\n", get_entity(ent_crate)->_mesh->name);
+	// entity* crate_ptr = get_entity(ent_crate);
+	// crate_ptr->_mesh->visible = BEE_FALSE;
 	
 	mesh* m_robot = get_mesh("robot01_LD.obj");
 	vec3 pos08 = { 2.0f, -0.5f, 0.0f };
 	vec3 scale04;
 	glm_vec3_scale(scale, 0.25f, scale04);
-	int ent_robot = add_entity(pos08, rot01, scale04, m_robot, get_material("MAT_robot"), NULL, NULL, "robot"); // mat_robot
+	// int ent_robot = add_entity(pos08, rot01, scale04, m_robot, get_material("MAT_robot"), NULL, NULL, NULL, NULL, "robot"); // mat_robot
 	// entity_add_script(ent_robot, "move_arrows.gravity");
 
 
@@ -169,33 +171,34 @@ void init()
 	vec3 rot02 = { 0.0f, 180,   0.0f };
 	// vec3 scale04;
 	// glm_vec3_scale(scale, 0.25f, scale04);
-	int ent_demon = add_entity(pos09, rot02, scale04, m_demon, get_material("MAT_demon"), NULL, NULL, "demon"); // mat_robot
-	entity_add_script(ent_demon, "move_arrows.gravity");
+	// int ent_demon = add_entity(pos09, rot02, scale04, m_demon, get_material("MAT_demon"), NULL, NULL, NULL, NULL, "demon"); // mat_robot
+	// entity_add_script(ent_demon, "move_arrows.gravity");
 
 
 	mesh* m_bunny = get_mesh("bunny.obj");
 	vec3 pos06 = { 1.5f, -0.5f, -1.5f };
-	int ent_bunny = add_entity(pos06, rot01, scale, m_bunny, get_material("MAT_blank"), NULL, NULL, "bunny"); // mat_blank
-	entity_add_script(ent_bunny, "sinewave_y.gravity");
+	// int ent_bunny = add_entity(pos06, rot01, scale, m_bunny, get_material("MAT_blank"), NULL, NULL, NULL, NULL, "bunny"); // mat_blank
+	// entity_add_script(ent_bunny, "sinewave_y.gravity");
 
 	mesh* m_barrel = get_mesh("post_apocalyptic_barrel.obj");
 	vec3 pos07 = { -1.5f, 0.0f, -1.5f };
 	vec3 scale03;
 	glm_vec3_scale(scale, 0.5f, scale03);
-	int ent_barrel = add_entity(pos07, rot01, scale03, m_barrel, get_material("MAT_barrel"), NULL, NULL, "barrel"); // mat_barrel
-	entity_add_script(ent_barrel, "sinewave_x.gravity");
+	// int ent_barrel = add_entity(pos07, rot01, scale03, m_barrel, get_material("MAT_barrel"), NULL, NULL, NULL, NULL, "barrel"); // mat_barrel
+	// entity_add_script(ent_barrel, "sinewave_x.gravity");
 		
-	entity_set_parent(ent_crate, ent_bunny);
+	// entity_set_parent(ent_crate, ent_bunny);
 	// entity_set_parent(ent_bunny, ent_crate);
 	// entity_set_parent(ent_robot, ent_crate);
 	
 	// cube for testing noise shader
-	add_entity(scale, rot01, scale, get_mesh("cube.obj"), get_material("MAT_noise"), NULL, NULL, "noise_cube"); // mat_barrel
+	// add_entity(scale, rot01, scale, get_mesh("cube.obj"), get_material("MAT_noise"), NULL, NULL, NULL, NULL, "noise_cube"); // mat_barrel
 
 	*/
 
 	// load_scene("showcase06.scene");
-	load_scene("rotation01.scene");
+	load_scene("physics05.scene");
+	// load_scene("rotation01.scene");
 
 	// generate physics components old
 	/*
@@ -276,7 +279,7 @@ void update()
 	set_window_title(title);
 
 	// -------------
-	
+
 
 #ifdef EDITOR_ACT
 	// ---- input ----

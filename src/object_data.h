@@ -100,7 +100,6 @@ typedef struct mesh
 	u32 vao, vbo, ebo;
 
 	bee_bool indexed;
-	bee_bool visible;
 
 	char* name;
 }mesh;
@@ -210,6 +209,7 @@ typedef struct entity
 	char* name;
 	int   id;
 	int   id_idx;
+	bee_bool visible;
 
 	bee_bool has_trans;
 	vec3 pos;
@@ -222,7 +222,7 @@ typedef struct entity
 	// ---- components ----
 
 	bee_bool has_model;
-	mesh _mesh;
+	mesh* _mesh;
 	material* _material;
 
 	bee_bool has_cam;

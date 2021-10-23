@@ -39,7 +39,6 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 {
 	mesh m;
 	m.name = name;
-	m.visible = BEE_TRUE;
 	// m.vertices = NULL;
 	m.vertices_len   = vertices_len;
 	m.vertices_elems = vertices_len / 11;
@@ -408,20 +407,21 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _mat, 
 {
 	entity ent;
 	ent.name = _name;
+	ent.visible = BEE_TRUE;
 	ent.rotate_global = BEE_TRUE;
 
 	ent.has_trans = (pos == NULL || rot == NULL || scale == NULL) ? BEE_FALSE : BEE_TRUE;
 	if (ent.has_trans)
 	{
-		glm_vec3_copy(pos, ent.pos);
-		glm_vec3_copy(rot, ent.rot);
+		glm_vec3_copy(pos,	 ent.pos);
+		glm_vec3_copy(rot,	 ent.rot);
 		glm_vec3_copy(scale, ent.scale);
 	}
 
 	ent.has_model = (_mesh != NULL && _mat != NULL) ? BEE_TRUE : BEE_FALSE;
 	if (ent.has_model)
 	{
-		ent._mesh	  = *_mesh;
+		ent._mesh	  = _mesh;
 		ent._material = _mat;
 	}
 	ent.has_cam = _cam != NULL ? BEE_TRUE : BEE_FALSE;
@@ -519,8 +519,8 @@ void free_entity(entity* ent)
 {
 	if (ent->has_model)
 	{
-		// free_mesh(&ent->_mesh);
-		// free_material(&ent->_material);
+		// free_mesh(ent->_mesh);
+		// free_material(ent->_material);
 	}
 
 	if (ent->scripts_len > 0)

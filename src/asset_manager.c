@@ -773,7 +773,7 @@ void remove_logged_mesh(char* name)
 
 int get_mesh_idx(char* name)
 {
-	return shget(meshes, name);
+	return shget(meshes, name) == -1 ? 0 : shget(meshes, name);
 }
 
 mesh* get_all_meshes(int* meshes_len)
@@ -795,7 +795,6 @@ mesh* get_mesh(const char* name)
 	// get the index to the mesh_data array from the hashmap
 	int i = shget(meshes, name);
 
-
 	// check if the mesh hasn't been loaded yet 
 	if (i == 9999 || i > mesh_data_len) // 0 == 0
 	{
@@ -810,7 +809,7 @@ void log_mesh(const char* path, const char* name)
 {
 	if (check_mesh_exists(name))
 	{
-		printf("tried to add mesh: \"%s\" but already existed\n", name);
+		printf("[ERROR] tried to add mesh: \"%s\" but already existed\n", name);
 		return;
 	}
 
@@ -834,7 +833,7 @@ void log_mesh(const char* path, const char* name)
 	int i = shgeti(meshes, name);
 	hmput(meshes_paths, i, path_cpy);
 	meshes_paths_len++;
-	// printf("texture path: \"%s\"; texture name: \"%s\"; texture id: %d\n", path, name, i);
+	printf("path: \"%s\"; name: \"%s\"; id: %d\n", path, name, i);
 
 	// keep track of logged mesh names
 	arrput(logged_meshes, name_cpy);
@@ -846,13 +845,20 @@ void create_mesh(const char* name)
 {
 	// key for the path is the index of the mesh in the hashmap
 	int path_idx = shgeti(meshes, name);
+	assert(path_idx >= 0);
 	char* path = hmget(meshes_paths, path_idx);
+
+	// copy name and path as passed name might be deleted
+	char* name_cpy = malloc((strlen(name) + 1) * sizeof(char));
+	assert(name_cpy != NULL);
+	strcpy(name_cpy, name);
 
 	mesh m = load_mesh(path);
 
 	// put texture index in tex array into the value of the hashmap with the texture name as key 
 	// and put the created texture into the tex array
-	shput(meshes, name, mesh_data_len);
+	shput(meshes, name_cpy, mesh_data_len);
+	// meshes_len++; // @BUGG: causes weird stuff
 	arrput(mesh_data, m);
 	mesh_data_len++;
 
@@ -971,14 +977,14 @@ int get_material_idx(char* name)
 }
 
 material* add_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
-	vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
+					   vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
 {
 	return add_material_specific(s, dif_tex, spec_tex, get_texture("blank.png"), is_transparent, shininess,
 								 tile, tint, draw_backfaces, 0, NULL, name, overwrite);
 }
 
 material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, 
-					   vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite)
+								vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite)
 {
 	if (shget(materials, name) != -1) // check if already exist
 	{
@@ -1121,7 +1127,7 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 	s.uniform_defs		= uniform_defs;
 
 	shput(shaders, name_cpy, shaders_data_len);
-	shaders_len++;
+	// shaders_len++; // @BUGG: causes weird stuff
 	arrput(shaders_data, s);
 	shaders_data_len++;
 

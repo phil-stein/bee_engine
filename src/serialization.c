@@ -6,7 +6,7 @@
 #include "framebuffer.h"
 #include "scene_manager.h" // tmp
 
-#define VERSION 1.5f
+#define VERSION 1.6f
 f32 current_version = VERSION;
 
 
@@ -118,7 +118,7 @@ void serialize_entity(char* buffer, int* offset, entity* ent)
 	serialize_enum(buffer, offset, ent->has_model);
 	if (ent->has_model)
 	{
-		serialize_mesh(buffer, offset, &ent->_mesh);
+		serialize_mesh(buffer, offset, ent->_mesh);
 		serialize_str(buffer, offset, ent->_material->name);
 		// serialize_material(buffer, offset, ent->_material);
 	}
@@ -207,7 +207,7 @@ void serialize_mesh(char* buffer, int* offset, mesh* m)
 	// serialize_u32(buffer, offset, m->ebo);
 
 	// serialize_enum(buffer, offset, m->indexed);
-	serialize_enum(buffer, offset, m->visible);
+	// serialize_enum(buffer, offset, m->visible);
 	serialize_str(buffer, offset, m->name);
 }
 
@@ -487,7 +487,7 @@ entity deserialize_entity(char* buffer, int* offset)
 	e.has_model = deserialize_enum(buffer, offset);
 	if (e.has_model)
 	{
-		e._mesh     = *deserialize_mesh(buffer, offset);
+		e._mesh     = deserialize_mesh(buffer, offset);
 		e._material = get_material(deserialize_str(buffer, offset));
 	}
 
@@ -592,10 +592,13 @@ material* deserialize_material(char* buffer, int* offset)
 
 mesh* deserialize_mesh(char* buffer, int* offset)
 {
-	bee_bool visible = deserialize_enum(buffer, offset);
+	if (current_version <= 1.5f)
+	{
+		bee_bool visible = deserialize_enum(buffer, offset);
+	}
 	char* name = deserialize_str(buffer, offset);
 	mesh* m = get_mesh(name);
-	m->visible = visible;
+	// m->visible = visible;
 	return m;
 }
 

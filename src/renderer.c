@@ -358,7 +358,7 @@ void render_scene_mouse_pick()
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		entity* ent = get_entity(entity_ids[i]);
-		if ((ent->has_model && ent->_mesh.visible) || ent->has_light || ent->has_cam)
+		if ((ent->has_model) || ent->has_light || ent->has_cam) //  && ent->visible
 		{
 			// MVP for mesh
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
@@ -376,7 +376,7 @@ void render_scene_mouse_pick()
 
 			shader_set_float(mouse_pick_shader, "id", (f32)ent->id);
 
-			mesh* m = &ent->_mesh;
+			mesh* m = ent->_mesh;
 
 			// gizmos
 			if (ent->has_light)
@@ -474,7 +474,7 @@ void render_scene_outline()
 	glViewport(0, 0, w, h);
 	bind_framebuffer(&fb_outline);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear bg
-	if (!(gamestate && hide_gizmos) && ent->id != -1 && (ent->has_model || ent->has_light || ent->has_cam))
+	if (!(gamestate && hide_gizmos) && ent->id != -1 && (ent->has_model || ent->has_light || ent->has_cam)) //  && ent->visible
 	{
 
 		vec3 pos   = { 0.0f, 0.0f, 0.0f };
@@ -485,7 +485,7 @@ void render_scene_outline()
 		// vec3 tint = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
 		vec3 tint = GLM_VEC3_ONE_INIT;
 		material* mat = get_material("MAT_blank_unlit");
-		mesh* m = &ent->_mesh;
+		mesh* m = ent->_mesh;
 		// gizmos
 		if (ent->has_light)
 		{
@@ -674,7 +674,7 @@ void render_scene_shadows()
 		for (int i = 0; i < entity_ids_len; ++i)
 		{
 			entity* ent = get_entity(entity_ids[i]);
-			if (ent->has_model && ent->_mesh.visible)
+			if (ent->has_model && ent->visible)
 			{
 				// MVP for mesh
 				vec3 pos   = { 0.0f, 0.0f, 0.0f };
@@ -691,14 +691,14 @@ void render_scene_shadows()
 				// shader_set_mat4(shadow_shader, "proj", proj);
 				shader_set_mat4(shadow_shader, "light_space", light_space);
 
-				glBindVertexArray(ent->_mesh.vao);
-				if (ent->_mesh.indexed == BEE_TRUE)
+				glBindVertexArray(ent->_mesh->vao);
+				if (ent->_mesh->indexed == BEE_TRUE)
 				{
-					glDrawElements(GL_TRIANGLES, (ent->_mesh.indices_len), GL_UNSIGNED_INT, 0);
+					glDrawElements(GL_TRIANGLES, (ent->_mesh->indices_len), GL_UNSIGNED_INT, 0);
 				}
 				else
 				{
-					glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh.vertices_len / F32_PER_VERT));
+					glDrawArrays(GL_TRIANGLES, 0, (ent->_mesh->vertices_len / F32_PER_VERT));
 				}
 
 			}
@@ -761,17 +761,17 @@ void render_scene_normal()
 		if (is_trans) { continue; }
 
 		entity* ent = get_entity(entity_ids[i]);
-		if (ent->has_model)
+		if (ent->has_model && ent->visible)
 		{
 			vec3 pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(entity_ids[i], pos, rot, scale); vec3 v = VEC3_ZERO_INIT;
-			draw_mesh(ent->id, &ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
+			draw_mesh(ent->id, ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v); // entities[i].pos, entities[i].rot, entities[i].scalef
 
 		}
 		#ifdef EDITOR_ACT
-		if (!(gamestate && hide_gizmos) && (ent->has_light || (ent->has_cam && !gamestate) || ent->has_collider))
+		if (!(gamestate && hide_gizmos) && ent->visible && (ent->has_light || (ent->has_cam && !gamestate) || ent->has_collider))
 		{
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
@@ -872,13 +872,13 @@ void render_scene_normal()
 	{
 		int i = transparent_ents[n];
 		entity* ent = get_entity(i);
-		if (ent->has_model)
+		if (ent->has_model && ent->visible)
 		{
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
 			vec3 rot = { 0.0f, 0.0f, 0.0f };
 			vec3 scale = { 0.0f, 0.0f, 0.0f };
 			get_entity_global_transform(i, pos, rot, scale); vec3 v = VEC3_ZERO_INIT;
-			draw_mesh(ent->id, &ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v);
+			draw_mesh(ent->id, ent->_mesh, ent->_material, pos, rot, scale, ent->rotate_global, BEE_FALSE, v);
 		}
 	}
 	// ------------------------------------------------------------------------
@@ -1008,7 +1008,7 @@ void render_scene_screen()
 
 void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col)
 {
-	if (_mesh->visible == BEE_FALSE)
+	if (_mesh == NULL || mat == NULL)
 	{
 		return;
 	}
