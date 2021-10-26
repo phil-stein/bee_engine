@@ -2,7 +2,7 @@
 
 #include "GLAD/glad.h"
 
-#include "asset_manager.h"
+#include "files/asset_manager.h"
 #include "stb/stb_ds.h"
 #include "editor_ui.h"
 #include "window.h"
@@ -10,6 +10,8 @@
 // ---- vars ----
 GLFWwindow* window;
 char* window_title;
+
+platform current_platform;
 
 bee_bool is_maximized = BEE_TRUE;;
 
@@ -23,7 +25,7 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 {
 
 	// enable error logging for glfw
-	glfwSetErrorCallback(error_callback);
+	glfwSetErrorCallback(glfw_error_callback);
 
 	// Initialise GLFW
 	if (glfwInit() == GLFW_FALSE)
@@ -73,6 +75,26 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 
 	// callback for files dropped onto window
 	glfwSetDropCallback(window, file_drop_callback);
+
+	// ---- platform ----
+#if (defined _WIN32 || defined _WIN64)
+	
+	#define WINDOWS
+	current_platform = PLATFORM_WINDOWS;
+
+#elif (defined linux || defined _linux || __linux__)
+
+	#define LINUX
+	current_platform = PLATFORM_LINUX;
+	printf("[!!!] linux not yet properly supported.");
+
+#elif (defined __APPLE__ || defined _APPLE)
+	
+	#define APPLE
+	current_platform = PLATFORM_APPLE;
+	printf("[!!!] apple mac_os not yet properly supported.");
+
+#endif
 
 	return BEE_OK; // all good :)
 }
@@ -132,15 +154,18 @@ void set_texturebuffer_to_update_to_screen_size(framebuffer* fb)
 	resize_buffers_len++;
 }
 
+platform get_current_platform()
+{
+	return current_platform;
+}
+
 // ---- callbacks ----
 
-// glfw error func
-void error_callback(int error, const char* description)
+void glfw_error_callback(int error, const char* description)
 {
-	fprintf(stderr, "GLFW-Error: %s\n", description);
+	fprintf(stderr, "[GLFW-Error] %s\n", description);
 }
-// window resize callback
-// resizes the "glViewport" according to the resized window
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -153,6 +178,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void file_drop_callback(GLFWwindow* window, int path_count, const char* paths[])
 {
+	// only activate import ui when editor active
 #ifdef EDITOR_ACT
 	set_drag_and_drop_import_window(path_count, paths);
 #endif

@@ -5,7 +5,7 @@
 #include "CGLM/cglm.h"
 
 #include "global.h"
-#include "object_data.h"
+#include "types/object_data.h"
 
 typedef struct
 {

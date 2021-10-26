@@ -9,13 +9,13 @@
 
 #define  GLOBAL_H_IMPLEMENTATION
 #include "global.h"
-// #include "file_handler.h"
-#include "asset_manager.h"
+
+#include "files/asset_manager.h"
+#include "physics/physics.h"
+#include "types/entities.h"
 #include "game_time.h"
 #include "editor_ui.h"
 #include "renderer.h"
-#include "entities.h"
-#include "physics.h"
 #include "window.h"
 #include "input.h"
 #include "app.h"
@@ -62,14 +62,16 @@ int main(void)
 	printf(" -> init() finished\n");
 	gravity_ui_init();
 	printf(" -> grav_ui_init() finished\n");
-#ifdef EDITOR_ACT
+	#ifdef EDITOR_ACT
 	ui_init();
 	printf(" -> ui_init() finished\n");
-#endif
+	#endif
 	input_init();
 	printf(" -> input_init() finished\n");
 	renderer_init();
-	printf(" -> renderer_init() finished\n\n");
+	printf(" -> renderer_init() finished\n");
+	physics_init();
+	printf(" -> physics_init() finished\n\n");
 
 	// gui console 
 	submit_txt_console("bee_engine :)");
@@ -109,16 +111,18 @@ int main(void)
 		// ---- rendering ----
 		renderer_update(); // render all objects
 
-#ifdef EDITOR_ACT
+		#ifdef EDITOR_ACT
 		ui_update();
-#endif
+		#endif
 
 		entities_update(); // has to be after ui
 
-		physics_update(); // after renderer & entities
+		if (get_gamestate()) // only wile playing
+		{
+			physics_update(get_delta_time()); // after renderer & entities
+		}
 
-		// reset last frames button state
-		input_update();
+		input_update(); // reset last frames button state
 
 		// ---- glfw stuff ----
 		// swap back and front bufffer

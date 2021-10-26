@@ -107,7 +107,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>EDITOR_ACT;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\external_c\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -163,51 +163,58 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\app.c" />
-    <ClCompile Include="src\asset_manager.c" />
-    <ClCompile Include="src\camera.c" />
-    <ClCompile Include="src\entities.c" />
-    <ClCompile Include="src\file_handler.c" />
-    <ClCompile Include="src\framebuffer.c" />
+    <ClCompile Include="src\external_c\glad.c" />
+    <ClCompile Include="src\external_c\tinyfiledialogs.c" />
+    <ClCompile Include="src\files\asset_manager.c" />
+    <ClCompile Include="src\files\file_handler.c" />
+    <ClCompile Include="src\files\serialization.c" />
     <ClCompile Include="src\game_time.c" />
-    <ClCompile Include="src\glad.c" />
-    <ClCompile Include="src\gravity_interface.c" />
-    <ClCompile Include="src\gravity_interface_ui.c" />
-    <ClCompile Include="src\gravity_script.c" />
     <ClCompile Include="src\input.c" />
     <ClCompile Include="src\main.c" />
-    <ClCompile Include="src\object_data.c" />
-    <ClCompile Include="src\physics.c" />
+    <ClCompile Include="src\physics\physics.c" />
+    <ClCompile Include="src\physics\phys_collision.c" />
+    <ClCompile Include="src\physics\phys_dynamics.c" />
+    <ClCompile Include="src\physics\phys_response.c" />
     <ClCompile Include="src\renderer.c" />
     <ClCompile Include="src\scene_manager.c" />
-    <ClCompile Include="src\serialization.c" />
+    <ClCompile Include="src\script\gravity_interface.c" />
+    <ClCompile Include="src\script\gravity_interface_ui.c" />
+    <ClCompile Include="src\script\gravity_script.c" />
     <ClCompile Include="src\shader.c" />
     <ClCompile Include="src\str_util.c" />
-    <ClCompile Include="src\tinyfiledialogs.c" />
     <ClCompile Include="src\editor_ui.c" />
+    <ClCompile Include="src\types\camera.c" />
+    <ClCompile Include="src\types\entities.c" />
+    <ClCompile Include="src\types\framebuffer.c" />
+    <ClCompile Include="src\types\object_data.c" />
     <ClCompile Include="src\window.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\fastobj\fast_obj.h" />
     <ClInclude Include="src\app.h" />
-    <ClInclude Include="src\asset_manager.h" />
-    <ClInclude Include="src\camera.h" />
-    <ClInclude Include="src\entities.h" />
-    <ClInclude Include="src\file_handler.h" />
-    <ClInclude Include="src\framebuffer.h" />
+    <ClInclude Include="src\files\asset_manager.h" />
+    <ClInclude Include="src\files\file_handler.h" />
+    <ClInclude Include="src\files\serialization.h" />
     <ClInclude Include="src\game_time.h" />
     <ClInclude Include="src\global.h" />
-    <ClInclude Include="src\gravity_interface.h" />
-    <ClInclude Include="src\gravity_interface_ui.h" />
-    <ClInclude Include="src\gravity_script.h" />
     <ClInclude Include="src\input.h" />
-    <ClInclude Include="src\object_data.h" />
-    <ClInclude Include="src\physics.h" />
+    <ClInclude Include="src\physics\physics.h" />
+    <ClInclude Include="src\physics\phys_collision.h" />
+    <ClInclude Include="src\physics\phys_dynamics.h" />
+    <ClInclude Include="src\physics\phys_response.h" />
+    <ClInclude Include="src\physics\phys_types.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\scene_manager.h" />
-    <ClInclude Include="src\serialization.h" />
+    <ClInclude Include="src\script\gravity_interface.h" />
+    <ClInclude Include="src\script\gravity_interface_ui.h" />
+    <ClInclude Include="src\script\gravity_script.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\str_util.h" />
     <ClInclude Include="src\editor_ui.h" />
+    <ClInclude Include="src\types\camera.h" />
+    <ClInclude Include="src\types\entities.h" />
+    <ClInclude Include="src\types\framebuffer.h" />
+    <ClInclude Include="src\types\object_data.h" />
     <ClInclude Include="src\ui_util.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>

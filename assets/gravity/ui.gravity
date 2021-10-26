@@ -6,6 +6,9 @@ var check01 = false;
 var check02 = false;
 var check03 = false;
 
+var i:Int = 0;
+var f = 0.0;
+
 func init()
 {
 }
@@ -22,36 +25,49 @@ func update()
 	var h = 250;
 	if (ui.window_begin("in game nuklear ui", x, y, w, h))
 	{
-		ui.layout(25, 1);
-		if (ui.button("menu01"))
+		ui.layout(145, 2); // group layout
+		if (ui.group_begin("btn01", false))
 		{
-			btn_menu01 = !btn_menu01;
+			ui.layout(30, 1);
+			if (ui.button("menu01"))
+			{
+				btn_menu01 = !btn_menu01;
+			}
+			if (btn_menu01)
+			{
+				ui.layout(25, 1);
+				// ui.text("this option is good");
+				check01 = ui.checkbox("option a", check01);
+				// ui.text("this option is ok");
+				check02 = ui.checkbox("option b", check02);
+				// ui.text("this option is evil");
+				check03 = ui.checkbox("option c", check03);
+				// ui.layout(25, 1);
+			}
+			ui.group_end();
 		}
-		if (btn_menu01)
+		if (ui.group_begin("btn02", false))
 		{
-			ui.layout(25, 2);
-			ui.text("this option is good");
-			check01 = ui.checkbox("option a", check01);
-			ui.text("this option is ok");
-			check02 = ui.checkbox("option b", check02);
-			ui.text("this option is evil");
-			check03 = ui.checkbox("option c", check03);
-			ui.layout(25, 1);
+			ui.layout(30, 1);
+			if (ui.button("image"))
+			{
+				btn_image = !btn_image;
+			}
+			if (btn_image)
+			{
+				ui.layout_static(75, 75, 1);
+				// ui.text(" ");
+				ui.image("crate01_dif.png");
+				// ui.text(" ");
+				ui.layout(25, 1);
+				ui.text("thats a crate");
+			}
+			ui.group_end();
 		}
-		if (ui.button("image"))
-		{
-			btn_image = !btn_image;
-		}
-		if (btn_image)
-		{
-			w = w / 3;
-			ui.layout_static(w, w, 3);
-			ui.text(" ");
-			ui.image("crate01_dif.png");
-			ui.text(" ");
-			ui.layout(25, 2);
-			ui.text("thats a crate");
-		}
+		ui.layout(25, 2);
+		i = ui.number("int", i);
+		f = ui.number("f32", f);
+
 	} ui.window_end();
 
 	ui.end();

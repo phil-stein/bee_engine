@@ -24,10 +24,10 @@
     - [ ]  rot -> dir (kinda works)
     - [ ] dir -> rot (kinda works)
     
-  - [ ] make mesh in entity pointer
-
+  - [ ] make entity id's guid's 
+  
     
-
+  
 - buggs
 
   - [ ] search for memory leaks & corruption using tool 
@@ -40,9 +40,13 @@
 
     -> analyze using RenderDoc
 
+  - [ ] deserialization requests material with name "" 
+
     
 
 - unfinished
+
+  - [ ] add missing asset-types to "check_asset_exists()", etc.
 
   - [ ] make_grid_mesh()
 
@@ -65,13 +69,13 @@
   - [ ] make first entity be right-click-able & drag-able
 
   - [ ] themes
-
+  
     - [ ] light blue theme
       - [ ] different color for node tab / tree tab 
     - [ ] make themes affect gizmo color
 
   - [ ] debug draw functions
-
+  
     - [x] sphere
     - [x] cube
     - [x] line
@@ -113,13 +117,15 @@
   
 - editor
   - [ ] asset manager
+    
+    - [ ]  switch name to guid as id
     - internal assets
       -  [ ] automate the internal asset recognition
     - [ ] make assets on import be put in the right folder
     - [x] add ui for drag&drop importing
     - [ ] removing assets
     - [ ] add cube map assets
-    - [ ] add font assets for nuklear
+    - [ ] add font assets for nuklear / stb_truetype
     - [ ] reload assets 
       - [x] shaders
       - [ ] meshes
@@ -131,7 +137,7 @@
   - [x] ui for drag & drop imported assets
 
   - [ ] editor cam v. game cam (camera component)
-
+  
     - [x] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
 
@@ -142,7 +148,7 @@
   - [ ] axis view gizmo like top-right in blender, unity, max, etc
 
   - [ ] transform gizmos
-
+  
     - [x] move
     - [ ] scale
     - [ ] rotate
@@ -199,17 +205,21 @@
 
   - [ ] interface for nuklear
 
-    - [ ] float property
+    - [x] float property
 
     - [ ] color wheel
 
-    - [ ] groups
+      -> would need me to return custom object, vec3 / color
+
+    - [x] groups
 
     - [ ] set style
 
-      - [ ] through functions or style-sheets ?
-
-        -> both prob.
+      - [ ] text
+      - [ ] main-color
+      - [ ] highlight
+      - [ ] inactive
+      - [ ] background
 
 
 
@@ -247,6 +257,9 @@
     
   
 - [ ] optimization
+  
+  
+  - [x] make mesh in entity pointer
   - [ ] use uniform buffers for matrices and maybe lights
   - [ ] use proper sorting algorithm for transparent objects
   - [ ] take a look at normal-mapping chapter again and use better option

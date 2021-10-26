@@ -6,8 +6,8 @@
 
 
 #include "global.h"
-#include "asset_manager.h"
-#include "object_data.h"
+#include "files/asset_manager.h"
+// #include "object_data.h"
 
 
 typedef struct

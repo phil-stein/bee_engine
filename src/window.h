@@ -5,12 +5,15 @@
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 
-#include "framebuffer.h"
+#include "types/framebuffer.h"
 #include "global.h"
 
-// ---- util ----
+// the engine also defines "WINDOWS", "LINUX" or "APPLE", to check that way
+// !!! not all platforms in enum supported yet
+typedef enum platform { PLATFORM_WINDOWS, PLATFORM_LINUX, PLATFORM_APPLE }platform;
 
-// intis glfw & glad, also creates the window
+
+// intis glfw & glad (opengl), also creates the window
 // returns: "global.h" return_code
 rtn_code create_window(const int width, const int height, const char* title, bee_bool maximized);
 
@@ -34,10 +37,15 @@ char* get_window_title();
 // register a texture buffer to be resized if the window size changes
 void set_texturebuffer_to_update_to_screen_size(framebuffer* fb);
 
+// get the platform the program currently is running on / compiled for
+// the engine also defines "WINDOWS", "LINUX" or "APPLE", to check that way
+// !!! only returns valid after "create_window()" has been called
+platform get_current_platform();
+
 // --- callbacks ----
 
 // glfw error callback function
-void error_callback(int error, const char* description);
+void glfw_error_callback(int error, const char* description);
 
 // window resize callback
 // resizes the "glViewport" according to the resized window

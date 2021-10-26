@@ -5,7 +5,7 @@
 #include "shader.h"
 #include "str_util.h"
 #include "stb/stb_ds.h"
-#include "asset_manager.h"
+#include "files/asset_manager.h"
 // #include "file_handler.h"
 
 // generate a shader-program from a vertex- and fragment-shader

@@ -18,28 +18,13 @@
     <ClCompile Include="src\app.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\camera.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\file_handler.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\game_time.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\object_data.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\shader.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\window.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\editor_ui.c">
@@ -54,45 +39,63 @@
     <ClCompile Include="src\str_util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\asset_manager.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\framebuffer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gravity_script.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\gravity_interface.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\tinyfiledialogs.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\serialization.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\scene_manager.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\entities.c">
+    <ClCompile Include="src\script\gravity_interface.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gravity_interface_ui.c">
+    <ClCompile Include="src\script\gravity_interface_ui.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\physics.c">
+    <ClCompile Include="src\script\gravity_script.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\external_c\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\external_c\tinyfiledialogs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\files\asset_manager.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\files\file_handler.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\files\serialization.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\camera.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\entities.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\framebuffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\types\object_data.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\window.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\physics\physics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\physics\phys_collision.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\physics\phys_dynamics.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\physics\phys_response.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\file_handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\game_time.h">
@@ -101,13 +104,7 @@
     <ClInclude Include="src\global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\object_data.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="external\fastobj\fast_obj.h">
@@ -125,34 +122,58 @@
     <ClInclude Include="src\str_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\asset_manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\framebuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gravity_script.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gravity_interface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\serialization.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\scene_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\entities.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\gravity_interface_ui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\physics.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ui_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\gravity_interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\gravity_interface_ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\gravity_script.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\files\file_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\files\asset_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\files\serialization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types\entities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types\framebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types\object_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics\physics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics\phys_types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics\phys_collision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics\phys_dynamics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\physics\phys_response.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

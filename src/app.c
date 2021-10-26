@@ -11,16 +11,16 @@
 #include "input.h"
 #include "shader.h"
 #include "window.h"
-#include "camera.h"
 #include "renderer.h"
-#include "entities.h"
 #include "game_time.h"
 #include "editor_ui.h"
-#include "object_data.h"
-#include "file_handler.h"
-#include "asset_manager.h"
+#include "types/camera.h"
 #include "scene_manager.h"
-#include "gravity_script.h"
+#include "types/entities.h"
+#include "types/object_data.h"
+#include "files/file_handler.h"
+#include "files/asset_manager.h"
+#include "script/gravity_script.h"
 
 
 #pragma region __VARS__
@@ -199,7 +199,9 @@ void init()
 	// load_scene("showcase06.scene");
 	load_scene("physics05.scene");
 	// load_scene("rotation01.scene");
+	// load_scene("ui_test.scene");
 	// load_scene("tmp02.scene");
+
 
 	// generate physics components old
 	/*
@@ -476,11 +478,3 @@ void rotate_editor_cam_by_mouse()
 	set_editor_camera_front(dir);
 }
 #endif
-
-// @TODO: move this to a util file
-// returns: random number with range 0.0 - 1.0
-f32 rnd_num()
-{
-	// limits the random int returned by rand to a 0.0 - 1.0 range
-	return (f32)rand() / RAND_MAX;
-}

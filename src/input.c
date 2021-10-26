@@ -4,8 +4,7 @@
 #include "stb/stb_ds.h"
 #include "CGLM/cglm.h"
 
-// #include "renderer.h"
-#include "entities.h"
+#include "types/entities.h"
 
 
 // ---- vars ----

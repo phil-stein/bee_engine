@@ -21,14 +21,14 @@
 #include "stb/stb_ds.h"
 #include "tinyfd/tinyfiledialogs.h"
 
+#include "files/file_handler.h"
+#include "types/entities.h"
 #include "scene_manager.h"
-#include "file_handler.h"
+#include "types/camera.h"
 #include "game_time.h"
 #include "str_util.h"
-#include "entities.h"
 #include "renderer.h"
 #include "window.h"
-#include "camera.h"
 #include "input.h"
 #include "app.h"
 
@@ -4522,7 +4522,7 @@ void error_popup_window()
     const f32 y_ratio = 200.0f / 1020.0f;
 
     error_popup_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
-    char* title = error_popop_type == GENERAL_ERROR ? "Error" : error_popop_type == GRAVITY_ERROR ? "Gravity Error" : "Error";
+    char* title = error_popop_type == GENERAL_ERROR ? "Error" : error_popop_type == GRAVITY_ERROR ? "Gravity Error" : error_popop_type == GRAVITY_CALL_ERROR ? "Script Error" : "Error";
     if (nk_begin(ctx, title, error_popup_window_rect, window_flags | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE))
     {
         nk_layout_row_dynamic(ctx, 150, 1);

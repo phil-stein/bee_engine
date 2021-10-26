@@ -1,9 +1,11 @@
 #include "scene_manager.h"
-#include "asset_manager.h"
-#include "file_handler.h"
-#include "serialization.h"
+
 #include "stb/stb_ds.h"
-#include "entities.h"
+
+#include "files/file_handler.h"
+#include "files/asset_manager.h"
+#include "files/serialization.h"
+#include "types/entities.h"
 #include "renderer.h"
 #ifdef EDITOR_ACT
 #include "editor_ui.h"

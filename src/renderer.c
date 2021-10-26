@@ -8,18 +8,17 @@
 #include "input.h"
 #include "shader.h"
 #include "window.h"
-#include "camera.h"
-#include "entities.h"
 #include "editor_ui.h"
-#include "framebuffer.h"
-#include "file_handler.h"
-#include "asset_manager.h"
+#include "types/camera.h"
 #include "scene_manager.h"
-#include "gravity_interface.h"
-#include "gravity_interface_ui.h"
+#include "types/entities.h"
+#include "types/framebuffer.h"
+#include "files/file_handler.h"
+#include "files/asset_manager.h"
+#include "script/gravity_interface.h"
+#include "script/gravity_interface_ui.h"
 
 
-#define F32_PER_VERT 11
 #define BLEND_SORT_DEPTH 3
 
 
@@ -545,7 +544,6 @@ void render_scene_debug()
 		else if (debug_calls[i].type == DEBUG_DRAW_LINE)
 		{
 			// TODO: this is yank, do better
-			u32 vao, vbo;
 			const f32 lw = 0.05f; // line width
 			// pointers, access the same vec3
 			f32* p1 = debug_calls[i].v1;
@@ -566,19 +564,7 @@ void render_scene_debug()
 							   
 			const u32 vertices_len = 3 * 12; // 3 f32 per vert, 6 verts total
 
-			glGenVertexArrays(1, &vao);
-			glGenBuffers(1, &vbo);
-			glBindVertexArray(vao);
-
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			glBufferData(GL_ARRAY_BUFFER, vertices_len * sizeof(f32), vertices, GL_STATIC_DRAW);
-
-			// vertex position attribute
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(f32), (void*)0);
-			glEnableVertexAttribArray(0);
-
-			// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			mesh m = make_mesh(vertices, vertices_len, NULL, 0, "line", BEE_TRUE);
 
 			glDisable(GL_CULL_FACE);
 
@@ -620,7 +606,7 @@ void render_scene_debug()
 			shader_set_mat4(line_shader, "proj",     proj);
 			shader_set_int(line_shader, "just_tint", 1);
 			shader_set_vec3(line_shader, "mat.tint", tint);
-			glBindVertexArray(vao);
+			glBindVertexArray(m.vao);
 			glDrawArrays(GL_TRIANGLES, 0, 18); // each vertices consist of 3 floats
 
 			glEnable(GL_CULL_FACE);
@@ -1121,7 +1107,7 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 	}
 	else
 	{
-		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / F32_PER_VERT)); // each vertices consist of 8 floats
+		glDrawArrays(GL_TRIANGLES, 0, (_mesh->vertices_len / _mesh->floats_per_vert)); // each vertices consist of multiple floats
 	}
 
 	if (mat->draw_backfaces == BEE_TRUE)
@@ -1156,30 +1142,20 @@ void make_model_matrix(int entity_id, vec3 pos, vec3 rot, vec3 scale, bee_bool r
 		entity* ent = get_entity(entity_id);
 		if (entity_id >= 0 && ent->id != -1 && ent->parent != 9999 && get_entity(ent->parent)->has_trans)
 		{
-			// @TODO: make recursive
-
 			vec3 parent_pos   = { 0.0f, 0.0f, 0.0f };
 			vec3 parent_rot   = { 0.0f, 0.0f, 0.0f };
 			vec3 parent_scale = { 0.0f, 0.0f, 0.0f };
-			entity* parent = get_entity(ent->parent);
 			get_entity_global_transform(ent->parent, parent_pos, parent_rot, parent_scale);
 
-			// vec3 parent_offset;
-			// glm_vec3_sub(parent_pos, ent->pos, parent_offset);
-			glm_vec3_add(parent_pos, ent->pos, offset);
+			glm_vec3_add(parent_pos, ent->pos, offset); // position affected by parent
 
-			f32 x_p = parent_rot[0];  glm_make_rad(&x_p);
-			f32 y_p = parent_rot[1];  glm_make_rad(&y_p);
-			f32 z_p = parent_rot[2];  glm_make_rad(&z_p);
-			glm_rotate_at(model, parent_pos, x_p, VEC3_X);
-			glm_rotate_at(model, parent_pos, y_p, VEC3_Y);
-			glm_rotate_at(model, parent_pos, z_p, VEC3_Z);
+			get_entity_global_rot_mat(ent->id, model); // rotation matrix affected by parent and its parent, etc.
 		
 			rotated_around_parent = BEE_TRUE;
 
 			// normal rotation
-			glm_rotate_at(model, pos, x, VEC3_X); // axis is wrong
-			glm_rotate_at(model, pos, y, VEC3_Y); // @TODO: up axis
+			glm_rotate_at(model, pos, x, VEC3_X);
+			glm_rotate_at(model, pos, y, VEC3_Y); 
 			glm_rotate_at(model, pos, z, VEC3_Z);
 		}
 		else

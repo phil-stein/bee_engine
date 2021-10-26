@@ -3,7 +3,7 @@
 #define SCENE_MANAGER_H
 
 #include "global.h"
-#include "object_data.h"
+#include "types/object_data.h"
 
 // get the path to the current directory that stores the scene files
 char* get_scene_dir_path();

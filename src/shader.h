@@ -2,9 +2,9 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "object_data.h"
 #include"CGLM/cglm.h"
 #include "global.h"
+#include "types/object_data.h"
 
 // generate a shader-program from a vertex- and fragment-shader
 // give the filepath to the vert / frag shader as the arguments

@@ -7,7 +7,6 @@
 #include "CGLM/cglm.h"
 
 #include "global.h"
-#include "object_data.h"
 
 
 // struct used to pass pointers to various variables
@@ -34,7 +33,5 @@ void process_input(GLFWwindow* window);
 void rotate_editor_cam_by_mouse();
 
 void center_cursor_pos();
-
-f32 rnd_num();
 
 #endif
