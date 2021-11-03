@@ -1,6 +1,6 @@
 #include "physics.h"
 
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 #include "stb/stb_ds.h"
 
 #include "types/entities.h"
@@ -50,10 +50,12 @@ void physics_update(f32 dt)
 			// ---- collision response ----
 			if (c.collision)
 			{
+				#ifdef EDITOR_ACT
 				vec3 scale;  
 				glm_vec3_fill(scale, 0.2f);
 				debug_draw_sphere(e1->pos, scale);
-
+				#endif
+				
 				// notify objects of collision
 
 				c.trigger = e1->collider.is_trigger || e2->collider.is_trigger;

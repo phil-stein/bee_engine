@@ -9,13 +9,13 @@
 
     - [x] basics
 
-    - [ ] child rotation on axis rotated by parent
+    - [x] child rotation on axis rotated by parent
 
       -> decompose rotation in "get_entity_global_transform()"
 
       -> maybe look at glm (not cglm) repo for example
 
-    - [ ] recursive, multiple childs affecting each other
+    - [x] recursive, multiple childs affecting each other
 
       -> above needs to be finished
 
@@ -26,6 +26,10 @@
     
   - [ ] make entity id's guid's 
   
+  - [x] write debugging / performance testing tools
+  
+    - [x] timer
+    
     
   
 - buggs
@@ -42,11 +46,15 @@
 
   - [ ] deserialization requests material with name "" 
 
+  - [ ] the shader pointer in material gets set to null somewhere
+
+    -> pointer address changes when stb_ds automatically reallocs more space to contain the incoming shaders, i.e. after 8 it reallocs to 16, possibly changing the location of the array entirely
+
     
 
 - unfinished
 
-  - [ ] add missing asset-types to "check_asset_exists()", etc.
+  - [x] add missing asset-types to "check_asset_exists()", etc.
 
   - [ ] make_grid_mesh()
 
@@ -64,21 +72,24 @@
 
     -> directly use uniform from shader, without having to add them in the material as well
 
+    -> maybe make files for shaders specifing vert / frag file and uniforms
+
   - [ ] move gizmo take camera orientation into account
 
   - [ ] make first entity be right-click-able & drag-able
-
+  
   - [ ] themes
   
     - [ ] light blue theme
       - [ ] different color for node tab / tree tab 
     - [ ] make themes affect gizmo color
-
+  
   - [ ] debug draw functions
   
     - [x] sphere
     - [x] cube
     - [x] line
+    - [ ] proper line drawing using glDrawArrays(GL_LINE, ...)
     - [ ] line cube
     - [ ] text
       - [ ] text renderer "stb_truetype.h"
@@ -89,6 +100,10 @@
 
 
 - graphics
+  
+  
+  - [ ] sorting transparent objects properly
+    
   - [ ] sort geometry of transparent objects
   
   - [ ] geometry shader normal direction
@@ -98,7 +113,7 @@
     - [x] shadow mapping
     - [ ] point shadows
     - [ ] cascaded shadow mapping (in guest articles on learnopengl.com)
-    
+  
   - [ ] parallax mapping ?
   
   - [ ] bloom (as in the cherno video)
@@ -112,7 +127,7 @@
     - [ ] lighting
     - [ ] diffuse irradiance
     - [ ] specular ibl
-    
+  
     
   
 - editor
@@ -264,4 +279,4 @@
   - [ ] use proper sorting algorithm for transparent objects
   - [ ] take a look at normal-mapping chapter again and use better option
   - [ ] instanced rendering / batching
-  - [ ] multithreading ?
+  - [ ] multithreading

@@ -1,6 +1,6 @@
 #include "phys_dynamics.h"
 
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 
 const vec3 gravity = { 0.0f, -9.89f, 0.0f };

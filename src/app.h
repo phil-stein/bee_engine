@@ -4,7 +4,7 @@
 
 #define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 #include "global.h"
 
@@ -18,9 +18,9 @@ typedef struct
 }settings;
 
 
-void init();
+void app_init();
 
-void update();
+void app_update();
 
 void cleanup();
 

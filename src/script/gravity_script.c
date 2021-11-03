@@ -1,14 +1,14 @@
 #include "gravity_script.h"
 
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 #include "gravity_interface_ui.h"
 #include "gravity_interface.h"
 #include "files/file_handler.h"
+#include "util/str_util.h"
 #include "types/camera.h"
 #include "game_time.h"
 #include "editor_ui.h"
-#include "str_util.h"
 #include "renderer.h"
 #include "input.h"
 

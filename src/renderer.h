@@ -20,11 +20,11 @@ typedef struct
 
 typedef enum render_setting
 {
-	RENDER_WIREFRAME,
-	RENDER_UV,
-	RENDER_NORMAL,
-	RENDER_CUBEMAP,
-	RENDER_MSAA
+	RENDER_WIREFRAME,	// wireframe mode, renders objects as wireframe instead of solid
+	RENDER_UV,			// uv mode, renders objects with their uv coordinates instead of color / texture
+	RENDER_NORMAL,		// normal mode, renders objects with their normal direction instead of color / texture
+	RENDER_CUBEMAP,		// skybox enabled, if disabled use "get_bg_color()" / "set_bg_color()" to set backgroud color
+	RENDER_MSAA			// msaa enabled, multisampled anti aliasing, smoothes out jagged egdes
 }render_setting;
 
 #ifdef EDITOR_ACT
@@ -66,6 +66,9 @@ void render_scene_normal();
 void render_scene_skybox();
 // renders the previous stages onto a quad spanning the whole window
 void render_scene_screen();
+
+// sets bg color and splash image, so the screen isn't white until done loading
+void set_bg_till_loaded();
 
 // renderes a single mesh, causing one draw-call
 void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col);

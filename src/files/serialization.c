@@ -545,6 +545,7 @@ entity deserialize_entity(char* buffer, int* offset)
 
 	e.scripts = NULL; // for stb_ds
 	e.scripts_len =  deserialize_int(buffer, offset);
+	// e.scripts_len = e.scripts_len < 0 ? 0 : e.scripts_len > 100 ? 0 : e.scripts_len; // in case of errors
 	for (int i = 0; i < e.scripts_len; ++i)
 	{
 #ifdef EDITOR_ACT
@@ -616,7 +617,7 @@ mesh* deserialize_mesh(char* buffer, int* offset)
 {
 	bee_bool visible = deserialize_enum(buffer, offset);
 	char* name = deserialize_str(buffer, offset);
-	printf("deserialized mesh.name: %s\n", name);
+	// printf("deserialized mesh.name: %s\n", name);
 	mesh* m = get_mesh(name);
 	// m->visible = visible;
 	return m;
@@ -679,7 +680,7 @@ light deserialize_light(char* buffer, int* offset)
 	l.cut_off		= deserialize_float(buffer, offset);
 	l.outer_cut_off = deserialize_float(buffer, offset);
 
-	create_framebuffer_shadowmap(&l.shadow_map, &l.shadow_fbo, l.shadow_map_x, l.shadow_map_y);
+	create_framebuffer_shadowmap(&l.fb_shadow.buffer, &l.fb_shadow.fbo, l.shadow_map_x, l.shadow_map_y);
 
 	return l;
 }
@@ -795,7 +796,7 @@ uniform deserialize_uniform(char* buffer, int* offset, shader* s)
 	{
 		int idx = deserialize_int(buffer, offset);
 		u.def = &s->uniform_defs[idx];
-		printf("deserialized uniform_def idx: %d\n", idx);
+		// printf("deserialized uniform_def idx: %d\n", idx);
 	}
 	else if (current_version >= 0.7f || 1) // tmp
 	{
@@ -827,7 +828,7 @@ uniform deserialize_uniform(char* buffer, int* offset, shader* s)
 			u.tex_val = deserialize_texture(buffer, offset);
 			break;
 	}
-	printf("deserialized uniform: def[\"%s\", %d]\n", u.def->name, u.def->type);
+	// printf("deserialized uniform: def[\"%s\", %d]\n", u.def->name, u.def->type);
 	return u;
 }
 
@@ -836,7 +837,7 @@ uniform_def deserialize_uniform_def(char* buffer, int* offset)
 	uniform_def u;
 	u.name = deserialize_str(buffer, offset);
 	u.type = deserialize_enum(buffer, offset);
-	printf("deserialized uniform_def: \"%s\", type: %d\n", u.name, u.type);
+	// printf("deserialized uniform_def: \"%s\", type: %d\n", u.name, u.type);
 	return u;
 }
 

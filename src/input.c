@@ -2,7 +2,7 @@
 
 #include "GLFW/glfw3.h"
 #include "stb/stb_ds.h"
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 #include "types/entities.h"
 

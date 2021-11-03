@@ -6,11 +6,11 @@
 #include "files/file_handler.h"
 #include "types/entities.h"
 #include "scene_manager.h"
+#include "util/str_util.h"
 #include "types/camera.h"
 #include "game_time.h"
 #include "editor_ui.h"
 #include "renderer.h"
-#include "str_util.h"
 #include "input.h"
 
 

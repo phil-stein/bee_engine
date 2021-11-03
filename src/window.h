@@ -17,6 +17,7 @@ typedef enum platform { PLATFORM_WINDOWS, PLATFORM_LINUX, PLATFORM_APPLE }platfo
 // returns: "global.h" return_code
 rtn_code create_window(const int width, const int height, const char* title, bee_bool maximized);
 
+// sets the variable returned by "get_window_should_close()" to true, causing the application to exit the main loop, i.e. quit
 void close_window();
 
 // set the windows title
@@ -33,6 +34,20 @@ void  get_window_size(int* width, int* height);
 
 // get the windows current title
 char* get_window_title();
+
+// true:  window should be closed i.e. exit main loop and call glfwTerminate()
+// false: all good keep the application running
+bee_bool get_window_should_close();
+
+// swap the front and back buffers glfw created for us when creating a window
+// the back buffer is the one we render to and the front buffer is the one being displayed
+// swapping them shows the new rendered frame on screen
+void window_swap_buffers();
+
+// tell glfw to process events that stacked up since last call to this function
+// events: mouse-movement, key-presses, file dropped over window, etc.
+// when this function isnt called regularly the application is tagged unresponsive by the os
+void window_poll_events();
 
 // register a texture buffer to be resized if the window size changes
 void set_texturebuffer_to_update_to_screen_size(framebuffer* fb);

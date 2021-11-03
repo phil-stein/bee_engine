@@ -108,12 +108,14 @@ static bee_bool gravity_begin(gravity_vm* vm, gravity_value_t* args, uint16_t na
 
     // draw ui
     nk_glfw3_new_frame(&g_glfw);
+    printf("ui_begin\n");
 }
 static bee_bool gravity_end(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
 {
     if (nargs != 1) { throw_error("[UI.end()] Wrong amount of arguments, 0 arguments are needed."); return; }
  
     nk_glfw3_render(&g_glfw, NK_ANTI_ALIASING_ON, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+    printf("ui_end\n");
 }
 
 
@@ -156,6 +158,7 @@ static bee_bool gravity_window_begin(gravity_vm* vm, gravity_value_t* args, uint
     const f32 y_ratio = y / 1020.0f;
 
     bee_bool b = nk_begin(g_ctx, title, nk_rect(x_ratio * width, y_ratio * height, w_ratio * width, h_ratio * height), g_window_flags);
+    printf("window_begin: %d\n", b);
     RETURN_VALUE(VALUE_FROM_INT(b), rindex);
 }
 
@@ -164,6 +167,7 @@ static bee_bool gravity_window_end(gravity_vm* vm, gravity_value_t* args, uint16
     if (nargs != 1) { throw_error("[UI.window_end()] Wrong amount of arguments, 0 arguments are needed."); return; }
 
     nk_end(g_ctx);
+    printf("window_end\n");
 }
 
 static bee_bool gravity_group_begin(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)

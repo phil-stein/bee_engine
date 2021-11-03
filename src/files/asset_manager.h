@@ -128,6 +128,9 @@ shader* add_shader(const char* vert_name, const char* frag_name, const char* nam
 // get a specific material
 // returns shader with pink color if shader name not found
 shader* get_shader(char* name);
+// get a shader by its index in the "shader_data" array
+// use "get_shader_idx()" to get a shaders idx
+shader* get_shader_by_idx(int idx);
 // get the array holding all shaders and its length
 shader* get_all_shaders(int* shaders_len);
 // get the length of the array holding all shaders

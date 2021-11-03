@@ -14,12 +14,10 @@ vec3 aces_tone_mapping(vec3 col);
 
 void main()
 {	
-	vec3 col = vec3(0.0);
 
-	// reinhard tone mapping
-	vec3 col_hdr = texture(tex, TexCoord).rgb;
-	// col = vec3(1.0) - exp(-col_hdr * exposure);
-	col = aces_tone_mapping(col_hdr);
+	// tone mapping
+	vec4 col_hdr = texture(tex, TexCoord).rgba;
+	vec3 col = aces_tone_mapping(col_hdr.rgb);
 
 	// gamma correction
 	// float inv_gamma = 0.4545454545454545; // 1/2.2
@@ -27,7 +25,7 @@ void main()
 	col = pow(col, vec3(1 / gamma));
 
 
-	FragColor = vec4(col, 1.0);
+	FragColor = vec4(col, col_hdr.a);
 
 }
 

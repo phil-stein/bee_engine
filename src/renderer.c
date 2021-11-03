@@ -6,12 +6,13 @@
 #include "GLAD/glad.h"
 
 #include "input.h"
-#include "shader.h"
 #include "window.h"
 #include "editor_ui.h"
+#include "types/shader.h"
 #include "types/camera.h"
 #include "scene_manager.h"
 #include "types/entities.h"
+#include "util/debug_util.h"
 #include "types/framebuffer.h"
 #include "files/file_handler.h"
 #include "files/asset_manager.h"
@@ -115,7 +116,7 @@ shader* line_shader;
 void renderer_init()
 {
 	// framebuffer ----------------------------------------------------------------------------------
-	
+
 #ifdef EDITOR_ACT
 	screen_shader = add_shader("screen.vert", "screen_editor.frag", "SHADER_framebuffer", BEE_TRUE);
 	line_shader   = add_shader("billboard.vert", "unlit.frag", "SHADER_line", BEE_TRUE);
@@ -124,10 +125,7 @@ void renderer_init()
 #endif
 				  
 	shadow_shader = add_shader("shadow_map.vert", "empty.frag", "SHADER_shadow", BEE_TRUE);
-	
-	int w, h;
-	// create_framebuffer_hdr(&tex_col_buffer, &tex_col_fbo, &tex_col_rbo, 1, &w, &h);
-	// create_framebuffer_multisampled_hdr(&tex_aa_buffer, &tex_aa_fbo, &tex_aa_rbo, 1, &w, &h, 4);
+
 	
 	fb_color.type = FRAMEBUFFER_RGB16F;
 	fb_color.is_msaa = BEE_FALSE;
@@ -148,8 +146,26 @@ void renderer_init()
 	set_texturebuffer_to_update_to_screen_size(&fb_msaa);  // updates framebuffer on window resize
 
 #ifdef EDITOR_ACT
+	P_STR("pre mousepick & outline add shader | shader unlit:");
+	int n = 0;
+	P_INT(arrcap(get_all_shaders(&n)));
+	shader* sx = get_shader("SHADER_unlit");
+	P_PTR(sx);
+	P_STR(sx->name);
+	material* matx = get_material("MAT_blank_unlit");
+	P_PTR(matx->shader);
+
 	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick", BEE_TRUE);
-	// create_framebuffer_single_channel_f(&mouse_pick_buffer, &mouse_pick_fbo, &mouse_pick_rbo, 4, &w, &h);
+
+	P_STR("post mousepick & outline add shader | shader unlit:");
+	n = 0;
+	P_INT(arrcap(get_all_shaders(&n)));
+	printf("mouse pick shader ptr: %p, idx: %d\n", mouse_pick_shader, get_shader_idx("SHADER_mouse_pick"));
+	sx = get_shader("SHADER_unlit");
+	P_PTR(sx);
+	P_STR(sx->name);
+	matx = get_material("MAT_blank_unlit");
+	P_PTR(matx->shader);
 	
 	fb_mouse_pick.type	  = FRAMEBUFFER_SINGLE_CHANNEL_F;
 	fb_mouse_pick.is_msaa = BEE_FALSE;
@@ -158,8 +174,6 @@ void renderer_init()
 	fb_mouse_pick.size_divisor = 4;
 	create_framebuffer(&fb_mouse_pick);
 	set_texturebuffer_to_update_to_screen_size(&fb_mouse_pick);  // updates framebuffer on window resize
-
-	// create_framebuffer_single_channel_f(&outline_buffer, &outline_fbo, &outline_rbo, 1, &w, &h);
 	
 	fb_outline.type = FRAMEBUFFER_SINGLE_CHANNEL_F;
 	fb_outline.is_msaa = BEE_FALSE;
@@ -270,14 +284,21 @@ void renderer_init()
 
 	// set background-color
 	set_bg_color(bg_color);
-
-
-	// light* l = &get_entity(dir_lights[0])->_light;
-	// create_framebuffer_shadowmap(&l->shadow_map, &l->shadow_fbo, SHADOW_MAP_SIZE_X, SHADOW_MAP_SIZE_Y);
 }
 
 void renderer_update()
 {
+	// @BUGG: the shader pointer in asset manager gets changed somewhere
+
+	P_STR("renderer update | shader unlit:");
+	shader* s = get_shader("SHADER_unlit");
+	P_PTR(s);
+	P_STR(s->name);
+	material* mat = get_material("MAT_blank_unlit");
+	P_PTR(mat->shader);
+	ABORT();
+	P_STR(mat->shader->name);
+
 #ifdef EDITOR_ACT
 	draw_calls_per_frame = 0;
 	verts_per_frame		= 0;
@@ -285,20 +306,37 @@ void renderer_update()
 #endif
 
 #ifdef EDITOR_ACT
+	START_TIMER("render_scene_mouse_pick()");
 	render_scene_mouse_pick();
+	STOP_TIMER();
 #endif
+	START_TIMER("render_scene_shadows()");
 	render_scene_shadows();
+	STOP_TIMER();
+
+	START_TIMER("render_scene_normal()");
 	render_scene_normal();
+	STOP_TIMER();
+
 #ifdef EDITOR_ACT
+	
+	START_TIMER("render_scene_outline()");
 	render_scene_outline();
+	STOP_TIMER();
+
+	START_TIMER("render_scene_debug()");
 	render_scene_debug();
+	STOP_TIMER();
 
 	if (wireframe_mode_enabled == BEE_TRUE)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+
 #endif
+	START_TIMER("render_scene_screen()");
 	render_scene_screen();
+	STOP_TIMER();
 
 #ifdef EDITOR_ACT
 	// do this so the nuklear gui is always drawn in solid-mode
@@ -343,9 +381,10 @@ void render_scene_mouse_pick()
 #ifdef EDITOR_ACT
 	if (!gamestate) // play-mode
 	{
+		// editor cam
 		deg_pers = perspective;
-		near_p = near_plane;
-		far_p = far_plane;
+		near_p   = near_plane;
+		far_p    = far_plane;
 	}
 #endif
 	glm_make_rad(&deg_pers);
@@ -354,10 +393,11 @@ void render_scene_mouse_pick()
 	// cycle all objects
 	int entity_ids_len = 0;
 	int* entity_ids = get_entity_ids(&entity_ids_len);
+	shader_use(mouse_pick_shader);
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		entity* ent = get_entity(entity_ids[i]);
-		if ((ent->has_model) || ent->has_light || ent->has_cam) //  && ent->visible
+		if (ent->has_model || ent->has_light || ent->has_cam) //  && ent->visible
 		{
 			// MVP for mesh
 			vec3 pos = { 0.0f, 0.0f, 0.0f };
@@ -368,7 +408,6 @@ void render_scene_mouse_pick()
 			mat4 model;
 			make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
-			shader_use(mouse_pick_shader);
 			shader_set_mat4(mouse_pick_shader, "model", model);
 			shader_set_mat4(mouse_pick_shader, "view", view);
 			shader_set_mat4(mouse_pick_shader, "proj", proj);
@@ -396,6 +435,8 @@ void render_scene_mouse_pick()
 			else if (ent->has_cam)
 			{ m = get_mesh("camera.obj"); }
 
+			if (m == NULL) { continue; }
+
 			glBindVertexArray(m->vao);
 			if (m->indexed == BEE_TRUE)
 			{
@@ -410,9 +451,9 @@ void render_scene_mouse_pick()
 	}
 
 	// draw gizmo
-	glClear(GL_DEPTH_BUFFER_BIT);
 	if (!(gamestate && hide_gizmos) && get_selected_entity() >= 0 && get_show_move_gizmo())
 	{
+		glClear(GL_DEPTH_BUFFER_BIT);
 		// glDisable(GL_DEPTH_TEST);
 		entity* ent = get_entity(get_selected_entity());
 
@@ -427,7 +468,8 @@ void render_scene_mouse_pick()
 		mat4 model;
 		make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
-		shader_use(mouse_pick_shader);
+		// shader_use called before the loop drawing the entities
+		// shader_use(mouse_pick_shader);
 		shader_set_mat4(mouse_pick_shader, "model", model);
 		shader_set_mat4(mouse_pick_shader, "view", view);
 		shader_set_mat4(mouse_pick_shader, "proj", proj);
@@ -526,6 +568,11 @@ void render_scene_debug()
 	glViewport(0, 0, w, h);
 	bind_framebuffer(&fb_color);
 
+	if (wireframe_mode_enabled == BEE_TRUE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
 	for (int i = 0; i < debug_calls_len; ++i)
 	{
 		mesh* m = NULL;
@@ -543,26 +590,46 @@ void render_scene_debug()
 		}
 		else if (debug_calls[i].type == DEBUG_DRAW_LINE)
 		{
-			// TODO: this is yank, do better
-			const f32 lw = 0.05f; // line width
-			// pointers, access the same vec3
-			f32* p1 = debug_calls[i].v1;
-			f32* p2 = debug_calls[i].v2; 
-			f32 vertices[] = { (0.5f * lw) + p2[0], p2[1], p2[2],   // front, right top
-							   (-.5f * lw) + p2[0], p2[1], p2[2],   // front, left top
-							   (-.5f * lw) + p1[0], p1[1], p1[2],   // front, left bottom
-							   (-.5f * lw) + p1[0], p1[1], p1[2],   // front, left bottom			   
-							   (0.5f * lw) + p1[0], p1[1], p1[2],	// front, right bottom
-							   (0.5f * lw) + p2[0], p2[1], p2[2],   // front, right top
-							
-							   p2[0], p2[1], (0.5f * lw) + p2[2],   // left, right top
-							   p2[0], p2[1], (-.5f * lw) + p2[2],   // left, left top
-							   p1[0], p1[1], (-.5f * lw) + p1[2],   // left, left bottom
-							   p1[0], p1[1], (-.5f * lw) + p1[2],   // left, left bottom			   
-							   p1[0], p1[1], (0.5f * lw) + p1[2],	// left, right bottom
-							   p2[0], p2[1], (0.5f * lw) + p2[2]};  // left, right top
-							   
-			const u32 vertices_len = 3 * 12; // 3 f32 per vert, 6 verts total
+			// @PERFORMANCE: this recreates and submits this mesh each call,
+			//				 is just a debug tool though, so doesnt have to be fast
+
+			const f32 lw = 0.01f; // line width
+
+			f32* p1 = debug_calls[i].v1;	// pointers, access the same vec3, "debug_draw.v1"
+			f32* p2 = debug_calls[i].v2;	// pointers, access the same vec3, "debug_draw.v2"
+
+			vec3 dir, right, up, p;
+			glm_vec3_sub(p2, p1, dir);
+
+			// use y as cross up, unless dir is also y
+			glm_vec3_normalize(dir);
+			vec3 cross_up = VEC3_Y_INIT;
+			if (glm_vec3_eqv(dir, cross_up)) { glm_vec3_copy((vec3) { 0.5f, 0.5f, 0.0f }, cross_up); }
+
+			glm_vec3_cross(dir, cross_up, right);	// get right vector
+			glm_vec3_cross(right, dir, up);			// get up vector
+			glm_vec3_normalize(right);				// normalize right, for scaling
+			glm_vec3_normalize(up);					// normalize up, for scaling
+			vec3_mul_f(right, lw);					// scale right
+			vec3_mul_f(up, lw);						// scale up
+			glm_vec3_negate(right);					// haha right was actually left all along
+
+
+			f32 vertices[] = { p2[0] - up[0], p2[1] - up[1], p2[2] - up[2],   // front, right top
+							   p2[0] + up[0], p2[1] + up[1], p2[2] + up[2],   // front, left top
+							   p1[0] + up[0], p1[1] + up[1], p1[2] + up[2],   // front, left bottom
+							   p1[0] + up[0], p1[1] + up[1], p1[2] + up[2],   // front, left bottom			   
+							   p1[0] - up[0], p1[1] - up[1], p1[2] - up[2],   // front, right bottom
+							   p2[0] - up[0], p2[1] - up[1], p2[2] - up[2],   // front, right top
+
+							   p2[0] - right[0], p2[1] - right[1], p2[2] - right[2],   // up, right top
+							   p2[0] + right[0], p2[1] + right[1], p2[2] + right[2],   // up, left top
+							   p1[0] + right[0], p1[1] + right[1], p1[2] + right[2],   // up, left bottom
+							   p1[0] + right[0], p1[1] + right[1], p1[2] + right[2],   // up, left bottom			   
+							   p1[0] - right[0], p1[1] - right[1], p1[2] - right[2],   // up, right bottom
+							   p2[0] - right[0], p2[1] - right[1], p2[2] - right[2] }; // up, right top
+
+			const u32 vertices_len = 3 * 12; // 3 f32 per vert, 12 verts total
 
 			mesh m = make_mesh(vertices, vertices_len, NULL, 0, "line", BEE_TRUE);
 
@@ -650,7 +717,7 @@ void render_scene_shadows()
 			continue;
 		}
 		glViewport(0, 0, l->_light.shadow_map_x, l->_light.shadow_map_y);
-		bind_framebuffer_fbo(l->_light.shadow_fbo);
+		bind_framebuffer_fbo(l->_light.fb_shadow.fbo);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		mat4 view;
@@ -825,7 +892,7 @@ void render_scene_normal()
 	}
 
 	// sort transparent / translucent objects
-	vec3 cam_pos; get_editor_camera_pos(&cam_pos);
+	vec3 cam_pos; get_editor_camera_pos(cam_pos);
 	for(int rpt = 0; rpt < BLEND_SORT_DEPTH; ++rpt)
 	{
 		// sort by distance
@@ -986,7 +1053,7 @@ void render_scene_screen()
 	shader_use(screen_shader);
 	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, wireframe_mode_enabled ? fb_outline.buffer : fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
+	glBindTexture(GL_TEXTURE_2D, fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
 	shader_set_int(screen_shader, "tex", 0);
 #ifdef EDITOR_ACT
 	glActiveTexture(GL_TEXTURE1);
@@ -997,6 +1064,63 @@ void render_scene_screen()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glEnable(GL_DEPTH_TEST);
 	// ------------------------------------------------------------------------
+}
+
+void set_bg_till_loaded()
+{
+	// set bg_color for loading screen
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// calculate positions, based on HD dimensions
+	// also transform to normalized device coordinates, i.e.  (* 2 -1), for range [-1, 1]
+	f32 l_x = ((555.0f  / 1920.0f) * 2) - 1;
+	f32 r_x = ((1363.0f / 1920.0f) * 2) - 1;
+	f32 l_y = ((135.0f  / 1080.0f) * 2) - 1;
+	f32 r_y = ((943.0f  / 1080.0f) * 2) - 1;
+
+	f32 quad_verts[] = 
+	{
+		// positions   // texCoords
+		l_x, r_y,  0.0f, 0.0f,
+		l_x, l_y,  0.0f, 1.0f,
+		r_x, l_y,  1.0f, 1.0f,
+
+		l_x, r_y,  0.0f, 0.0f,
+		r_x, l_y,  1.0f, 1.0f,
+		r_x, r_y,  1.0f, 0.0f
+	};
+
+	u32 quad_vao, quad_vbo;
+	
+	glEnable(GL_BLEND); // enable blending of transparent texture
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //set blending function: 1 - source_alpha, e.g. 0.6(60%) transparency -> 1 - 0.6 = 0.4(40%)
+	glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+
+	// screen quad VAO
+	glGenVertexArrays(1, &quad_vao);
+	glGenBuffers(1, &quad_vbo);
+	glBindVertexArray(quad_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
+	glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(f32), &quad_verts, GL_STATIC_DRAW); // quad_verts is 24 long
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)(2 * sizeof(f32)));
+
+
+	shader* s = add_shader_specific("screen.vert", "screen.frag", "splash-logo", BEE_FALSE, 0, NULL, BEE_TRUE);
+	texture t = get_texture("bee_engine_logo_dif.png");
+
+	shader_use(s);
+	shader_set_float(s, "exposure", 0.8f);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, t.handle); // wireframe_mode_enabled ? mouse_pick_buffer : 
+	shader_set_int(s, "tex", 0);
+	glBindVertexArray(quad_vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	window_swap_buffers();
 }
 
 void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, bee_bool is_gizmo, vec3 gizmo_col)
@@ -1100,7 +1224,7 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 	}
 #endif
 
-	glBindVertexArray(_mesh->vao); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+	glBindVertexArray(_mesh->vao);
 	if (_mesh->indexed == BEE_TRUE)
 	{
 		glDrawElements(GL_TRIANGLES, (_mesh->indices_len), GL_UNSIGNED_INT, 0);
@@ -1239,7 +1363,7 @@ void set_shader_uniforms(material* mat)
 			shader_set_int(mat->shader, buffer, light->_light.cast_shadow);
 			sprintf(buffer, "dir_lights[%d].shadow_map", idx);
 			glActiveTexture(GL_TEXTURE0 + texture_index);
-			glBindTexture(GL_TEXTURE_2D, light->_light.shadow_map);
+			glBindTexture(GL_TEXTURE_2D, light->_light.fb_shadow.buffer);
 			shader_set_int(mat->shader, buffer, texture_index);
 			texture_index++;
 			sprintf(buffer, "dir_lights[%d].light_space", idx);

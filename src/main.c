@@ -2,17 +2,19 @@
 #include <direct.h>
 #include <string.h>
 
-#define GLFW_INCLUDE_NONE
-#include "GLFW/glfw3.h"
+// #define GLFW_INCLUDE_NONE
+// #include "GLFW/glfw3.h"
 // #include "GLAD/glad.h"
 // #include "CGLM/cglm.h"
 
 #define  GLOBAL_H_IMPLEMENTATION
 #include "global.h"
 
+#include "script/gravity_interface_ui.h"
 #include "files/asset_manager.h"
 #include "physics/physics.h"
 #include "types/entities.h"
+#include "util/debug_util.h"
 #include "game_time.h"
 #include "editor_ui.h"
 #include "renderer.h"
@@ -20,26 +22,12 @@
 #include "input.h"
 #include "app.h"
 
-// #include "serialization.h"
-// #include "scene_manager.h"
-
-// temp
-#include "shader.h"
-
-// if defined build as editor, otherwise build as game
-// #define EDITOR_ACT in project properties
-
-f32 delta_t = 0.0f;	// Time between current frame and last frame
-f32 last_frame = 0.0f;	// Time of last frame
-
-f32 fps_t;
-f32 cur_fps;
-int fps_ticks_counter;
 
 
 // ---- entry func ----
 int main(void)
 {
+	START_TIMER("---- init ----");
 
 	assetm_init();
 	printf(" -> assetm_init() finished\n");
@@ -56,22 +44,26 @@ int main(void)
 	load_internal_assets();
 	printf(" -> assetm load_internal_assets() finished\n");
 
+	set_bg_till_loaded();
+
 	entities_init();
 	printf(" -> entities_init() finished\n");
-	init(); // @TODO: this should be last
-	printf(" -> init() finished\n");
+	app_init(); // @TODO: this should be last
+	printf(" -> app_init() finished\n");
 	gravity_ui_init();
-	printf(" -> grav_ui_init() finished\n");
+	printf(" -> gravity_ui_init() finished\n");
 	#ifdef EDITOR_ACT
 	ui_init();
 	printf(" -> ui_init() finished\n");
 	#endif
-	input_init();
-	printf(" -> input_init() finished\n");
 	renderer_init();
 	printf(" -> renderer_init() finished\n");
+	input_init();
+	printf(" -> input_init() finished\n");
 	physics_init();
 	printf(" -> physics_init() finished\n\n");
+
+	STOP_TIMER_PRINT(); // init
 
 	// gui console 
 	submit_txt_console("bee_engine :)");
@@ -79,54 +71,60 @@ int main(void)
 
 
 	// main loop
-	while (!glfwWindowShouldClose(get_window()))
+	while (!get_window_should_close())
 	{
+		START_TIMER("---- frame ----"); // whole frame
+
 		// get and process events
-		glfwPollEvents();
+		window_poll_events();
 
 		// ---- time ----
-		// printf("Time: %f \n", glfwGetTime());
-		f32 currentFrame = (f32)glfwGetTime();
-		delta_t = currentFrame - last_frame;
-		last_frame = currentFrame;
-		set_delta_time(delta_t);
-		set_total_secs(currentFrame);
-		// ---- fps -----
-		fps_t += get_delta_time();
-		fps_ticks_counter++;
-		if (fps_t > 1.0f)
-		{
-			cur_fps = (int)floor((double)fps_ticks_counter / (double)fps_t);
-			fps_ticks_counter = 0;
-			fps_t = 0.0f;
-			set_fps(cur_fps);
-		}
-
+		game_time_update();
 
 
 		// call the update function in the apllication
-		update();
+		START_TIMER("app_update()");
+		app_update();
+		STOP_TIMER();
 
-
-		// ---- rendering ----
+		START_TIMER("renderer_update()");
 		renderer_update(); // render all objects
+		STOP_TIMER();
+
 
 		#ifdef EDITOR_ACT
+		START_TIMER("ui_update()");
 		ui_update();
+		STOP_TIMER();
 		#endif
 
+		START_TIMER("entities_update()");
 		entities_update(); // has to be after ui
+		STOP_TIMER();
 
+		// only need to / can check gamestate when editor is active
+		START_TIMER("physics_update()");
+		#ifdef EDITOR_ACT
 		if (get_gamestate()) // only wile playing
 		{
 			physics_update(get_delta_time()); // after renderer & entities
 		}
+		#else 
+			physics_update(get_delta_time()); // after renderer & entities
+		#endif
+		STOP_TIMER(); // physics update
 
+		START_TIMER("input_update()");
 		input_update(); // reset last frames button state
+		STOP_TIMER();
 
 		// ---- glfw stuff ----
 		// swap back and front bufffer
-		glfwSwapBuffers(get_window());
+		window_swap_buffers();
+
+		STOP_TIMER(); // frame
+
+		clear_state_timers();
 	}
 
 	// free allocated memory

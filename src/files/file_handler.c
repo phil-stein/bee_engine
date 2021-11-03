@@ -16,8 +16,8 @@
 // #include "fastobj\fast_obj.h"
 
 #include "asset_manager.h"
+#include "util/str_util.h"
 #include "file_handler.h"
-#include "str_util.h"
 #include "global.h"
 
 

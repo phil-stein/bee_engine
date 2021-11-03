@@ -51,6 +51,8 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 	m.indexed = BEE_FALSE;
 	if (simple)
 	{
+		assert(indices_len == 0); // cant be indexed and simple
+
 		m.floats_per_vert = 3;
 		m.vertices_elems = vertices_len / 3;
 
@@ -220,10 +222,11 @@ mesh make_cube_mesh()
 mesh make_grid_mesh(int x_verts, int z_verts)
 {
 	//make sure both xVerts and zVerts are at least 2
-	x_verts = x_verts < 2 ? 2 : x_verts; z_verts = z_verts < 2 ? 2 : z_verts;
+	x_verts = x_verts < 2 ? 2 : x_verts; 
+	z_verts = z_verts < 2 ? 2 : z_verts;
 
 	//generates the vertices
-	int verts_len = (z_verts * x_verts * 8);
+	int verts_len = (z_verts * x_verts * F32_PER_VERT);
 	f32* verts;
 	verts = malloc(verts_len * sizeof(f32));
 	assert(verts != NULL);
@@ -233,22 +236,24 @@ mesh make_grid_mesh(int x_verts, int z_verts)
 		for (int x = 0; x < x_verts * 8;)
 		{
 			//xyz coords              amount of verts in row +1 * step size per vert to fit in -1 to 1 space | sizeX / 2 and sizeX&sizeZ are always 1
-			verts[(z * (x_verts * 8)) + x + 0] = (((x / 8) + 1) * (2.0f / x_verts)) - 1.0f;//(float)Math.Clamp((double) , -1, 1);
-			verts[(z * (x_verts * 8)) + x + 1] = 0.0f;
-			verts[(z * (x_verts * 8)) + x + 2] = z * (2.0f / z_verts) - 1.0f; //(float)Math.Clamp((double) , -1, 1);
-			//Debug.WriteLine("Vert0" + (x / 8).ToString() + ": X: " + ((((x / 8) + 1) * (2f / xVerts)) - 1f).ToString() + ", Z: " + (z * (2f / zVerts) - 1f).ToString());
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 0] = (((x / 8) + 1) * (2.0f / x_verts)) - 1.0f;
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 1] = 0.0f;
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 2] = z * (2.0f / z_verts) - 1.0f;
 
-			// normals for lighting
-			verts[(z * (x_verts * 8)) + x + 3] = 0.0f;
-			verts[(z * (x_verts * 8)) + x + 4] = 1.0f;
-			verts[(z * (x_verts * 8)) + x + 5] = 0.0f;
+			// normals
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 3] = 0.0f;
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 4] = 1.0f;
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 5] = 0.0f;
 
 			//uv
-			verts[(z * (x_verts * 8)) + x + 6] = (f32)x / (x_verts * 8);
-			verts[(z * (x_verts * 8)) + x + 7] = (f32)z / z_verts;
-			//Debug.WriteLine(" |U: " + verts[(z * (xVerts * 8)) + x + 6].ToString() + ", V: " + verts[(z * (xVerts * 8)) + x + 7].ToString() + ", x: " + x.ToString() + ", xVerts: " + xVerts.ToString() + ", z: " + z.ToString() + ", zVerts: " + zVerts.ToString());
-			//Debug.WriteLine("Vert: " + (z * (xVerts * 8) + x).ToString() + ", x: " + x.ToString() + ", Coords: " + ((((x / 8) + 1) * (2f / xVerts)) - 1f).ToString() + "f, 0f ," + (z * (2f / zVerts) - 1f).ToString() + "f");
-			x += 8;
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 6] = (f32)x / (x_verts * F32_PER_VERT);
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 7] = (f32)z / z_verts;
+
+			// tangents
+			verts[(z * (x_verts * F32_PER_VERT)) + x +  8] = 0.0f;
+			verts[(z * (x_verts * F32_PER_VERT)) + x +  9] = 1.0f;
+			verts[(z * (x_verts * F32_PER_VERT)) + x + 10] = 0.0f;
+			x += F32_PER_VERT;
 		}
 	}
 
@@ -261,7 +266,7 @@ mesh make_grid_mesh(int x_verts, int z_verts)
 	for (int w = 0, z = 0; z < z_verts - 1; z++)
 	{
 		if (firstW) { w = 1; }
-		//Debug.WriteLine("---Row0" + z.ToString() + "---");
+
 		for (int x = 0; x < x_verts - 1; x++)
 		{
 			tris[tri + 0] = quad + (f32)(x_verts * (z / w)) + 1;
@@ -280,8 +285,8 @@ mesh make_grid_mesh(int x_verts, int z_verts)
 	}
 
 	mesh m = make_mesh(verts, verts_len, tris, tris_len, "grid", BEE_FALSE);
-	free(verts);
-	free(tris);
+	// free(verts);
+	// free(tris);
 	return m;
 }
 
@@ -347,7 +352,7 @@ light make_dir_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction)
 	_light.linear	 = 0.14f;
 	_light.quadratic = 0.13;
 
-	create_framebuffer_shadowmap(&_light.shadow_map, &_light.shadow_fbo, _light.shadow_map, _light.shadow_map_y);
+	create_framebuffer_shadowmap(&_light.fb_shadow.buffer, &_light.fb_shadow.fbo, _light.shadow_map_x, _light.shadow_map_y);
 	return _light;
 }
 light make_spot_light(vec3 ambient, vec3 diffuse, vec3 specular, vec3 direction, f32 constant, f32 linear, f32 quadratic, f32 cut_off, f32 outer_cut_off)

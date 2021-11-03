@@ -1,4 +1,3 @@
-#ifdef EDITOR_ACT
 #pragma once
 
 #ifndef EDITOR_UI_H
@@ -7,7 +6,8 @@
 
 #include "global.h"
 #include "files/asset_manager.h"
-// #include "object_data.h"
+
+#ifdef EDITOR_ACT
 
 
 typedef struct
@@ -136,13 +136,6 @@ static void set_style(struct nk_context* ctx, enum ui_theme theme);
 // this way i dont have to put "#ifdef EDITOR_ACT" statements around each of them
 // 
 
-#ifndef EDITOR_UI_H
-#define EDITOR_UI_H
-
-
-#include "global.h"
-
-
 // during play-build this obviously doesnt do anything
 void submit_txt_console(char* doesnt_show_up);
 
@@ -152,5 +145,4 @@ void set_error_popup(error_type type, char* doesnt_show_up);
 // during play-build this obviously doesnt do anything
 void set_error_popup(error_type type, char* doesnt_show_up);
 
-#endif
 #endif

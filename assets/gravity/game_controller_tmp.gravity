@@ -16,6 +16,7 @@ func init()
 {
 	System.print("called init: game_controller");
 
+	/*
 	var lw = 0.5; // width
 	var vertices = [ (0.5 * lw), 1, 0,   // front, right top
 					 (-.5 * lw), 1, 0,   // front, left top
@@ -26,6 +27,7 @@ func init()
 
 	var game = Game();
 	game.add_mesh(vertices, "cool_mesh");
+	*/
 }
 
 func update()
@@ -61,9 +63,9 @@ func update()
 
 	if (input.get_key_SPACE())
 	{
-		world.add_entity(0, 2.5 + (added_ents * 1.25), 0, "cool_mesh", "MAT_blank", "inst" + added_ents);
-		game.console("added entity :), inst" + added_ents);
-		added_ents += 1;
+		// world.add_entity(0, 2.5 + (added_ents * 1.25), 0, "cool_mesh", "MAT_blank", "inst" + added_ents);
+		// game.console("added entity :), inst" + added_ents);
+		// added_ents += 1;
 	}
 
 }

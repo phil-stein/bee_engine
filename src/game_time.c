@@ -1,35 +1,49 @@
 #include "game_time.h"
 
-// time between current frame and last frame
-f32 delta_time = 0.0f;
+#include "GLFW/glfw3.h"
+
+
+f32 delta_time = 0.0f; // time between current frame and last frame
+f32 last_frame = 0.0f; // time of last frame
 
 // time since application started
 f32 total_secs = 0.0f;
 
 f32 frames_per_second;
+f32 fps_t;
+int fps_ticks_counter;
+
+
+void game_time_update()
+{
+
+	// ---- delta t ----
+	f32 currentFrame = (f32)glfwGetTime();
+	delta_time = currentFrame - last_frame;
+	last_frame = currentFrame;
+
+	// ---- fps -----
+	fps_t += delta_time;
+	fps_ticks_counter++;
+	if (fps_t > 1.0f)
+	{
+		frames_per_second = (int)floor((f64)fps_ticks_counter / (f64)fps_t);
+		fps_ticks_counter = 0;
+		fps_t = 0.0f;
+	}
+}
+
 
 f32 get_delta_time()
 {
 	return delta_time;
 }
-void set_delta_time(f32 delta_t)
-{
-	delta_time = delta_t;
-}
 
 f32 get_total_secs() 
 {
-	return total_secs;
-}
-void set_total_secs(f32 secs)
-{
-	total_secs = secs;
+	return (f32)glfwGetTime();
 }
 
-void set_fps(f32 fps)
-{
-	frames_per_second = fps;
-}
 f32 get_fps()
 {
 	return frames_per_second;

@@ -148,6 +148,21 @@ char* get_window_title()
 	return window_title;
 }
 
+bee_bool get_window_should_close()
+{
+	return (bee_bool)glfwWindowShouldClose(window);
+}
+
+void window_swap_buffers()
+{
+	glfwSwapBuffers(window);
+}
+
+void window_poll_events()
+{
+	glfwPollEvents(window);
+}
+
 void set_texturebuffer_to_update_to_screen_size(framebuffer* fb)
 {
 	arrput(resize_buffers, fb);

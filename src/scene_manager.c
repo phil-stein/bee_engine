@@ -19,7 +19,8 @@ bee_bool scene_state_buffer_filled = BEE_FALSE;
 char scene_name_before_state_change[NAME_SIZE];
 #endif
 
-char active_scene[NAME_SIZE] = "no_name";
+#define NO_LOADED_SCENE_NAME "no_name"
+char active_scene[NAME_SIZE] = NO_LOADED_SCENE_NAME;
 
 char* get_scene_dir_path()
 {
@@ -66,6 +67,7 @@ void load_scene(const char* name)
 	// entities
 	for (int i = 0; i < s.entities_len; ++i)
 	{
+		// printf("deserialized entity: %s, id: %d, scripts_len: %d\n", s.entities[i].name, s.entities[i].id, s.entities[i].scripts_len);
 		add_entity_direct_id(s.entities[i], s.entities[i].id);
 	}
 
@@ -128,7 +130,7 @@ void clear_scene()
 {
 	entities_clear_scene();
 	renderer_clear_scene();
-	strcpy(active_scene, "no_name");
+	strcpy(active_scene, NO_LOADED_SCENE_NAME);
 }
 
 void add_empty_scene(const char* name)

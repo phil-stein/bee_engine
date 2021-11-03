@@ -36,7 +36,9 @@ func update()
 		{
 			ui.text("collision: " + collision_id);
 		}
-	} ui.window_end();
+	} 
+	ui.window_end();
+	
 
 	ui.end();
 

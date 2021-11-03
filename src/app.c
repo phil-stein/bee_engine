@@ -9,11 +9,11 @@
 #include "tinyfd/tinyfiledialogs.h"
 
 #include "input.h"
-#include "shader.h"
 #include "window.h"
 #include "renderer.h"
 #include "game_time.h"
 #include "editor_ui.h"
+#include "types/shader.h"
 #include "types/camera.h"
 #include "scene_manager.h"
 #include "types/entities.h"
@@ -37,7 +37,7 @@ int mouse_callback_idx = 0;
 #pragma endregion
 
 
-void init()
+void app_init()
 {
 	window = get_window();
 
@@ -88,9 +88,6 @@ void init()
 	texture glass_dif_tex = get_texture("window.png");
 	material* mat_glass	  = add_material(shader_default, glass_dif_tex, blank_tex, BEE_TRUE, 1.0f, tile, tint, BEE_TRUE, "MAT_glass", BEE_TRUE);
 
-	//
-	// @TODO: make the renderer use the right camera
-	// 
 	// in-game-camera
 	camera cam = make_camera(40.0f, 0.1f, 100.0f);
 	cam.front[0] = 0; 
@@ -197,81 +194,41 @@ void init()
 	*/
 
 	// load_scene("showcase06.scene");
-	load_scene("physics05.scene");
+	// load_scene("physics05.scene");
 	// load_scene("rotation01.scene");
 	// load_scene("ui_test.scene");
 	// load_scene("tmp02.scene");
 
+	add_shader("basic.vert", "blinn_phong.frag", "SHADER_default", BEE_TRUE);
+	add_shader("basic.vert", "unlit.frag", "SHADER_unlit", BEE_TRUE);
+	add_shader("basic.vert", "cel_shading.frag", "SHADER_cel", BEE_TRUE);
 
-	// generate physics components old
-	/*
-	entity* cube	  = get_entity(0);
-	entity* ground	  = get_entity(2);
-	entity* tombstone = get_entity(6);
+	vec2 tile = { 1.0f, 1.0f };
+	vec3 tint = { 1.0f, 1.0f, 1.0f };
+
+	texture blank_tex = get_texture("blank.png");
+	add_material(get_shader("SHADER_default"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
+	add_material(get_shader("SHADER_unlit"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
+	add_material(get_shader("SHADER_cel"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
+
+	P_STR("app init | shader unlit:");
+	P_PTR(get_shader("SHADER_unlit"));
+	P_STR(get_shader("SHADER_unlit")->name);
 	
-	// rigidbody
-	rigidbody rb01;
-	vec3 f1 = { 100.0f, 500.0f, 0.0f };
-	glm_vec3_copy(f1, rb01.force);
-	glm_vec3_copy(GLM_VEC3_ZERO, rb01.velocity); 
-	rb01.mass = 1.0f;
-	cube->has_rb = BEE_TRUE;
-	cube->rb = rb01;
+	mesh m = make_grid_mesh(4, 4);
+	add_mesh(m);
 
-	rigidbody rb02;
-	vec3 f2 = { -100.0f * 5.0f, 500.0f * 5.0f, 0.0f };
-	glm_vec3_copy(f2, rb02.force);
-	glm_vec3_copy(GLM_VEC3_ZERO, rb02.velocity);
-	rb02.mass = 5.0f;
-	// tombstone->has_rb = BEE_TRUE;
-	// tombstone->rb = rb02;
+	add_entity(VEC3_ZERO, VEC3_ZERO, VEC3_ONE, get_mesh("grid"), get_material("MAT_blank_unlit"), NULL, NULL, NULL, NULL, "grid");
 
-	// collider
-	sphere_collider d_col_s;
-	d_col_s.radius = 1.0f;
-	box_collider c_col, d_col, g_col;
-	glm_vec3_copy(GLM_VEC3_ZERO, c_col.aabb[0]);
-	glm_vec3_copy(GLM_VEC3_ONE,  c_col.aabb[1]);
-	glm_vec3_copy(GLM_VEC3_ZERO, d_col.aabb[0]);
-	glm_vec3_copy(GLM_VEC3_ONE,  d_col.aabb[1]);
-	vec3 min = { -5, 0, -5 };
-	vec3 max = {  5, 1,  5 };
-	glm_vec3_copy(min, g_col.aabb[0]);
-	glm_vec3_copy(max, g_col.aabb[1]);
-	
-	collider c01, c02, c03;
-	c01.type = BOX_COLLIDER;
-	// c01.sphere = c_col;
-	c01.box = c_col;
-	glm_vec3_copy(GLM_VEC3_ZERO, c01.offset);
-	c02.type =  BOX_COLLIDER; // SPHERE_COLLIDER;
-	// c02.sphere = d_col_s;
-	c02.box = d_col;
-	vec3 offset2 = { 0, 1, 0 };
-	glm_vec3_copy(offset2, c02.offset);
-
-	c03.type = BOX_COLLIDER;
-	c03.box = g_col;
-	vec3 offset3 = { 0, 0, 0 };
-	glm_vec3_copy(offset3, c03.offset);
-	
-	cube->has_collider = BEE_TRUE;
-	cube->collider = c01;
-	tombstone->has_collider = BEE_TRUE;
-	tombstone->collider = c02;
-	ground->has_collider = BEE_TRUE;
-	ground->collider = c03;
-	*/
 
 
 #ifdef EDITOR_ACT
-	// glfwSetCursorPosCallback(window, rotate_cam_by_mouse);
 	mouse_callback_idx = register_mouse_pos_callback(rotate_editor_cam_by_mouse);
 #endif
 
 }
 
-void update()
+void app_update()
 {
 	// ---- fps ----
 	
@@ -283,8 +240,9 @@ void update()
 
 	// -------------
 
-
 #ifdef EDITOR_ACT
+	//debug_draw_line(VEC3_ZERO, VEC3_Y);
+	
 	// ---- input ----
 	process_input(window);
 #endif

@@ -72,18 +72,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)debug\</OutDir>
     <IntDir>$(ProjectDir)bin\</IntDir>
+    <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)debug\</OutDir>
     <IntDir>$(ProjectDir)bin\</IntDir>
+    <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)release\</OutDir>
     <IntDir>$(ProjectDir)bin\</IntDir>
+    <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)release\</OutDir>
     <IntDir>$(ProjectDir)bin\</IntDir>
+    <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -91,7 +95,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <UndefinePreprocessorDefinitions>_cplusplus;</UndefinePreprocessorDefinitions>
@@ -106,8 +110,8 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>EDITOR_ACT;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\external_c\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\external_c\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -129,8 +133,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalUsingDirectories>GLFW_DLL;</AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\GLFW\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
       <UndefinePreprocessorDefinitions>_cplusplus;</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -148,9 +153,10 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)external\;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalUsingDirectories>GLFW_DLL;</AdditionalUsingDirectories>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir)src\;$(ProjectDir)external\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\GLFW\;$(ProjectDir)external\gravity;$(ProjectDir)external\GLAD\;$(ProjectDir)external\glm\;$(ProjectDir)external\tinyfd;$(ProjectDir)external\GLFW\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <UndefinePreprocessorDefinitions>_cplusplus;</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -180,13 +186,14 @@
     <ClCompile Include="src\script\gravity_interface.c" />
     <ClCompile Include="src\script\gravity_interface_ui.c" />
     <ClCompile Include="src\script\gravity_script.c" />
-    <ClCompile Include="src\shader.c" />
-    <ClCompile Include="src\str_util.c" />
     <ClCompile Include="src\editor_ui.c" />
     <ClCompile Include="src\types\camera.c" />
     <ClCompile Include="src\types\entities.c" />
     <ClCompile Include="src\types\framebuffer.c" />
     <ClCompile Include="src\types\object_data.c" />
+    <ClCompile Include="src\types\shader.c" />
+    <ClCompile Include="src\util\debug_util.c" />
+    <ClCompile Include="src\util\str_util.c" />
     <ClCompile Include="src\window.c" />
   </ItemGroup>
   <ItemGroup>
@@ -208,14 +215,15 @@
     <ClInclude Include="src\script\gravity_interface.h" />
     <ClInclude Include="src\script\gravity_interface_ui.h" />
     <ClInclude Include="src\script\gravity_script.h" />
-    <ClInclude Include="src\shader.h" />
-    <ClInclude Include="src\str_util.h" />
     <ClInclude Include="src\editor_ui.h" />
     <ClInclude Include="src\types\camera.h" />
     <ClInclude Include="src\types\entities.h" />
     <ClInclude Include="src\types\framebuffer.h" />
     <ClInclude Include="src\types\object_data.h" />
-    <ClInclude Include="src\ui_util.h" />
+    <ClInclude Include="src\types\shader.h" />
+    <ClInclude Include="src\util\debug_util.h" />
+    <ClInclude Include="src\util\str_util.h" />
+    <ClInclude Include="src\util\ui_util.h" />
     <ClInclude Include="src\window.h" />
   </ItemGroup>
   <ItemGroup>

@@ -3,7 +3,7 @@
 #define PHYS_TYPES_H
 
 #include "global.h"
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 typedef struct collision_info
 {

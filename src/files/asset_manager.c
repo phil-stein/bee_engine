@@ -5,10 +5,10 @@
 
 #include "stb/stb_ds.h" // STB_DS_IMPLEMENTATION defined in renderer.c
 
-#include "file_handler.h"
 #include "editor_ui.h"
-#include "str_util.h"
-#include "shader.h"
+#include "types/shader.h"
+#include "util/str_util.h"
+#include "files/file_handler.h"
 
 // ---- vars ----
 // hashmaps & dyn.-arrays using stb_ds.h
@@ -82,7 +82,7 @@ int shaders_len = 0;
 shader* shaders_data = NULL;
 int shaders_data_len = 0;
 
-// ---- vert-files 
+// ---- vert-files ----
 struct { char* key;  int   value; }*vert_files = NULL;
 int vert_files_len = 0;
 
@@ -92,7 +92,7 @@ int vert_files_paths_len = 0;
 
 char** logged_vert_files = NULL;
 
-// ---- frag-files 
+// ---- frag-files ----
 struct { char* key;  int   value; }*frag_files = NULL;
 int frag_files_len = 0;
 
@@ -132,6 +132,8 @@ char* internal_assets_names[] = {
 									// ---- misc ----
 									// needed for blank material, unlit material, etc.
 									"blank.png",
+									// engine logo for splash screen, etc
+									"bee_engine_logo_dif.png", // the dif because we need it in srb, as im rendering it using the screen shader
 
 									// ---- ui ----
 									"mesh_icon.png",
@@ -155,7 +157,7 @@ char* internal_assets_names[] = {
 									"arrow_down.obj",
 									"flashlight.obj",
 };
-int internal_assets_names_len = 18;
+int internal_assets_names_len = 19;
 // bee_bool all_internal_assets_found = BEE_FALSE;
 
 
@@ -185,7 +187,7 @@ void assetm_init()
 	shdefault(shaders, -1);
 	shdefault(materials, -1);
 	shdefault(scripts, -1);
-	shdefault(scenes_paths, -1);
+	shdefault(scenes_paths, NULL);
 }
 
 char* get_asset_dir()
@@ -242,8 +244,8 @@ void load_internal_assets()
 			get_mesh(internal_assets_names[i]);
 		}
 	}
-
-	add_mesh(make_plane_mesh());
+	mesh m = make_plane_mesh();
+	add_mesh(m);
 
 	shader* s = add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error", BEE_TRUE); // default shader
 
@@ -522,6 +524,8 @@ bee_bool check_asset_loaded(char* name)
 	int i = 9999;
 	switch (type)
 	{
+		case NOT_ASSET:
+			return BEE_FALSE;
 		case TEXTURE_ASSET:
 			i = shget(textures, name);
 			break;
@@ -543,6 +547,9 @@ bee_bool check_asset_loaded(char* name)
 		case FRAG_SHADER_ASSET:
 			i = shget(frag_files, name);
 			break;
+		case SCENE_ASSET:
+			; char* p = shget(scenes_paths, name);
+			return p != NULL;
 	}
 	// get the index to the asset array from the hashmap
 
@@ -833,7 +840,7 @@ void log_mesh(const char* path, const char* name)
 	int i = shgeti(meshes, name);
 	hmput(meshes_paths, i, path_cpy);
 	meshes_paths_len++;
-	printf("path: \"%s\"; name: \"%s\"; id: %d\n", path, name, i);
+	// printf("path: \"%s\"; name: \"%s\"; id: %d\n", path, name, i);
 
 	// keep track of logged mesh names
 	arrput(logged_meshes, name_cpy);
@@ -1109,9 +1116,9 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 	}
 
 	// key for the path is the index of the file in the hashmap
-	int path_idx = shgeti(vert_files, vert_name);
+	int path_idx	= shgeti(vert_files, vert_name);
 	char* vert_path = hmget(vert_files_paths, path_idx);
-	path_idx = shgeti(frag_files, frag_name);
+	path_idx		= shgeti(frag_files, frag_name);
 	char* frag_path = hmget(frag_files_paths, path_idx);
 
 	// make a persistent copy of the passed name
@@ -1127,7 +1134,6 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 	s.uniform_defs		= uniform_defs;
 
 	shput(shaders, name_cpy, shaders_data_len);
-	// shaders_len++; // @BUGG: causes weird stuff
 	arrput(shaders_data, s);
 	shaders_data_len++;
 
@@ -1151,6 +1157,19 @@ shader* get_shader(char* name)
 	// retrieve mesh from mesh_data array
 	shader* s = &shaders_data[shget(shaders, name) == -1 ? 0 : shget(shaders, name)];
 	if (s->has_error) { s = &shaders_data[0]; }
+	return s;
+}
+
+shader* get_shader_by_idx(int idx)
+{
+	if (idx < 0 || idx >= shaders_data_len)
+	{
+		assert(0);
+	}
+
+	// retrieve mesh from mesh_data array
+	shader* s = &shaders_data[idx];
+	if (s->has_error) { P_ERR("defaulted to 0th shader in \"get_shader()\""); s = &shaders_data[0]; }
 	return s;
 }
 

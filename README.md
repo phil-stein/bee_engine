@@ -3,7 +3,8 @@ simple 3d game-engine in C ( C89 ), using OpenGL 4.6 <br>
 **still under development | unstable**
 
 using    [glfw3](https://www.glfw.org/), [glad](https://glad.dav1d.de/), [cglm](https://github.com/recp/cglm), [stb_image & stb_ds](https://github.com/nothings/stb), [nuklear](https://github.com/Immediate-Mode-UI/Nuklear), [assimp](http://assimp.org/), [gravity](https://github.com/marcobambini/gravity), [tiny file dialogs](https://sourceforge.net/p/tinyfiledialogs/code/ci/master/tree/)<br>
-tutorial [learnopengl.com](https://learnopengl.com/)
+
+resources:  [learnopengl.com](https://learnopengl.com/), "3D Math Primer for Graphics and Game Development" by Dunn Parberry, "Game Physics Engine Development" by Ian Millington
 
 ## current capabilities
 
@@ -15,7 +16,7 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 
 ### planned features
 
-- [ ] parent-child relations
+- [x] parent-child relations
 - [ ] audio
 - [ ] first game test
 - [ ] advanced 3d
@@ -32,12 +33,30 @@ tutorial [learnopengl.com](https://learnopengl.com/)
 ### possible features
 
 - [ ] physics engine
-  - [x] sphere v. sphere
-  - [x] aabb v. aabb
-  - [ ] sphere v. aabb
+  - [ ] particle simulation
+  
+  - [ ] mass aggregate simulation
+  
+  - [ ] rigidbody simulation
+  
+  - [ ] collision detection
+  
+  - [ ] contact physics
+  
+    
+  
 - [ ] in-game gui
+
+  - [x] nuklear wrapper
+
+    -> used till / if custom implementation is made
+
+  - [ ] design (immediate mode vs. saving the layout made in an editor and running it entirely in c for speed)
+
   - [ ] text rendering
+
   - [ ] quads with relations
+
   - [ ] buttons
 
 

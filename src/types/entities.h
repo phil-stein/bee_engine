@@ -2,7 +2,7 @@
 #ifndef ENTITIES_H
 #define ENTITIES_H
 
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 #include "object_data.h"
 #include "global.h"

@@ -345,7 +345,7 @@ void entity_switch_light_type(int entity_id, light_type new_type)
 	case DIR_LIGHT:
 		arrput((*get_dir_light_ids_ptr()), entity_id);
 		(*get_dir_light_ids_len())++;
-		create_framebuffer_shadowmap(&ent->_light.shadow_map, &ent->_light.shadow_fbo, 2048, 2048);
+		create_framebuffer_shadowmap(&ent->_light.fb_shadow.buffer, &ent->_light.fb_shadow.fbo, 2048, 2048);
 		break;
 	case POINT_LIGHT:
 		arrput((*get_point_light_ids_ptr()), entity_id);

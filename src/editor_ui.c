@@ -1,6 +1,6 @@
-#ifdef EDITOR_ACT
-
 #include "editor_ui.h"
+
+#ifdef EDITOR_ACT
 
 #include "GLAD/glad.h"
 
@@ -16,17 +16,18 @@
 #define NK_KEYSTATE_BASED_INPUT
 #include "nuklear/nuklear.h"
 #include "nuklear/nuklear_glfw_gl3.h"
-#include "ui_util.h" // util functions / typedefs
+#include "util/ui_util.h" // util functions / typedefs
 
 #include "stb/stb_ds.h"
 #include "tinyfd/tinyfiledialogs.h"
 
 #include "files/file_handler.h"
+#include "util/debug_util.h"
 #include "types/entities.h"
 #include "scene_manager.h"
+#include "util/str_util.h"
 #include "types/camera.h"
 #include "game_time.h"
-#include "str_util.h"
 #include "renderer.h"
 #include "window.h"
 #include "input.h"
@@ -1591,7 +1592,7 @@ void properties_window()
     const f32 y_ratio = 10.0f   / 1020.0f;
 
     properties_window_rect = nk_rect(x_ratio * w, y_ratio * h, w_ratio * w, h_ratio * h);
-    if (nk_begin(ctx, "Properties", properties_window_rect, window_flags | NK_WINDOW_NO_SCROLLBAR))
+    if (nk_begin(ctx, "Properties", properties_window_rect, window_flags)) //  | NK_WINDOW_NO_SCROLLBAR
         // cant have these two because the windoews cant be resized otherwise NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE
     {
         static int gamestate_act = 0;
@@ -1617,8 +1618,8 @@ void properties_window()
         nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
         // ---- entity tree ----
-        nk_layout_row_static(ctx, properties_window_rect.h + 200, properties_window_rect.w, 10, 1);
-        if (nk_group_begin(ctx, "entity_hierarchy", 0))
+        // nk_layout_row_static(ctx, properties_window_rect.h + 200, properties_window_rect.w, 10, 1);
+        if (1)// nk_group_begin(ctx, "entity_hierarchy", 0))
         {
             if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) // NK_MAXIMIZED: open on start
             {
@@ -1756,9 +1757,11 @@ void properties_window()
                     nk_label(ctx, "ID:", NK_TEXT_LEFT);
                     char buf[4]; sprintf_s(buf, 4, "%d", ent->id);
                     nk_label(ctx, buf, NK_TEXT_LEFT);
-                    nk_layout_row_dynamic(ctx, 25, 1);
-                    nk_checkbox_label(ctx, " visible", &ent->visible);
-
+                    if (ent->has_model)
+                    {
+                        nk_layout_row_dynamic(ctx, 25, 1);
+                        nk_checkbox_label(ctx, " visible", &ent->visible);
+                    }
 
                     if (ent->parent != 9999)
                     {
@@ -1911,7 +1914,7 @@ void properties_window()
                 nk_tree_pop(ctx);
             }
             
-            nk_group_end(ctx);
+            // nk_group_end(ctx);
         }
 
         // extra spacing to scroll
@@ -2158,11 +2161,14 @@ void draw_scene_properties()
             nk_layout_row_static(ctx, 5, 10, 1);
             nk_label(ctx, " ", NK_TEXT_ALIGN_CENTERED);
 
-            int* skybox_enabled = renderer_get(RENDER_CUBEMAP);
+            int* skybox_enabled = 0;
+            skybox_enabled = renderer_get(RENDER_CUBEMAP);
             nk_layout_row_dynamic(ctx, 15, 1);
             nk_checkbox_label(ctx, " draw skybox", skybox_enabled);
 
-            int* msaa_enabled = renderer_get(RENDER_MSAA);
+            int* msaa_enabled = 0;
+            msaa_enabled = renderer_get(RENDER_MSAA);
+            assert(msaa_enabled != 0);
             nk_layout_row_dynamic(ctx, 15, 1);
             nk_checkbox_label(ctx, " MSAA", msaa_enabled);
 
@@ -2213,8 +2219,39 @@ void draw_scene_properties()
 
         if (nk_tree_push(ctx, NK_TREE_TAB, "Diagnostics", NK_MINIMIZED))
         {
-            char buf[20];
-            nk_layout_row_dynamic(ctx, 25, 1);
+            char buf[128];
+            #ifdef DEBUG_UTIL_ACT
+            if (nk_tree_push(ctx, NK_TREE_TAB, "Timers", NK_MINIMIZED))
+            {
+                int len = 0;
+                timer* timers = get_all_timers(&len);
+
+                nk_layout_row_dynamic(ctx, 25, 1);
+                if (len > 0) // lable for first file name
+                {
+                    sprintf_s(buf, 128, "%s | %s", timers[0].file, timers[0].func);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+                }
+                for (int i = 0; i < len; ++i)
+                {
+                    // @UNCLEAR: im comparing pointers here and it works 
+                    //           presumably because __FILE__, __FUNCTION__ always points to the same string
+                    //           not sure if i should use strcmp() anyways, if its more stable yk
+                    if (i != 0 && (timers[i - 1].file != timers[i].file || timers[i -1].func != timers[i].func)) // print file name if it changed
+                    {
+                        sprintf_s(buf, 128, "%s | %s", timers[i].file, timers[i].func);
+                        nk_label(ctx, buf, NK_TEXT_LEFT);
+                    }
+                    sprintf_s(buf, 128, "-> | %.2Lfms | %s", timers[i].time, timers[i].name);
+                    nk_label(ctx, buf, NK_TEXT_LEFT);
+                }
+
+                nk_tree_pop(ctx);
+            }
+            #else
+            nk_label(ctx, "Debug Utils deactivated, i.e. Timers", NK_TEXT_LEFT);
+            #endif
+
             sprintf_s(buf, 20, "FPS: %d", (int)get_fps());
             nk_label(ctx, buf, NK_TEXT_LEFT);
             sprintf_s(buf, 20, "Draw Calls: %d", *get_draw_calls_per_frame());
@@ -2264,12 +2301,11 @@ void draw_scene_properties()
             }
 
             if (index != -1)
-                nk_tooltipf(ctx, "Value: %.2f", (float)cos((float)index * step));
+                nk_tooltipf(ctx, "Value: %.2f", (f32)cos((f32)index * step));
             if (line_index != -1) {
                 nk_layout_row_dynamic(ctx, 20, 1);
-                nk_labelf(ctx, NK_TEXT_LEFT, "Selected value: %.2f", (float)cos((float)index * step));
+                nk_labelf(ctx, NK_TEXT_LEFT, "Selected value: %.2f", (f32)cos((f32)index * step));
             }
-
 
             nk_tree_pop(ctx);
         }
@@ -2281,21 +2317,27 @@ void draw_scene_properties()
             const struct nk_input* in = &ctx->input;
             struct nk_rect bounds;
 
-            int* wireframe_mode_enabled = renderer_get(RENDER_WIREFRAME);
+            int* wireframe_mode_enabled = 0;
+            wireframe_mode_enabled = renderer_get(RENDER_WIREFRAME);
+            assert(wireframe_mode_enabled != 0);
             nk_layout_row_dynamic(ctx, 15, 1);
             bounds = nk_widget_bounds(ctx);
             nk_checkbox_label(ctx, "Wireframe", wireframe_mode_enabled);
             if (nk_input_is_mouse_hovering_rect(in, bounds))
                 nk_tooltip(ctx, " Activate Wireframe-Mode, you can also use Tab.");
 
-            int* normal_mode_enabled = renderer_get(RENDER_NORMAL);
+            int* normal_mode_enabled = 0;
+            normal_mode_enabled = renderer_get(RENDER_NORMAL);
+            assert(normal_mode_enabled != 0);
             nk_layout_row_dynamic(ctx, 15, 1);
             bounds = nk_widget_bounds(ctx);
             nk_checkbox_label(ctx, "Normals", normal_mode_enabled);
             if (nk_input_is_mouse_hovering_rect(in, bounds))
                 nk_tooltip(ctx, " Not implemented yet.");
 
-            int* uv_mode_enabled = renderer_get(RENDER_UV);
+            int* uv_mode_enabled = 0;
+            uv_mode_enabled = renderer_get(RENDER_UV);
+            assert(uv_mode_enabled != 0);
             nk_layout_row_dynamic(ctx, 15, 1);
             bounds = nk_widget_bounds(ctx);
             nk_checkbox_label(ctx, "UVs", uv_mode_enabled);
@@ -3300,7 +3342,7 @@ void draw_light_component(entity* ent)
         if (ent->_light.cast_shadow == BEE_TRUE && nk_tree_push(ctx, NK_TREE_NODE, "Shadow Map", NK_MINIMIZED))
         {
             f32 ratio_x = (f32)ent->_light.shadow_map_x / (f32)ent->_light.shadow_map_y;
-            struct nk_image img = nk_image_id(ent->_light.shadow_map);
+            struct nk_image img = nk_image_id(ent->_light.fb_shadow.buffer);
             nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
             // struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
             nk_image(ctx, img);
@@ -5535,7 +5577,6 @@ static void set_style(struct nk_context* ctx, enum ui_theme theme)
 }
 
 #else
-#include "editor_ui.h"
 
 void submit_txt_console(char* doesnt_show_up)
 {
@@ -5547,9 +5588,5 @@ void set_error_popup(error_type type, char* doesnt_show_up)
     return;
 }
 
-void set_error_popup(error_type type, char* doesnt_show_up)
-{
-    return;
-}
 
 #endif

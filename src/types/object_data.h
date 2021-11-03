@@ -2,9 +2,10 @@
 #ifndef OBJECT_DATA_H
 #define OBJECT_DATA_H
 
-#include "CGLM/cglm.h"
+// #include "CGLM/cglm.h"
 
 #include "global.h"
+#include "types/framebuffer.h"
 #include "physics/phys_types.h"
 #include "script/gravity_script.h"
 
@@ -45,22 +46,22 @@ typedef struct uniform
 	uniform_def* def;
 	union
 	{
-		int int_val;
-		f32 f32_val;
-		vec2 vec2_val;
-		vec3 vec3_val;
-		texture tex_val;
+		int int_val;		// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
+		f32 f32_val;		// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
+		vec2 vec2_val;		// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
+		vec3 vec3_val;		// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
+		texture tex_val;	// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
 	};
 }uniform;
 
 typedef struct shader
 {
-	u32 handle;
+	u32 handle;					// use this in opengl functions
 	char* vert_name;
 	char* frag_name;
 	char* name;
 
-	bee_bool use_lighting;
+	bee_bool use_lighting;		// use standard lighting model, prob. gonna remove this
 	uniform_def* uniform_defs;
 	int uniform_defs_len;
 
@@ -74,6 +75,7 @@ typedef struct shader
 typedef struct material
 {
 	shader* shader;
+	// int shader_idx;
 
 	uniform* uniforms;
 	int uniforms_len;
@@ -95,24 +97,24 @@ typedef struct material
 #define F32_PER_VERT 11		// normal amount of floats per vert
 typedef struct mesh
 {
-	u32 vertices_len;
-	u32 vertices_elems;
-	u8  floats_per_vert;
-	u32 indices_len;
-	u32 indices_elems;
+	u32 vertices_len;		// floats in the vertices array
+	u32 vertices_elems;		// verts in the vertices array
+	u8  floats_per_vert;	// floats per vertex
+	u32 indices_len;		// u32 in the indices array
+	u32 indices_elems;		// indices in the indies array
 
-	u32 vao, vbo, ebo;
+	u32 vao, vbo, ebo;		// opengl handle 
 
-	bee_bool indexed;
+	bee_bool indexed;		// true: use glDrawElements(), false: use glDrawArrays()
 
 	char* name;
 }mesh;
 
 typedef struct camera
 {
-	f32 perspective;  // 45.0f;
-	f32 near_plane;  //  0.1f;
-	f32 far_plane;  //   100.0f;
+	f32 perspective;
+	f32 near_plane;	  // cuts off geometry too close too the camera
+	f32 far_plane;    // culls geometry too far from the camera
 	
 	vec3 front;  // = { 0.0f,  -0.5f, -0.85f };
 	vec3 up;	 // = { 0.0f,  1.0f,   0.0f };
@@ -128,8 +130,9 @@ typedef struct light
 	int id;
 	bee_bool enabled;
 	bee_bool cast_shadow;
-	u32  shadow_map;
-	u32  shadow_fbo;
+	// u32  shadow_map;
+	// u32  shadow_fbo;
+	framebuffer fb_shadow;
 	mat4 light_space;
 	int shadow_map_x, shadow_map_y;
 
