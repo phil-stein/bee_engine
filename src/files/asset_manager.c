@@ -249,9 +249,7 @@ void load_internal_assets()
 
 	shader* s = add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error", BEE_TRUE); // default shader
 
-	add_material(s, *get_texture_by_idx(0), *get_texture_by_idx(0), BEE_FALSE, 1.0f, GLM_VEC2_ONE, GLM_VEC3_ONE, BEE_FALSE, "MAT_missing_mat", BEE_TRUE);
-	// add_shader("basic.vert", "blinn_phong.frag", "SHADER_default"); // default shader
-
+	add_material(get_shader_idx("SHADER_missing_error"), *get_texture_by_idx(0), *get_texture_by_idx(0), BEE_FALSE, 1.0f, GLM_VEC2_ONE, GLM_VEC3_ONE, BEE_FALSE, "MAT_missing_mat", BEE_TRUE);
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
 {
@@ -983,14 +981,14 @@ int get_material_idx(char* name)
 	return shget(materials, name);
 }
 
-material* add_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
+material* add_material(int shader_idx, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
 					   vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
 {
-	return add_material_specific(s, dif_tex, spec_tex, get_texture("blank.png"), is_transparent, shininess,
+	return add_material_specific(shader_idx, dif_tex, spec_tex, get_texture("blank.png"), is_transparent, shininess,
 								 tile, tint, draw_backfaces, 0, NULL, name, overwrite);
 }
 
-material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, 
+material* add_material_specific(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess,
 								vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite)
 {
 	if (shget(materials, name) != -1) // check if already exist
@@ -999,7 +997,7 @@ material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, te
 		if (overwrite)
 		{
 			material* m = get_material(name);
-			m->shader = s;
+			m->shader_idx = shader_idx;
 			m->dif_tex = dif_tex;
 			m->spec_tex = spec_tex;
 			m->norm_tex = norm_tex;
@@ -1017,7 +1015,7 @@ material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, te
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
-	material mat = make_material(s, dif_tex, spec_tex, norm_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
+	material mat = make_material(shader_idx, dif_tex, spec_tex, norm_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
 
 	shput(materials, name_cpy, materials_data_len);
 	materials_len++;
@@ -1085,7 +1083,7 @@ int get_shader_idx(char* name)
 	return shget(shaders, name);
 }
 
-shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs, bee_bool overwrite)
+int add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs, bee_bool overwrite)
 {
 	if (shget(shaders, name) != -1) // check if already exist
 	{
@@ -1112,7 +1110,7 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 			shaders_data[shget(shaders, name)] = s;
 		}
 		// printf("[ERROR] Shader \"%s\" already exists\n", name);
-		return get_shader(name);
+		return get_shader_idx(name);
 	}
 
 	// key for the path is the index of the file in the hashmap
@@ -1137,10 +1135,10 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 	arrput(shaders_data, s);
 	shaders_data_len++;
 
-	return &shaders_data[shget(shaders, name)];
+	return shget(shaders, name);
 }
 
-shader* add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite)
+int add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite)
 {
 	return add_shader_specific(vert_name, frag_name, name, BEE_TRUE, 0, NULL, overwrite);
 }

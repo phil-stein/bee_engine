@@ -56,7 +56,7 @@
 
   - [x] add missing asset-types to "check_asset_exists()", etc.
 
-  - [ ] make_grid_mesh()
+  - [x] make_grid_mesh()
 
   - [ ] mixing of the different light sources looks weird in ambient areas & shadows
 

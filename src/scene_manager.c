@@ -170,8 +170,8 @@ void add_default_scene(const char* name)
 	vec2 tile = { 1.0f, 1.0f };
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
 	texture blank_tex = get_texture("blank.png");
-	material* mat_blank = add_material(shader_default, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
-	material* mat_cel = add_material(shader_cel, blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
+	material* mat_blank = add_material(get_shader_idx("SHADER_default"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
+	material* mat_cel = add_material(get_shader_idx("SHADER_cel"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
 	
 	vec3 zero = { 0, 0, 0 };
 	vec3 one  = { 1, 1, 1 };

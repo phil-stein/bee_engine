@@ -68,5 +68,4 @@ entity* get_cam_entity();
 // returns the index to the entity
 int get_entity_id_by_name(char* name);
 
-
 #endif

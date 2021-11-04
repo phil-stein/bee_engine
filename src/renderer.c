@@ -71,7 +71,7 @@ bee_bool uv_mode_enabled		 = BEE_FALSE;
 vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
 
 #ifdef EDITOR_ACT
-shader* modes_shader;
+int modes_shader;
 #endif
 
 #ifdef EDITOR_ACT
@@ -82,12 +82,12 @@ int debug_calls_len = 0;
 
 
 // post processing
-shader* screen_shader;
+int screen_shader;
 u32 quad_vao, quad_vbo;
 
 // skybox
 u32 cube_map;
-shader* skybox_shader;
+int skybox_shader;
 u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
 
@@ -97,19 +97,19 @@ framebuffer fb_color;
 bee_bool use_msaa = BEE_TRUE;
 
 // shadow mapping
-shader* shadow_shader;
+int shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
 
 #ifdef EDITOR_ACT
 // mouse picking
 framebuffer fb_mouse_pick;
-shader* mouse_pick_shader;
+int mouse_pick_shader;
 
 // outline 
 framebuffer fb_outline;
 
 // debug draw
-shader* line_shader;
+int line_shader;
 #endif
 
 
@@ -146,26 +146,7 @@ void renderer_init()
 	set_texturebuffer_to_update_to_screen_size(&fb_msaa);  // updates framebuffer on window resize
 
 #ifdef EDITOR_ACT
-	P_STR("pre mousepick & outline add shader | shader unlit:");
-	int n = 0;
-	P_INT(arrcap(get_all_shaders(&n)));
-	shader* sx = get_shader("SHADER_unlit");
-	P_PTR(sx);
-	P_STR(sx->name);
-	material* matx = get_material("MAT_blank_unlit");
-	P_PTR(matx->shader);
-
 	mouse_pick_shader = add_shader("basic.vert", "mouse_picking.frag", "SHADER_mouse_pick", BEE_TRUE);
-
-	P_STR("post mousepick & outline add shader | shader unlit:");
-	n = 0;
-	P_INT(arrcap(get_all_shaders(&n)));
-	printf("mouse pick shader ptr: %p, idx: %d\n", mouse_pick_shader, get_shader_idx("SHADER_mouse_pick"));
-	sx = get_shader("SHADER_unlit");
-	P_PTR(sx);
-	P_STR(sx->name);
-	matx = get_material("MAT_blank_unlit");
-	P_PTR(matx->shader);
 	
 	fb_mouse_pick.type	  = FRAMEBUFFER_SINGLE_CHANNEL_F;
 	fb_mouse_pick.is_msaa = BEE_FALSE;
@@ -288,16 +269,6 @@ void renderer_init()
 
 void renderer_update()
 {
-	// @BUGG: the shader pointer in asset manager gets changed somewhere
-
-	P_STR("renderer update | shader unlit:");
-	shader* s = get_shader("SHADER_unlit");
-	P_PTR(s);
-	P_STR(s->name);
-	material* mat = get_material("MAT_blank_unlit");
-	P_PTR(mat->shader);
-	ABORT();
-	P_STR(mat->shader->name);
 
 #ifdef EDITOR_ACT
 	draw_calls_per_frame = 0;
@@ -393,7 +364,8 @@ void render_scene_mouse_pick()
 	// cycle all objects
 	int entity_ids_len = 0;
 	int* entity_ids = get_entity_ids(&entity_ids_len);
-	shader_use(mouse_pick_shader);
+	shader* s = get_shader_by_idx(mouse_pick_shader);
+	shader_use(s);
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		entity* ent = get_entity(entity_ids[i]);
@@ -408,11 +380,11 @@ void render_scene_mouse_pick()
 			mat4 model;
 			make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
-			shader_set_mat4(mouse_pick_shader, "model", model);
-			shader_set_mat4(mouse_pick_shader, "view", view);
-			shader_set_mat4(mouse_pick_shader, "proj", proj);
+			shader_set_mat4(s, "model", model);
+			shader_set_mat4(s, "view", view);
+			shader_set_mat4(s, "proj", proj);
 
-			shader_set_float(mouse_pick_shader, "id", (f32)ent->id);
+			shader_set_float(s, "id", (f32)ent->id);
 
 			mesh* m = ent->_mesh;
 
@@ -470,13 +442,13 @@ void render_scene_mouse_pick()
 
 		// shader_use called before the loop drawing the entities
 		// shader_use(mouse_pick_shader);
-		shader_set_mat4(mouse_pick_shader, "model", model);
-		shader_set_mat4(mouse_pick_shader, "view", view);
-		shader_set_mat4(mouse_pick_shader, "proj", proj);
+		shader_set_mat4(s, "model", model);
+		shader_set_mat4(s, "view", view);
+		shader_set_mat4(s, "proj", proj);
 
 		for (int i = 0; i < 3; ++i)
 		{
-			shader_set_float(mouse_pick_shader, "id", (f32)-2 -i); // -2, -3, -4
+			shader_set_float(s, "id", (f32)-2 -i); // -2, -3, -4
 
 			mesh* m = NULL;
 			vec3 tint = GLM_VEC3_ONE_INIT;
@@ -667,12 +639,13 @@ void render_scene_debug()
 			glm_perspective(deg_pers, ((f32)w / (f32)h), near_p, far_p, proj);
 
 			// set shader uniforms ------------------------------
-			shader_use(line_shader);
-			shader_set_mat4(line_shader, "model",    model);
-			shader_set_mat4(line_shader, "view",     view);
-			shader_set_mat4(line_shader, "proj",     proj);
-			shader_set_int(line_shader, "just_tint", 1);
-			shader_set_vec3(line_shader, "mat.tint", tint);
+			shader* s = get_shader_by_idx(line_shader);
+			shader_use(s);
+			shader_set_mat4(s, "model",    model);
+			shader_set_mat4(s, "view",     view);
+			shader_set_mat4(s, "proj",     proj);
+			shader_set_int(s, "just_tint", 1);
+			shader_set_vec3(s, "mat.tint", tint);
 			glBindVertexArray(m.vao);
 			glDrawArrays(GL_TRIANGLES, 0, 18); // each vertices consist of 3 floats
 
@@ -709,6 +682,8 @@ void render_scene_shadows()
 	vec3 up = { 0.0f,  1.0f,  0.0f };
 	// glm_lookat(eye, center, up, view);
 
+	shader* s = get_shader_by_idx(shadow_shader);
+	shader_use(s);
 	for (int n = 0; n < dir_lights_len; ++n)
 	{
 		entity* l = get_entity(dir_lights[n]);
@@ -745,11 +720,8 @@ void render_scene_shadows()
 				mat4 model;
 				make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
-				shader_use(shadow_shader);
-				shader_set_mat4(shadow_shader, "model", model);
-				// shader_set_mat4(shadow_shader, "view", view);
-				// shader_set_mat4(shadow_shader, "proj", proj);
-				shader_set_mat4(shadow_shader, "light_space", light_space);
+				shader_set_mat4(s, "model", model);
+				shader_set_mat4(s, "light_space", light_space);
 
 				glBindVertexArray(ent->_mesh->vao);
 				if (ent->_mesh->indexed == BEE_TRUE)
@@ -993,8 +965,9 @@ void render_scene_skybox()
 #endif
 	// draw skybox as last
 	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
-	//shader_use(skybox_shader);
-	shader_use(skybox_shader);
+	
+	shader* s = get_shader_by_idx(skybox_shader);
+	shader_use(s);
 
 	mat4 view;
 #ifdef EDITOR_ACT
@@ -1020,13 +993,13 @@ void render_scene_skybox()
 	int w, h; get_window_size(&w, &h);
 	glm_perspective(deg_pers, ((float)w / (float)h), near_plane, far_plane, proj);
 
-	shader_set_mat4(skybox_shader, "view", &view[0]);
-	shader_set_mat4(skybox_shader, "proj", &proj[0]);
+	shader_set_mat4(s, "view", &view[0]);
+	shader_set_mat4(s, "proj", &proj[0]);
 
 	// skybox cube
 	glBindVertexArray(skybox_vao);
 	glActiveTexture(GL_TEXTURE0);
-	shader_set_int(skybox_shader, "cube_map", 0);
+	shader_set_int(s, "cube_map", 0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cube_map);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
@@ -1050,15 +1023,16 @@ void render_scene_screen()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);
-	shader_use(screen_shader);
-	shader_set_float(screen_shader, "exposure", exposure);
+	shader* s = get_shader_by_idx(screen_shader);
+	shader_use(s);
+	shader_set_float(s, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
-	shader_set_int(screen_shader, "tex", 0);
+	shader_set_int(s, "tex", 0);
 #ifdef EDITOR_ACT
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, fb_outline.buffer);
-	shader_set_int(screen_shader, "outline", 1);
+	shader_set_int(s, "outline", 1);
 #endif
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1109,9 +1083,9 @@ void set_bg_till_loaded()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)(2 * sizeof(f32)));
 
 
-	shader* s = add_shader_specific("screen.vert", "screen.frag", "splash-logo", BEE_FALSE, 0, NULL, BEE_TRUE);
+	int s_idx = add_shader_specific("screen.vert", "screen.frag", "splash-logo", BEE_FALSE, 0, NULL, BEE_TRUE);
 	texture t = get_texture("bee_engine_logo_dif.png");
-
+	shader* s = get_shader_by_idx(s_idx);
 	shader_use(s);
 	shader_set_float(s, "exposure", 0.8f);
 	glActiveTexture(GL_TEXTURE0);
@@ -1169,12 +1143,13 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 	if (wireframe_mode_enabled == BEE_TRUE || normal_mode_enabled == BEE_TRUE || uv_mode_enabled == BEE_TRUE) 
 	{
 		// act the shader
-		shader_use(modes_shader);
+		shader* s = get_shader_by_idx(modes_shader);
+		shader_use(s);
 
 		// set shader matrices ------------------------------
-		shader_set_mat4(modes_shader, "model", &model[0]);
-		shader_set_mat4(modes_shader, "view", &view[0]);
-		shader_set_mat4(modes_shader, "proj", &proj[0]);
+		shader_set_mat4(s, "model", &model[0]);
+		shader_set_mat4(s, "view", &view[0]);
+		shader_set_mat4(s, "proj", &proj[0]);
 
 		vec3 cam_pos; 
 		if (gamestate)
@@ -1185,21 +1160,21 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 		{
 			get_editor_camera_pos(cam_pos);
 		}
-		shader_set_vec3(modes_shader, "view_pos", cam_pos);
+		shader_set_vec3(s, "view_pos", cam_pos);
 
 
 		if (wireframe_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(modes_shader, "mode", 0);
-			shader_set_vec3(modes_shader, "wiref_col", wireframe_color);
+			shader_set_int(s, "mode", 0);
+			shader_set_vec3(s, "wiref_col", wireframe_color);
 		}
 		else if (normal_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(&modes_shader, "mode", 1);
+			shader_set_int(s, "mode", 1);
 		}
 		else if (uv_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(modes_shader, "mode", 2);
+			shader_set_int(s, "mode", 2);
 
 		}
 	}
@@ -1207,19 +1182,20 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 	{
 
 #endif
-		shader_use(mat->shader);
+		shader* s = get_shader_by_idx(mat->shader_idx);
+		shader_use(s);
 
 		// set shader matrices ------------------------------
-		shader_set_mat4(mat->shader, "model", model);
-		shader_set_mat4(mat->shader, "view", view);
-		shader_set_mat4(mat->shader, "proj", proj);
+		shader_set_mat4(s, "model", model);
+		shader_set_mat4(s, "view", view);
+		shader_set_mat4(s, "proj", proj);
 
-		set_shader_uniforms(mat);
+		set_shader_uniforms(mat, s);
 
 #ifdef EDITOR_ACT
 		if (is_gizmo)
 		{
-			shader_set_vec3(mat->shader, "mat.tint", gizmo_col); // material because using cel_shader
+			shader_set_vec3(s, "mat.tint", gizmo_col); // material because using cel_shader
 		}
 	}
 #endif
@@ -1311,29 +1287,29 @@ void make_model_matrix(int entity_id, vec3 pos, vec3 rot, vec3 scale, bee_bool r
 
 }
 
-void set_shader_uniforms(material* mat)
+void set_shader_uniforms(material* mat, shader* s)
 {
 	if (gamestate) // in play-mode
 	{
-		shader_set_vec3(mat->shader, "view_pos", get_entity(camera_ent_idx)->pos);
+		shader_set_vec3(s, "view_pos", get_entity(camera_ent_idx)->pos);
 	}
 	else
 	{
 		vec3 cam_pos; get_editor_camera_pos(cam_pos);
-		shader_set_vec3(mat->shader, "view_pos", cam_pos);
+		shader_set_vec3(s, "view_pos", cam_pos);
 	}
 
 	int texture_index = 0;
 
 	// set shader light ---------------------------------
-	if (mat->shader->use_lighting)
+	if (s->use_lighting)
 	{
 		char buffer[28]; // pointLights[i].quadratic is the longest str at 24
 		entity* light;
 		vec3 pos_l = { 0, 0, 0 };
 		vec3 rot_l = { 0, 0, 0 };
 		vec3 scale_l = { 0, 0, 0 };
-		shader_set_int(mat->shader, "num_dir_lights", dir_lights_len);
+		shader_set_int(s, "num_dir_lights", dir_lights_len);
 		int disabled_lights = 0;
 		for (int i = 0; i < dir_lights_len; ++i)
 		{
@@ -1341,36 +1317,36 @@ void set_shader_uniforms(material* mat)
 			if (!light->_light.enabled)
 			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "num_dir_lights", dir_lights_len - disabled_lights);
+				shader_set_int(s, "num_dir_lights", dir_lights_len - disabled_lights);
 				continue;
 			}
 			int idx = i - disabled_lights;
 			sprintf(buffer, "dir_lights[%d].direction", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.direction);
+			shader_set_vec3(s, buffer, light->_light.direction);
 
 			vec3 dif;
 			vec3 intensity = { light->_light.dif_intensity, light->_light.dif_intensity , light->_light.dif_intensity };
 			glm_vec3_mul(light->_light.diffuse, intensity, dif);
 
 			sprintf(buffer, "dir_lights[%d].ambient", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
+			shader_set_vec3(s, buffer, light->_light.ambient);
 			sprintf(buffer, "dir_lights[%d].diffuse", idx);
-			shader_set_vec3(mat->shader, buffer, dif);
+			shader_set_vec3(s, buffer, dif);
 			sprintf(buffer, "dir_lights[%d].specular", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.specular);
+			shader_set_vec3(s, buffer, light->_light.specular);
 
 			sprintf(buffer, "dir_lights[%d].use_shadow", idx);
-			shader_set_int(mat->shader, buffer, light->_light.cast_shadow);
+			shader_set_int(s, buffer, light->_light.cast_shadow);
 			sprintf(buffer, "dir_lights[%d].shadow_map", idx);
 			glActiveTexture(GL_TEXTURE0 + texture_index);
 			glBindTexture(GL_TEXTURE_2D, light->_light.fb_shadow.buffer);
-			shader_set_int(mat->shader, buffer, texture_index);
+			shader_set_int(s, buffer, texture_index);
 			texture_index++;
 			sprintf(buffer, "dir_lights[%d].light_space", idx);
-			shader_set_mat4(mat->shader, buffer, light->_light.light_space);
+			shader_set_mat4(s, buffer, light->_light.light_space);
 
 		}
-		shader_set_int(mat->shader, "num_point_lights", point_lights_len);
+		shader_set_int(s, "num_point_lights", point_lights_len);
 		disabled_lights = 0;
 		for (int i = 0; i < point_lights_len; ++i)
 		{
@@ -1378,32 +1354,32 @@ void set_shader_uniforms(material* mat)
 			if (!light->_light.enabled)
 			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "num_point_lights", point_lights_len - disabled_lights);
+				shader_set_int(s, "num_point_lights", point_lights_len - disabled_lights);
 				continue;
 			}
 			int idx = i - disabled_lights;
 			get_entity_global_transform(point_lights[i], pos_l, rot_l, scale_l);
 			sprintf(buffer, "point_lights[%d].position", idx);
-			shader_set_vec3(mat->shader, buffer, pos_l);
+			shader_set_vec3(s, buffer, pos_l);
 
 			vec3 dif;
 			vec3 intensity = { light->_light.dif_intensity, light->_light.dif_intensity , light->_light.dif_intensity };
 			glm_vec3_mul(light->_light.diffuse, intensity, dif);
 
 			sprintf(buffer, "point_lights[%d].ambient", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
+			shader_set_vec3(s, buffer, light->_light.ambient);
 			sprintf(buffer, "point_lights[%d].diffuse", idx);
-			shader_set_vec3(mat->shader, buffer, dif);
+			shader_set_vec3(s, buffer, dif);
 			sprintf(buffer, "point_lights[%d].specular", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.specular);
+			shader_set_vec3(s, buffer, light->_light.specular);
 			sprintf(buffer, "point_lights[%d].constant", idx);
-			shader_set_float(mat->shader, buffer, light->_light.constant);
+			shader_set_float(s, buffer, light->_light.constant);
 			sprintf(buffer, "point_lights[%d].linear", idx);
-			shader_set_float(mat->shader, buffer, light->_light.linear);
+			shader_set_float(s, buffer, light->_light.linear);
 			sprintf(buffer, "point_lights[%d].quadratic", idx);
-			shader_set_float(mat->shader, buffer, light->_light.quadratic);
+			shader_set_float(s, buffer, light->_light.quadratic);
 		}
-		shader_set_int(mat->shader, "num_spot_lights", spot_lights_len);
+		shader_set_int(s, "num_spot_lights", spot_lights_len);
 		disabled_lights = 0;
 		for (int i = 0; i < spot_lights_len; ++i)
 		{
@@ -1411,60 +1387,60 @@ void set_shader_uniforms(material* mat)
 			if (!light->_light.enabled)
 			{
 				disabled_lights++;
-				shader_set_int(mat->shader, "num_spot_lights", spot_lights_len - disabled_lights);
+				shader_set_int(s, "num_spot_lights", spot_lights_len - disabled_lights);
 				continue;
 			}
 			int idx = i - disabled_lights;
 			get_entity_global_transform(spot_lights[i], pos_l, rot_l, scale_l);
 			sprintf(buffer, "spot_lights[%d].position", idx);
-			shader_set_vec3(mat->shader, buffer, pos_l);
+			shader_set_vec3(s, buffer, pos_l);
 
 			sprintf(buffer, "spot_lights[%d].direction", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.direction);
+			shader_set_vec3(s, buffer, light->_light.direction);
 
 			vec3 dif;
 			vec3 intensity = { light->_light.dif_intensity, light->_light.dif_intensity , light->_light.dif_intensity };
 			glm_vec3_mul(light->_light.diffuse, intensity, dif);
 
 			sprintf(buffer, "spot_lights[%d].ambient", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.ambient);
+			shader_set_vec3(s, buffer, light->_light.ambient);
 			sprintf(buffer, "spot_lights[%d].diffuse", idx);
-			shader_set_vec3(mat->shader, buffer, dif);
+			shader_set_vec3(s, buffer, dif);
 			sprintf(buffer, "spot_lights[%d].specular", idx);
-			shader_set_vec3(mat->shader, buffer, light->_light.specular);
+			shader_set_vec3(s, buffer, light->_light.specular);
 			sprintf(buffer, "spot_lights[%d].constant", idx);
-			shader_set_float(mat->shader, buffer, light->_light.constant);
+			shader_set_float(s, buffer, light->_light.constant);
 			sprintf(buffer, "spot_lights[%d].linear", idx);
-			shader_set_float(mat->shader, buffer, light->_light.linear);
+			shader_set_float(s, buffer, light->_light.linear);
 			sprintf(buffer, "spot_lights[%d].quadratic", idx);
-			shader_set_float(mat->shader, buffer, light->_light.quadratic);
+			shader_set_float(s, buffer, light->_light.quadratic);
 			sprintf(buffer, "spot_lights[%d].cutOff", idx);
-			shader_set_float(mat->shader, buffer, light->_light.cut_off);
+			shader_set_float(s, buffer, light->_light.cut_off);
 			sprintf(buffer, "spot_lights[%d].outerCutOff", idx);
-			shader_set_float(mat->shader, buffer, light->_light.outer_cut_off);
+			shader_set_float(s, buffer, light->_light.outer_cut_off);
 		}
 	}
 
 	// set shader material ------------------------------
-	if (mat->shader->use_lighting)
+	if (s->use_lighting)
 	{
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->dif_tex.handle);
-		shader_set_int(mat->shader, "mat.diffuse", texture_index);
+		shader_set_int(s, "mat.diffuse", texture_index);
 		texture_index++;
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->spec_tex.handle);
-		shader_set_int(mat->shader, "mat.specular", texture_index);
+		shader_set_int(s, "mat.specular", texture_index);
 		texture_index++;
 		glActiveTexture(GL_TEXTURE0 + texture_index);
 		glBindTexture(GL_TEXTURE_2D, mat->norm_tex.handle);
-		shader_set_int(mat->shader, "mat.normal", texture_index);
+		shader_set_int(s, "mat.normal", texture_index);
 		texture_index++;
 
-		shader_set_float(mat->shader, "mat.shininess", mat->shininess);
-		shader_set_vec2(mat->shader, "mat.tile", mat->tile);
+		shader_set_float(s, "mat.shininess", mat->shininess);
+		shader_set_vec2(s, "mat.tile", mat->tile);
 
-		shader_set_vec3(mat->shader, "mat.tint", mat->tint);
+		shader_set_vec3(s, "mat.tint", mat->tint);
 	}
 
 	// set shader uniforms ------------------------------
@@ -1473,21 +1449,21 @@ void set_shader_uniforms(material* mat)
 		switch (mat->uniforms[i].def->type)
 		{
 			case UNIFORM_INT:
-				shader_set_int(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].int_val);
+				shader_set_int(s, mat->uniforms[i].def->name, mat->uniforms[i].int_val);
 				break;
 			case UNIFORM_F32:
-				shader_set_float(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].f32_val);
+				shader_set_float(s, mat->uniforms[i].def->name, mat->uniforms[i].f32_val);
 				break;
 			case UNIFORM_VEC2:
-				shader_set_vec2(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].vec2_val);
+				shader_set_vec2(s, mat->uniforms[i].def->name, mat->uniforms[i].vec2_val);
 				break;
 			case UNIFORM_VEC3:
-				shader_set_vec3(mat->shader, mat->uniforms[i].def->name, mat->uniforms[i].vec3_val);
+				shader_set_vec3(s, mat->uniforms[i].def->name, mat->uniforms[i].vec3_val);
 				break;
 			case UNIFORM_TEX:
 				glActiveTexture(GL_TEXTURE0 + texture_index);
 				glBindTexture(GL_TEXTURE_2D, mat->uniforms[i].tex_val.handle);
-				shader_set_int(mat->shader, mat->uniforms[i].def->name, texture_index);
+				shader_set_int(s, mat->uniforms[i].def->name, texture_index);
 				texture_index++;
 				break;
 		}

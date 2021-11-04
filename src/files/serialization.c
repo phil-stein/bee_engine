@@ -6,7 +6,7 @@
 #include "types/framebuffer.h"
 #include "files/asset_manager.h"
 
-#define VERSION 1.6f
+#define VERSION 1.7f
 f32 current_version = VERSION;
 
 
@@ -170,7 +170,8 @@ void serialize_material(char* buffer, int* offset, material* m)
 {
 	// serialize_shader(buffer, offset, &m->shader);
 	serialize_str(buffer, offset, m->name);
-	serialize_str(buffer, offset, m->shader->name);
+	shader* s = get_shader_by_idx(m->shader_idx);
+	serialize_int(buffer, offset, m->shader_idx);	// v1.7
 	serialize_texture(buffer, offset, &m->dif_tex);
 	serialize_texture(buffer, offset, &m->spec_tex);
 	serialize_texture(buffer, offset, &m->norm_tex);
@@ -186,9 +187,9 @@ void serialize_material(char* buffer, int* offset, material* m)
 	for (int i = 0; i < m->uniforms_len; ++i)
 	{
 		int idx = 0;
-		for (int n = 0; n < m->shader->uniform_defs_len; ++n)
+		for (int n = 0; n < s->uniform_defs_len; ++n)
 		{
-			if (m->uniforms[n].def = &m->shader->uniform_defs[n].name)
+			if (m->uniforms[n].def = &s->uniform_defs[n].name)
 			{
 				idx = n;
 				break;
@@ -577,8 +578,17 @@ material* deserialize_material(char* buffer, int* offset)
 		name = deserialize_str(buffer, offset);
 		// printf("deserialized material %s\n", name);
 	}
-	char* shader_name = deserialize_str(buffer, offset);
-	shader* s = get_shader(shader_name);
+
+	int shader_idx = 0;
+	if (current_version >= 1.7f)
+	{
+		shader_idx = deserialize_int(buffer, offset);
+	}
+	else
+	{
+		char* shader_name = deserialize_str(buffer, offset);
+		shader_idx = get_shader_idx(shader_name);
+	}
 	texture dif  = deserialize_texture(buffer, offset);
 	texture spec = deserialize_texture(buffer, offset);
 	texture norm = get_texture("blank.png");
@@ -599,6 +609,8 @@ material* deserialize_material(char* buffer, int* offset)
 	{
 		uniforms_len = deserialize_int(buffer, offset);
 		// if (uniforms_len > 0) { printf(" -> with %d uniforms\n", uniforms_len); }
+		shader* s = NULL;
+		if (uniforms_len > 0) { s = get_shader_by_idx(shader_idx); }
 		for (int i = 0; i < uniforms_len; ++i)
 		{
 			uniform u = deserialize_uniform(buffer, offset, s);
@@ -610,7 +622,7 @@ material* deserialize_material(char* buffer, int* offset)
 	{
 		name = deserialize_str(buffer, offset);
 	}
-	return add_material_specific(s, dif, spec, norm, is_trans, shininess, tile, tint, backfaces, uniforms_len, uniforms, name, BEE_TRUE);
+	return add_material_specific(shader_idx, dif, spec, norm, is_trans, shininess, tile, tint, backfaces, uniforms_len, uniforms, name, BEE_TRUE);
 }
 
 mesh* deserialize_mesh(char* buffer, int* offset)

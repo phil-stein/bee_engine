@@ -91,57 +91,6 @@ char* read_text_file_len(const char* file_path, int* length)
     *length = len;
     return text;
 }
-/*
-{
-    
-    // taken from: https://stackoverflow.com/questions/3463426/in-c-how-should-i-read-a-text-file-and-print-all-strings
-    // @TODO: rewrite this completely
-
-    char* buffer = NULL;
-    int string_size, read_size;
-    FILE* fp = fopen(file_path, "r");
-
-    if (fp)
-    {
-        // Seek the last byte of the file
-        fseek(fp, 0, SEEK_END);
-        // Offset from the first to the last byte, or in other words, filesize
-        string_size = ftell(fp);
-        // go back to the start of the file
-        //rewind(fp);
-        fseek(fp, 0, SEEK_SET);
-
-        // Allocate a string that can hold it all
-        buffer = (char*)malloc(sizeof(char) * (string_size + 1));
-
-        // check malloc worked
-        if (buffer == NULL) { fprintf(stderr, "error allocating memory for text file reading"); exit(1); }
-
-        // Read it all in one operation
-        read_size = (int)fread(buffer, (size_t)sizeof(char), (size_t)string_size, fp);
-
-        // fread doesn't set it so put a \0 in the last position
-        // and buffer is now officially a string
-        buffer[read_size] = '\0';
-
-        // @TODO: @STABILITY: i should look for errors here i think 
-        if (0 == 1 && string_size != read_size)
-        {
-            // Something went wrong, throw away the memory and set
-            // the buffer to NULL
-            free(buffer);
-            buffer = NULL;
-            fprintf(stderr, "error while loading text file in \"%s\"\n", file_path);
-            fprintf(stderr, "string_size: %d, read_size: %d\n", string_size, read_size);
-        }
-
-        // Always remember to close the file.
-        fclose(fp);
-    }
-
-    return buffer;
-}
-*/
 
 void write_text_file(const char* file_path, const char* txt, int len)
 {

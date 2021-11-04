@@ -2080,7 +2080,7 @@ void draw_properties_menu_bar()
         {
             vec2 tile = { 1.0f, 1.0f };
             vec3 tint = { 1.0f, 1.0f, 1.0f };
-            add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material", BEE_FALSE);
+            add_material(get_shader_idx("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material", BEE_FALSE);
         }
         if (nk_menu_item_label(ctx, "Shader", NK_TEXT_LEFT))
         {
@@ -2762,8 +2762,9 @@ void draw_material_component(entity* ent)
         nk_label(ctx, ent->_material->name, NK_TEXT_LEFT);
         material_bounds.h += 25; // the labels
 
+        shader* s = get_shader_by_idx(ent->_material->shader_idx);
         nk_label(ctx, "Shader", NK_TEXT_LEFT);
-        nk_label(ctx, ent->_material->shader->name, NK_TEXT_LEFT);
+        nk_label(ctx, s->name, NK_TEXT_LEFT);
         material_bounds.h += 25; // the labels
 
         nk_layout_row_dynamic(ctx, 25, 1);
@@ -2783,7 +2784,7 @@ void draw_material_component(entity* ent)
         material_bounds.h += 25;
 
 
-        if (ent->_material->shader->use_lighting)
+        if (s->use_lighting)
         {
             nk_property_float(ctx, "Shininess", 0.0f, &ent->_material->shininess, 32.0f, 0.1f, 0.002f);
             nk_layout_row_dynamic(ctx, 25, 2);
@@ -2858,10 +2859,10 @@ void draw_material_component(entity* ent)
 
         nk_layout_row_dynamic(ctx, 25, 2);
         nk_label(ctx, "Use Lighting: ", NK_TEXT_LEFT);
-        nk_label(ctx, ent->_material->shader->use_lighting == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
+        nk_label(ctx, s->use_lighting == BEE_TRUE ? "true" : "false", NK_TEXT_RIGHT);
 
         // not including this in the bounds for drag and dropping materials and shaders
-        if (ent->_material->shader->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
+        if (s->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
         {
 
             nk_layout_row_dynamic(ctx, 175, 2);
@@ -3060,7 +3061,7 @@ void draw_material_component(entity* ent)
                 else if (dropped_asset.type == SHADER_ASSET)
                 {
                     printf("dropped asset dropped over material\n");
-                    ent->_material->shader = &shaders[dropped_asset.asset_idx];
+                    ent->_material->shader_idx = dropped_asset.asset_idx;
                 }
                 dropped_asset.handled = BEE_TRUE;
             }
@@ -3621,7 +3622,7 @@ void asset_browser_window()
                     {
                         vec2 tile = { 1.0f, 1.0f };
                         vec3 tint = { 1.0f, 1.0f, 1.0f };
-                        add_material(get_shader("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material", BEE_FALSE);
+                        add_material(get_shader_idx("SHADER_default"), get_texture("blank.png"), get_texture("blank.png"), BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "new_material", BEE_FALSE);
                     }
                 }
                 else if (selected == SHADER_ASSET)
@@ -4333,7 +4334,8 @@ void asset_browser_window()
 
                         nk_layout_row_dynamic(ctx, 40, 1);
                         char* buf[64];
-                        sprintf(buf, "Shader: \"%s\"", materials[selected_material].shader->name);
+                        shader* s = get_shader_by_idx(materials[selected_material].shader_idx);
+                        sprintf(buf, "Shader: \"%s\"", s->name);
                         nk_label_wrap(ctx, buf);
                         sprintf(buf, "Draw Backfaces: \"%s\"", materials[selected_material].draw_backfaces == BEE_TRUE ? "true" : "false");
                         nk_label_wrap(ctx, buf);
@@ -4903,10 +4905,12 @@ void edit_asset_window()
             int shaders_len = 0;
             shaders = get_all_shaders(&shaders_len);
             static int selected_shader = 0;
-            selected_shader = get_shader_idx(m->shader->name);
+            selected_shader = m->shader_idx;
             int selected_shader_old = selected_shader;
             char** shaders_names = malloc(shaders_len * sizeof(char*));
             assert(shaders_names != NULL);
+
+            shader* s = get_shader_by_idx(m->shader_idx);
 
             for (int i = 0; i < shaders_len; ++i)
             {
@@ -4916,13 +4920,13 @@ void edit_asset_window()
 
             selected_shader = nk_combo(ctx, shaders_names, shaders_len, selected_shader, 25, nk_vec2(200, 200));
 
-            if (selected_shader_old != selected_shader) { m->shader = &shaders[selected_shader]; }
+            if (selected_shader_old != selected_shader) { s = &shaders[selected_shader]; }
 
 
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_checkbox_label(ctx, " draw backfaces", &m->draw_backfaces);
 
-            if (m->shader->use_lighting)
+            if (s->use_lighting)
             {
                 nk_property_float(ctx, "Shininess", 0.0f, &m->shininess, 32.0f, 0.1f, 0.002f);
                 nk_layout_row_dynamic(ctx, 25, 2);
@@ -4974,7 +4978,7 @@ void edit_asset_window()
             nk_spacing(ctx, 1);
 
             // not including this in the bounds for drag and dropping materials and shaders
-            if (m->shader->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
+            if (s->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
             {
                 tall = BEE_TRUE;
                 nk_layout_row_dynamic(ctx, 25, 2);
@@ -5061,22 +5065,22 @@ void edit_asset_window()
                 // style.active = item;
                 // style.normal = item;
                 // style.hover  = item;
-                char buf[24]; sprintf_s(buf, 24, "uniform defs: %d", m->shader->uniform_defs_len);
+                char buf[24]; sprintf_s(buf, 24, "uniform defs: %d", s->uniform_defs_len);
                 nk_label(ctx, buf, NK_TEXT_LEFT);
-                if (nk_button_label(ctx, add_uniform ? "Add" : "Add Uniform") && m->shader->uniform_defs_len > 0)
+                if (nk_button_label(ctx, add_uniform ? "Add" : "Add Uniform") && s->uniform_defs_len > 0)
                 {
                     add_uniform = !add_uniform;
                     if (add_uniform)
                     {
                         selected_def = 0;
                         char buf[24];
-                        sprintf_s(buf, 24, "uniform defs: %d", m->shader->uniform_defs_len);
+                        sprintf_s(buf, 24, "uniform defs: %d", s->uniform_defs_len);
                         nk_label(ctx, buf, NK_TEXT_LEFT);
-                        printf("uniform defs: %d", m->shader->uniform_defs_len);
+                        printf("uniform defs: %d", s->uniform_defs_len);
                     }
                     else
                     {
-                        uniform_def* u_def = &m->shader->uniform_defs[selected_def];
+                        uniform_def* u_def = &s->uniform_defs[selected_def];
                         uniform u;
                         u.def = u_def;
 
@@ -5109,19 +5113,19 @@ void edit_asset_window()
 
                     }
                 }
-                if (add_uniform && m->shader->uniform_defs_len > 0)
+                if (add_uniform && s->uniform_defs_len > 0)
                 {
-                    char** uniform_def_names = malloc((m->shader->uniform_defs_len) * sizeof(char*));
+                    char** uniform_def_names = malloc((s->uniform_defs_len) * sizeof(char*));
                     assert(uniform_def_names != NULL);
-                    for (int i = 0; i < m->shader->uniform_defs_len; ++i)
+                    for (int i = 0; i < s->uniform_defs_len; ++i)
                     {
                         // uniform_def_names[i] = m->shader.uniform_defs[i -1].name;
-                        uniform_def_names[i] = malloc((strlen(m->shader->uniform_defs[i].name) + 1) * sizeof(char));
-                        strcpy(uniform_def_names[i], m->shader->uniform_defs[i].name);
+                        uniform_def_names[i] = malloc((strlen(s->uniform_defs[i].name) + 1) * sizeof(char));
+                        strcpy(uniform_def_names[i], s->uniform_defs[i].name);
                         printf("uniform def name: %s\n", uniform_def_names[i]);
                     }
 
-                    selected_def = nk_combo(ctx, uniform_def_names, m->shader->uniform_defs_len, selected_def, 25, nk_vec2(200, 200));
+                    selected_def = nk_combo(ctx, uniform_def_names, s->uniform_defs_len, selected_def, 25, nk_vec2(200, 200));
 
                     free(uniform_def_names);
                 }

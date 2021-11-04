@@ -207,18 +207,18 @@ void app_init()
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
 
 	texture blank_tex = get_texture("blank.png");
-	add_material(get_shader("SHADER_default"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
-	add_material(get_shader("SHADER_unlit"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
-	add_material(get_shader("SHADER_cel"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
-
-	P_STR("app init | shader unlit:");
-	P_PTR(get_shader("SHADER_unlit"));
-	P_STR(get_shader("SHADER_unlit")->name);
+	add_material(get_shader_idx("SHADER_default"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
+	add_material(get_shader_idx("SHADER_unlit"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
+	add_material(get_shader_idx("SHADER_cel"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
 	
-	mesh m = make_grid_mesh(4, 4);
+	mesh m = make_grid_mesh_indexed(10, 10, BEE_TRUE);
 	add_mesh(m);
 
-	add_entity(VEC3_ZERO, VEC3_ZERO, VEC3_ONE, get_mesh("grid"), get_material("MAT_blank_unlit"), NULL, NULL, NULL, NULL, "grid");
+	// tmp
+	get_material("MAT_blank_unlit")->dif_tex = get_texture("grass01_dif.png");
+
+	vec3 scale; glm_vec3_fill(scale, 0.25f);
+	add_entity(VEC3_ZERO, VEC3_ZERO, scale, get_mesh("grid"), get_material("MAT_blank_unlit"), NULL, NULL, NULL, NULL, "grid");
 
 
 
@@ -239,6 +239,7 @@ void app_update()
 	set_window_title(title);
 
 	// -------------
+
 
 #ifdef EDITOR_ACT
 	//debug_draw_line(VEC3_ZERO, VEC3_Y);

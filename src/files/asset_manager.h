@@ -104,9 +104,9 @@ bee_bool check_material_exists(const char* name);
 // get the index of a material in "materials_data[]" by name
 int get_material_idx(char* name);
 // create a material and add it to the asset manager
-material* add_material(shader* s, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite);
+material* add_material(int shader_idx, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite);
 // create a material and add it to the asset manager
-material* add_material_specific(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite);
+material* add_material_specific(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite);
 // get a specific material
 // returns material with pink textures if material name not found
 material* get_material(char* name);
@@ -122,9 +122,11 @@ bee_bool check_shader_exists(const char* name);
 // get the index of a shader in "shaders_data[]" by name
 int get_shader_idx(char* name);
 // create a shader and add it to the asset manager
-shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform_def* uniforms, bee_bool overwrite);
+// returns the shader idx
+int add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniforms_len, uniform_def* uniforms, bee_bool overwrite);
 // create a shader and add it to the asset manager
-shader* add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite);
+// returns the shader idx
+int add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite);
 // get a specific material
 // returns shader with pink color if shader name not found
 shader* get_shader(char* name);

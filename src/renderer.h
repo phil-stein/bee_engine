@@ -76,7 +76,7 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 // output passed to matrix "model", doesnt need to be identity
 void make_model_matrix(int entity_id, vec3 pos, vec3 rot, vec3 scale, bee_bool rotate_global, mat4 model);
 // sets all the uniforms for a shader
-void set_shader_uniforms(material* mat);
+void set_shader_uniforms(material* mat, shader* s);
 
 // clears all internally used data, used for f.e. switching scenes
 void renderer_clear_scene();

@@ -14,11 +14,11 @@
 
 // ---- material ----
 
-material make_material(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
+material make_material(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
 {
 	material mat;
 	mat.name		   = name;
-	mat.shader		   = s;
+	mat.shader_idx	   = shader_idx;
 	mat.dif_tex		   = dif_tex;
 	mat.spec_tex	   = spec_tex;
 	mat.norm_tex	   = norm_tex;
@@ -219,76 +219,171 @@ mesh make_cube_mesh()
 	return make_mesh(vertices, vert_len, NULL, 0, "cube", BEE_FALSE);
 }
 
-mesh make_grid_mesh(int x_verts, int z_verts)
+mesh make_grid_mesh(int x_quads, int z_quads)
 {
-	//make sure both xVerts and zVerts are at least 2
-	x_verts = x_verts < 2 ? 2 : x_verts; 
-	z_verts = z_verts < 2 ? 2 : z_verts;
+	//make sure both x_verts and z_verts are at least 1
+	x_quads = x_quads < 1 ? 1 : x_quads;
+	z_quads = z_quads < 1 ? 1 : z_quads;
 
-	//generates the vertices
-	int verts_len = (z_verts * x_verts * F32_PER_VERT);
-	f32* verts;
-	verts = malloc(verts_len * sizeof(f32));
-	assert(verts != NULL);
-	for (int z = 0; z < z_verts; z++)
+	int verts_total = (x_quads + 1) * (z_quads + 1);
+	verts_total = (x_quads * z_quads) * 6 * F32_PER_VERT;		// tmp
+	f32* verts = malloc(verts_total * sizeof(f32));
+	ASSERT(verts != NULL);
+	int offset = 0; // vert offset
+
+	int indices_total = (x_quads * z_quads * 6);
+	u32* indices = malloc(indices_total * sizeof(u32));
+	ASSERT(indices != NULL);
+	int offs = 0; // tri offset
+
+ 
+	// add a vert to the array by giving the x, z coordinates
+	#define ADD_VERT(x, z)		verts[offset + 0] = x; verts[offset + 1] = 0; verts[offset + 2] = z;							\
+								/* normals  */																					\
+								verts[offset + 3] = 0.0f; verts[offset + 4] = 1.0f; verts[offset + 5] = 0.0f;  					\
+								/* @TODO: uv's */																				\
+								verts[offset + 6] = 0; verts[offset + 7] = 0;													\
+								/* tangents */																					\
+								verts[offset +  8] = 0.0f; verts[offset +  9] = 1.0f; verts[offset + 10] = 0.0f;				\
+								offset += F32_PER_VERT;
+
+	for (int z = 0; z < z_quads; ++z)
 	{
-		//Debug.WriteLine("---Row0" + z.ToString() + "---");
-		for (int x = 0; x < x_verts * 8;)
+		for (int x = 0; x < x_quads; ++x)
 		{
-			//xyz coords              amount of verts in row +1 * step size per vert to fit in -1 to 1 space | sizeX / 2 and sizeX&sizeZ are always 1
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 0] = (((x / 8) + 1) * (2.0f / x_verts)) - 1.0f;
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 1] = 0.0f;
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 2] = z * (2.0f / z_verts) - 1.0f;
+			ADD_VERT(0 + x, 1 + z);		// left top
+			ADD_VERT(1 + x, 1 + z);		// right top
+			ADD_VERT(1 + x, 0 + z);		// right bottom
+			ADD_VERT(1 + x, 0 + z);		// right bottom
+			ADD_VERT(0 + x, 0 + z);		// left bottom
+			ADD_VERT(0 + x, 1 + z);		// left top
+			/*
+			if (x == 0 && z == 0)	// first quad
+			{
+				ADD_VERT(0, 1);		// left top
+				ADD_VERT(1, 1);		// right top
+				ADD_VERT(1, 0);		// right bottom
+				ADD_VERT(0, 0);		// left bottom
 
-			// normals
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 3] = 0.0f;
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 4] = 1.0f;
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 5] = 0.0f;
+				indices[0] = 0;		// left top
+				indices[1] = 1;		// right top
+				indices[2] = 2;		// right bottom
+				indices[3] = 2;		// right bottom
+				indices[4] = 3;		// left bottom
+				indices[5] = 0;		// left top
+				offs += 6;
+			}
+			else if (z == 0)		// bottom x row
+			{
+				ADD_VERT(1 + x, 1);	// right top
+				ADD_VERT(1 + x, 0); // right bottom
 
-			//uv
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 6] = (f32)x / (x_verts * F32_PER_VERT);
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 7] = (f32)z / z_verts;
-
-			// tangents
-			verts[(z * (x_verts * F32_PER_VERT)) + x +  8] = 0.0f;
-			verts[(z * (x_verts * F32_PER_VERT)) + x +  9] = 1.0f;
-			verts[(z * (x_verts * F32_PER_VERT)) + x + 10] = 0.0f;
-			x += F32_PER_VERT;
+				int x_off = x * 2;
+				indices[0] = 0;		// left top
+				indices[1] = 1;		// right top
+				indices[2] = 2;		// right bottom
+				indices[3] = 2;		// right bottom
+				indices[4] = 3;		// left bottom
+				indices[5] = 0;		// left top
+				offs += 6;
+			}
+			else if (x == 0)		// first z row
+			{
+				int x_off = x * 4 + (z == 0 ? 2 : x_quads + 1);
+				ADD_VERT(0, 1 + z); // left top
+				ADD_VERT(0, 0 + z); // left bottom
+			}
+			else					// middle quads
+			{
+				ADD_VERT(1+x, 1+z);	// right top
+			}
+			*/
 		}
 	}
 
-	//generates the triangles
-	int tris_len = (x_verts * z_verts * 6);
-	f32* tris;
-	tris = malloc(tris_len * sizeof(f32));
-	//Debug.WriteLine("xVerts: " + xVerts.ToString() + "; zVerts: " + zVerts.ToString() + "; Verts-Length: " + verts.Length.ToString() + "; Tris-Length: " + tris.Length.ToString() + "\n");
-	f32 quad = 0.0f; int tri = 0; bee_bool firstW = BEE_TRUE;
-	for (int w = 0, z = 0; z < z_verts - 1; z++)
-	{
-		if (firstW) { w = 1; }
+	// ERR_CHECK(offset / F32_PER_VERT != verts_total, 
+	// 		  "verts added werent the amount that the grid would need");
 
-		for (int x = 0; x < x_verts - 1; x++)
-		{
-			tris[tri + 0] = quad + (f32)(x_verts * (z / w)) + 1;
-			tris[tri + 1] = quad + (f32)(x_verts * (z / w)) + 0;
-			tris[tri + 2] = quad + (f32)(x_verts * (z / w) + x_verts);
-			tris[tri + 3] = quad + (f32)(x_verts * (z / w) + x_verts);
-			tris[tri + 4] = quad + (f32)(x_verts * (z / w) + x_verts + 1);
-			tris[tri + 5] = quad + (f32)(x_verts * (z / w)) + 1;
+	ERR_CHECK(offs / 6 != indices_total,
+		"indices added werent the amount that the grid would need");
 
-			quad += 1;
-			tri += 6;
-		}
-		if (firstW) { w = 0; firstW = BEE_FALSE; }
-		quad++;
-		w += 2;
-	}
+	mesh m = make_mesh(verts, verts_total, NULL, 0, "grid", BEE_FALSE);
 
-	mesh m = make_mesh(verts, verts_len, tris, tris_len, "grid", BEE_FALSE);
-	// free(verts);
-	// free(tris);
+	// ---- cleanup ----
+	free(verts);
+	free(indices);
+	#undef ADD_VERT(x, z)
+
 	return m;
 }
+
+mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered)
+{
+	//make sure both x_verts and z_verts are at least 1
+	x_quads = x_quads < 1 ? 1 : x_quads;
+	z_quads = z_quads < 1 ? 1 : z_quads;
+
+	int verts_total = (x_quads + 1) * (z_quads + 1) * F32_PER_VERT;
+	f32* verts = malloc(verts_total * sizeof(f32));
+	ASSERT(verts != NULL);
+	int offset = 0; // vert offset
+
+	int indices_total = (x_quads * z_quads * 6); // two tris with 3 indices per face
+	u32* indices = malloc(indices_total * sizeof(u32));
+	ASSERT(indices != NULL);
+	int offs = 0; // tri offset
+
+	for (int z = 0; z < z_quads +1; ++z)
+	{
+		for (int x = 0; x < x_quads +1; ++x)
+		{
+			// if centered move back by half the total size
+			int _x = centered ? x - (x_quads / 2) : x;
+			int _z = centered ? z - (z_quads / 2) : z;
+			// x, y, z coords
+			verts[offset + 0] = _x; verts[offset + 1] = 0; verts[offset + 2] = _z;		
+			// normals
+			verts[offset + 3] = 0.0f; verts[offset + 4] = 1.0f; verts[offset + 5] = 0.0f;  
+			// uv's 
+			verts[offset + 6] = (f32)x / (f32)x_quads; verts[offset + 7] = (f32)z / (f32)z_quads;
+			// tangents 
+			verts[offset + 8] = 0.0f; verts[offset + 9] = 1.0f; verts[offset + 10] = 0.0f;
+			offset += F32_PER_VERT;
+		}
+	}
+	for (int i = 0; i < x_quads * z_quads; ++i)
+	{
+		int z = i / z_quads; // extract the current z row from i
+		int x = i % x_quads; // extract the current x row from i
+		int off_top = x + ((x_quads +1) * (z + 1));	// draw a grid to understand this
+		int off_bot = x + ((x_quads +1) * z);		// draw a grid to understand this
+		// printf("bot: %d, x: %d, x_verts: %d, z: %d, x_verts * z: %d  \n", off_bot, x, x_quads +1, z, (x_quads + 1) * z);
+		// printf("top: %d, x: %d, x_verts: %d, z: %d, x_verts * z: %d\n\n", off_top, x, x_quads +1, z +1, (x_quads + 1) * (z + 1));
+		indices[offs + 0] = off_top;			// left top
+		indices[offs + 1] = off_top + 1;		// right top
+		indices[offs + 2] = off_bot + 1;		// right bottom
+		indices[offs + 3] = off_bot + 1;		// right bottom
+		indices[offs + 4] = off_bot;			// left bottom
+		indices[offs + 5] = off_top;			// left top
+		offs += 6;
+	}
+
+
+	ERR_CHECK(offset == verts_total, 
+			  "verts added werent the amount that the grid would need");
+
+	ERR_CHECK(offs == indices_total,
+			  "indices added werent the amount that the grid would need");
+
+	mesh m = make_mesh(verts, verts_total, indices, indices_total, "grid", BEE_FALSE);
+
+	// ---- cleanup ----
+	free(verts);
+	free(indices);
+
+	return m;
+}
+
 
 // ---- camera ----
 

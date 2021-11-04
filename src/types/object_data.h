@@ -74,8 +74,8 @@ typedef struct shader
 
 typedef struct material
 {
-	shader* shader;
-	// int shader_idx;
+	// shader* shader;
+	int shader_idx;
 
 	uniform* uniforms;
 	int uniforms_len;
@@ -271,7 +271,7 @@ typedef struct scene
 
 
 // creates a material struct
-material make_material(shader* s, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
+material make_material(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
 // creates a mesh struct 
 // dont do this manually
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name, bee_bool simple); // simple: only 3 floats per vert, x,y,z coords
@@ -279,8 +279,11 @@ mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, c
 mesh make_plane_mesh();
 // straightforward mesh of a cube, you could say the default cube
 mesh make_cube_mesh();
-// this is unfinished have to finish this
-mesh make_grid_mesh(int x_verts, int z_verts);
+// makes a NOT indexed plane mesh with the subdivision set in the args
+mesh make_grid_mesh(int x_quads, int z_quads);
+// makes a indexed plane mesh with the subdivision set in the args
+// centered: true: mesh is centered around 0, 0, 0; false: mesh starts at 0, 0, 0 and expands from there
+mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered);
 
 // create a camera struct
 camera make_camera(f32 perspective, f32 near_plane, f32 far_plane);
