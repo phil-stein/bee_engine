@@ -70,23 +70,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)debug\</OutDir>
-    <IntDir>$(ProjectDir)bin\</IntDir>
+    <OutDir>$(ProjectDir)build\debug\</OutDir>
+    <IntDir>$(ProjectDir)build\bin\</IntDir>
     <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)debug\</OutDir>
-    <IntDir>$(ProjectDir)bin\</IntDir>
+    <OutDir>$(ProjectDir)build\debug\</OutDir>
+    <IntDir>$(ProjectDir)build\bin\</IntDir>
     <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)release\</OutDir>
-    <IntDir>$(ProjectDir)bin\</IntDir>
+    <OutDir>$(ProjectDir)build\release\</OutDir>
+    <IntDir>$(ProjectDir)build\bin\</IntDir>
     <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)release\</OutDir>
-    <IntDir>$(ProjectDir)bin\</IntDir>
+    <OutDir>$(ProjectDir)build\release\</OutDir>
+    <IntDir>$(ProjectDir)build\bin\</IntDir>
     <TargetName>bee_engine</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -198,6 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\fastobj\fast_obj.h" />
+    <ClInclude Include="rc\resource.h" />
     <ClInclude Include="src\app.h" />
     <ClInclude Include="src\files\asset_manager.h" />
     <ClInclude Include="src\files\file_handler.h" />
@@ -230,6 +231,13 @@
     <None Include="assets\shaders\basic.frag" />
     <None Include="assets\shaders\basic.vert" />
     <None Include="assets\shaders\blinn_phong.frag" />
+    <None Include="rc\BeeEngine.aps" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\#internal\icons\bee_engine_logo_blue.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="rc\BeeEngine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
