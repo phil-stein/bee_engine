@@ -1,7 +1,11 @@
 # build-folder
+**/build
 **/bin
 **/debug
 **/release
+
+# builds in builds folder
+**/builds
 
 # vs-files
 Browse.VC.opendb
@@ -21,4 +25,4 @@ Browse.VC.opendb
 
 # rar-files
 *.rar
-.zip
+*.zip

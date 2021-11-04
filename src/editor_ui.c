@@ -2865,43 +2865,56 @@ void draw_material_component(entity* ent)
         if (s->use_lighting && nk_tree_push(ctx, NK_TREE_NODE, "Textures", NK_MINIMIZED))
         {
 
+            // need this globally
+            float ratio_x = 0.0f;
+            struct nk_image img;
+            struct nk_rect img_bounds_dif;  // bounds of the displayed texure, used for f.e. checking if the mouse is over 
+            struct nk_rect img_bounds_spec; // bounds of the displayed texure, used for f.e. checking if the mouse is over 
+            struct nk_rect img_bounds_norm; // bounds of the displayed texure, used for f.e. checking if the mouse is over 
+
             nk_layout_row_dynamic(ctx, 175, 2);
-            nk_group_begin(ctx, "dif", NK_WINDOW_NO_SCROLLBAR);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_label(ctx, "Diffuse Texture: ", NK_TEXT_LEFT);
-            nk_label(ctx, ent->_material->dif_tex.name, NK_TEXT_LEFT);
-            float ratio_x = (float)ent->_material->dif_tex.size_y / (float)ent->_material->dif_tex.size_x;
-            nk_layout_row_static(ctx, 100 * ratio_x, 100, 1);
-            struct nk_image img = nk_image_id(ent->_material->dif_tex.icon_handle);
-            // nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
-            struct nk_rect img_bounds_dif = nk_widget_bounds(ctx);
-            nk_image(ctx, img);
-            nk_group_end(ctx);
+            if (nk_group_begin(ctx, "dif", NK_WINDOW_NO_SCROLLBAR))
+            {
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "Diffuse Texture: ", NK_TEXT_LEFT);
+                nk_label(ctx, ent->_material->dif_tex.name, NK_TEXT_LEFT);
+                float ratio_x = (float)ent->_material->dif_tex.size_y / (float)ent->_material->dif_tex.size_x;
+                nk_layout_row_static(ctx, 100 * ratio_x, 100, 1);
+                img = nk_image_id(ent->_material->dif_tex.icon_handle);
+                // nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                img_bounds_dif = nk_widget_bounds(ctx);
+                nk_image(ctx, img);
+                nk_group_end(ctx);
+            }
 
-            nk_group_begin(ctx, "spec", NK_WINDOW_NO_SCROLLBAR);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_label(ctx, "Specular Texture: ", NK_TEXT_LEFT);
-            nk_label(ctx, ent->_material->spec_tex.name, NK_TEXT_LEFT);
-            ratio_x = (float)ent->_material->spec_tex.size_y / (float)ent->_material->spec_tex.size_x;
-            img = nk_image_id(ent->_material->spec_tex.icon_handle);
-            // nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
-            nk_layout_row_static(ctx, 100 * ratio_x, 100, 1);
-            struct nk_rect img_bounds_spec = nk_widget_bounds(ctx);
-            nk_image(ctx, img);
-            nk_group_end(ctx);
+            if (nk_group_begin(ctx, "spec", NK_WINDOW_NO_SCROLLBAR))
+            {
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "Specular Texture: ", NK_TEXT_LEFT);
+                nk_label(ctx, ent->_material->spec_tex.name, NK_TEXT_LEFT);
+                ratio_x = (float)ent->_material->spec_tex.size_y / (float)ent->_material->spec_tex.size_x;
+                img = nk_image_id(ent->_material->spec_tex.icon_handle);
+                // nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                nk_layout_row_static(ctx, 100 * ratio_x, 100, 1);
+                img_bounds_spec = nk_widget_bounds(ctx);
+                nk_image(ctx, img);
+                nk_group_end(ctx);
+            }
 
-            nk_group_begin(ctx, "norm", NK_WINDOW_NO_SCROLLBAR);
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_label(ctx, "Normal Texture: ", NK_TEXT_LEFT);
-            nk_label(ctx, ent->_material->norm_tex.name, NK_TEXT_LEFT);
+            if (nk_group_begin(ctx, "norm", NK_WINDOW_NO_SCROLLBAR))
+            {
+                nk_layout_row_dynamic(ctx, 25, 1);
+                nk_label(ctx, "Normal Texture: ", NK_TEXT_LEFT);
+                nk_label(ctx, ent->_material->norm_tex.name, NK_TEXT_LEFT);
 
-            ratio_x = (float)ent->_material->norm_tex.size_y / (float)ent->_material->norm_tex.size_x;
-            img = nk_image_id(ent->_material->norm_tex.icon_handle);
-            // nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
-            nk_layout_row_static(ctx, 100 * ratio_x, 100, 1);
-            struct nk_rect img_bounds_norm = nk_widget_bounds(ctx);
-            nk_image(ctx, img);
-            nk_group_end(ctx);
+                ratio_x = (float)ent->_material->norm_tex.size_y / (float)ent->_material->norm_tex.size_x;
+                img = nk_image_id(ent->_material->norm_tex.icon_handle);
+                // nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                nk_layout_row_static(ctx, 100 * ratio_x, 100, 1);
+                img_bounds_norm = nk_widget_bounds(ctx);
+                nk_image(ctx, img);
+                nk_group_end(ctx);
+            }
 
             // check for assets dropped from the asset browser
             if (dropped_asset.type == TEXTURE_ASSET && dropped_asset.handled == BEE_FALSE)
