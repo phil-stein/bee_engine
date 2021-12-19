@@ -54,7 +54,7 @@ END
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "..\\assets\\#internal\\icons\\bee_engine_logo_blue.ico"
 
-IDI_ICON2               ICON                    "C:\\Workspace\\C\\BeeEngine\\assets\\#internal\\icons\\bee_engine_logo_blue.ico"
+IDI_ICON2               ICON                    "..\\assets\\#internal\\icons\\bee_engine_logo_blue.ico"
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
