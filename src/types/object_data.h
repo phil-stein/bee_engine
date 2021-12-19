@@ -74,8 +74,8 @@ typedef struct shader
 
 typedef struct material
 {
-	// shader* shader;
-	int shader_idx;
+	shader* shader;
+	// int shader_idx;
 
 	uniform* uniforms;
 	int uniforms_len;
@@ -250,11 +250,18 @@ typedef struct entity
 
 }entity;
 
-// structure is just a pointer to an array of entities
-// how do you save parent-child ids when doing this
-// maybe i do need guids
+// structure is just an an array of entity pointers
+// ? how do you save parent-child ids when doing this
+// maybe i do need guids 
+// ----------------------------------------------------------
+// - top
+//   - ent
+//       - ent
+//       - ent
+//           - ent
+//  - ent
 // 
-typedef entity* structure;
+typedef entity** structure;
 
 typedef struct scene
 {
@@ -271,7 +278,7 @@ typedef struct scene
 
 
 // creates a material struct
-material make_material(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
+material make_material(shader* shader, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name);
 // creates a mesh struct 
 // dont do this manually
 mesh make_mesh(f32* vertices, int vertices_len, u32* indices, int indices_len, const char* name, bee_bool simple); // simple: only 3 floats per vert, x,y,z coords
@@ -283,7 +290,10 @@ mesh make_cube_mesh();
 mesh make_grid_mesh(int x_quads, int z_quads);
 // makes a indexed plane mesh with the subdivision set in the args
 // centered: true: mesh is centered around 0, 0, 0; false: mesh starts at 0, 0, 0 and expands from there
-mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered);
+// uniform_uv: only has an effect when when x_quads and z_quads arent equal, 
+// -> false: the uvs are mapped completely to the mesh, which causes distortion in the texture
+// -> true:  the uvs are projected onto the mesh uniformly, but the texture is cut off  
+mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered, bee_bool uniform_uv);
 
 // create a camera struct
 camera make_camera(f32 perspective, f32 near_plane, f32 far_plane);
@@ -307,7 +317,13 @@ entity make_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* mat, c
 
 // updates all attached components
 void update_entity(entity* ent);
-// void entity_add_script(entity* ent,const char* path);
+
+// tree hierarchy of entities and their children starting with "top_entity"
+structure make_structure(entity* top_entity);
+
+// creates a sub part of the entity child hierarchy tree
+// !!! used internally !!!
+void add_entity_to_structure(structure s, entity* e);
 
 // void free_material(material* mat);
 // free the buffer objects of the mesh

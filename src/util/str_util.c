@@ -9,6 +9,7 @@ char* str_find_last_of(char* str, char* identifier)
     int n = strlen(identifier);
     while (*str)
     {
+        // go through str and compare with identifier
         if (!memcmp(str++, identifier, n))
         {
             last = str - 1;

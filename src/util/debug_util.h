@@ -20,7 +20,7 @@ void   start_timer_func(char* name, char* file, char* func);
 
 // start a timer, pushing a new one onto the stack,
 // call either "STOP_TIMER()" or "STOP_TIMER_PRINT()" to pop / stop timer
-#define START_TIMER(n) start_timer_func(n, __FILE__, __FUNCTION__)
+#define TIMER_START(n) start_timer_func(n, __FILE__, __FUNCTION__)
 
 // check whether there is a timer on the stack to be stopped
 bee_bool can_stop_timer();
@@ -29,13 +29,13 @@ bee_bool can_stop_timer();
 timer  stop_timer_func();
 
 // pops timer of stack, stopping it, also calculates the "timer.time" value
-#define STOP_TIMER() if (!can_stop_timer()) { P_ERR("attempted to stop timer without starting one first."); } stop_timer_func()
+#define TIMER_STOP() if (!can_stop_timer()) { P_ERR("attempted to stop timer without starting one first."); } stop_timer_func()
 
 // stops timer / pops it off stack and prints a message based on the name given in "START_TIMER()"
 f64    stop_timer_print_func();
 
 // stops timer / pops it off stack and prints a message based on the name given in "START_TIMER()"
-#define STOP_TIMER_PRINT() if (!can_stop_timer()) { P_ERR("attempted to stop timer without starting one first."); } stop_timer_print_func()
+#define TIMER_STOP_PRINT() if (!can_stop_timer()) { P_ERR("attempted to stop timer without starting one first."); } stop_timer_print_func()
 
 // get the array/stack of current timers
 timer* get_all_timers(int* len);

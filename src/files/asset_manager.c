@@ -10,7 +10,14 @@
 #include "util/str_util.h"
 #include "files/file_handler.h"
 
+
+
 // ---- vars ----
+
+// amount of slots allocated in asset data arrays, 
+// right now this still means its the max amount of any single asset that can be stored at the same time
+#define MAX_ITEMS 64	
+
 // hashmaps & dyn.-arrays using stb_ds.h
 #define ASSET_DIR_MAX_LEN 100
 char asset_dir_path[ASSET_DIR_MAX_LEN];
@@ -161,7 +168,6 @@ int internal_assets_names_len = 19;
 // bee_bool all_internal_assets_found = BEE_FALSE;
 
 
-
 void assetm_init()
 {
 	// char* dir_path = get_asset_dir();
@@ -188,6 +194,12 @@ void assetm_init()
 	shdefault(materials, -1);
 	shdefault(scripts, -1);
 	shdefault(scenes_paths, NULL);
+	// set start length
+	arrsetcap(texture_data, MAX_ITEMS);
+	arrsetcap(mesh_data, MAX_ITEMS);
+	arrsetcap(shaders_data, MAX_ITEMS);
+	arrsetcap(materials_data, MAX_ITEMS);
+	arrsetcap(scripts_data, MAX_ITEMS);
 }
 
 char* get_asset_dir()
@@ -249,7 +261,7 @@ void load_internal_assets()
 
 	shader* s = add_shader("basic.vert", "shader_error.frag", "SHADER_missing_error", BEE_TRUE); // default shader
 
-	add_material(get_shader_idx("SHADER_missing_error"), *get_texture_by_idx(0), *get_texture_by_idx(0), BEE_FALSE, 1.0f, GLM_VEC2_ONE, GLM_VEC3_ONE, BEE_FALSE, "MAT_missing_mat", BEE_TRUE);
+	add_material(s, *get_texture_by_idx(0), *get_texture_by_idx(0), BEE_FALSE, 1.0f, GLM_VEC2_ONE, GLM_VEC3_ONE, BEE_FALSE, "MAT_missing_mat", BEE_TRUE);
 }
 void check_file(char* file_name, int file_name_len, char* dir_path)
 {
@@ -644,6 +656,7 @@ texture get_texture(const char* name)
 	// check if the texture hasn't been loaded yet 
 	if (i == 9999 || i > texture_data_len) // 0 == 0
 	{
+		ERR_CHECK(texture_data_len < MAX_ITEMS, "reached limit of available space for asset, this is a problem and will be fixed in the future.");
 		create_texture(name);
 	}
 
@@ -803,6 +816,7 @@ mesh* get_mesh(const char* name)
 	// check if the mesh hasn't been loaded yet 
 	if (i == 9999 || i > mesh_data_len) // 0 == 0
 	{
+		ERR_CHECK(mesh_data_len < MAX_ITEMS, "reached limit of available space for asset, this is a problem and will be fixed in the future.");
 		create_mesh(name);
 	}
 
@@ -886,6 +900,7 @@ rtn_code add_mesh(mesh m)
 		printf("[ERROR] Mesh added already exists\n");
 		return BEE_ERROR;
 	}
+	ERR_CHECK(mesh_data_len < MAX_ITEMS, "reached limit of available space for asset, this is a problem and will be fixed in the future.");
 	shput(meshes, m.name, mesh_data_len);
 	arrput(mesh_data, m);
 	mesh_data_len++;
@@ -934,6 +949,8 @@ void create_script(const char* path, const char* name)
 		return;
 	}
 
+	ERR_CHECK(scripts_data_len < MAX_ITEMS, "reached limit of available space for asset, this is a problem and will be fixed in the future.");
+
 	// make a persistent copy of the passed name
 	char* name_cpy = calloc(strlen(name), sizeof(char));
 	assert(name_cpy != NULL);
@@ -981,14 +998,14 @@ int get_material_idx(char* name)
 	return shget(materials, name);
 }
 
-material* add_material(int shader_idx, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
+material* add_material(shader* shader, texture dif_tex, texture spec_tex, bee_bool is_transparent, f32 shininess,
 					   vec2 tile, vec3 tint, bee_bool draw_backfaces, const char* name, bee_bool overwrite)
 {
-	return add_material_specific(shader_idx, dif_tex, spec_tex, get_texture("blank.png"), is_transparent, shininess,
+	return add_material_specific(shader, dif_tex, spec_tex, get_texture("blank.png"), is_transparent, shininess,
 								 tile, tint, draw_backfaces, 0, NULL, name, overwrite);
 }
 
-material* add_material_specific(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess,
+material* add_material_specific(shader* shader, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess,
 								vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name, bee_bool overwrite)
 {
 	if (shget(materials, name) != -1) // check if already exist
@@ -997,8 +1014,8 @@ material* add_material_specific(int shader_idx, texture dif_tex, texture spec_te
 		if (overwrite)
 		{
 			material* m = get_material(name);
-			m->shader_idx = shader_idx;
-			m->dif_tex = dif_tex;
+			m->shader	= shader;
+			m->dif_tex  = dif_tex;
 			m->spec_tex = spec_tex;
 			m->norm_tex = norm_tex;
 			m->is_transparent = is_transparent;
@@ -1010,12 +1027,15 @@ material* add_material_specific(int shader_idx, texture dif_tex, texture spec_te
 		}
 		return get_material(name);
 	}
+
+	ERR_CHECK(materials_data_len < MAX_ITEMS, "reached limit of available space for asset, this is a problem and will be fixed in the future.");
+
 	// make a persistent copy of the passed name
 	char* name_cpy = malloc((strlen(name) +1) * sizeof(char)); 
 	assert(name_cpy != NULL);
 	strcpy(name_cpy, name);
 
-	material mat = make_material(shader_idx, dif_tex, spec_tex, norm_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
+	material mat = make_material(shader, dif_tex, spec_tex, norm_tex, is_transparent, shininess, tile, tint, draw_backfaces, uniforms_len, uniforms, name_cpy);
 
 	shput(materials, name_cpy, materials_data_len);
 	materials_len++;
@@ -1083,7 +1103,7 @@ int get_shader_idx(char* name)
 	return shget(shaders, name);
 }
 
-int add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs, bee_bool overwrite)
+shader* add_shader_specific(const char* vert_name, const char* frag_name, const char* name, bee_bool use_lighting, int uniform_defs_len, uniform_type* uniform_defs, bee_bool overwrite)
 {
 	if (shget(shaders, name) != -1) // check if already exist
 	{
@@ -1113,6 +1133,8 @@ int add_shader_specific(const char* vert_name, const char* frag_name, const char
 		return get_shader_idx(name);
 	}
 
+	ERR_CHECK(shaders_data_len < MAX_ITEMS, "reached limit of available space for asset, this is a problem and will be fixed in the future.");
+
 	// key for the path is the index of the file in the hashmap
 	int path_idx	= shgeti(vert_files, vert_name);
 	char* vert_path = hmget(vert_files_paths, path_idx);
@@ -1135,10 +1157,10 @@ int add_shader_specific(const char* vert_name, const char* frag_name, const char
 	arrput(shaders_data, s);
 	shaders_data_len++;
 
-	return shget(shaders, name);
+	return &shaders_data[shget(shaders, name)];
 }
 
-int add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite)
+shader* add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite)
 {
 	return add_shader_specific(vert_name, frag_name, name, BEE_TRUE, 0, NULL, overwrite);
 }

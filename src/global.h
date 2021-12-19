@@ -94,16 +94,24 @@ typedef void (*empty_callback)();
 
 // printf helpers ------------------------------------------------------------------------------------
 
-#define P_INT(i)	 printf("int: %i\n", i)		// printf integer value, -> "int: i"
-#define P_INT64(i)   printf("int64: %li\n", i)	// printf long long value, -> "int64: i"
-#define P_UINT(u)	 printf("uint: %u\n", u)	// printf unsigned int value, -> "uint: u"
-#define P_UINT64(u)	 printf("uint64: %lu\n", u)	// printf unsigned long long value, -> "uint64: u"
-#define P_F32(f)	 printf("f32: %f\n", f)		// printf float value, -> "f32: f"
-#define P_F64(f)	 printf("f64: %Lf\n", f)	// printf double value, -> "f64: f"
+#define P_INT(i)	 printf("%s: %i\n",  #i, i)						// printf integer value, -> "int: i"
+#define P_INT64(i)   printf("%s: %li\n", #i, i)						// printf long long value, -> "int64: i"
+#define P_UINT(u)	 printf("%s: %u\n",  #u, u)						// printf unsigned int value, -> "uint: u"
+#define P_UINT64(u)	 printf("%s: %lu\n", #u, u)						// printf unsigned long long value, -> "uint64: u"
+#define P_F32(f)	 printf("%s: %f\n",  #f, f)						// printf float value, -> "f32: f"
+#define P_F64(f)	 printf("%s: %Lf\n", #f, f)						// printf double value, -> "f64: f"
 
-#define P_CHAR(c)	 printf("char: %c\n", c)	// printf char, -> "char: c"
-#define P_STR(s)	 printf("str: %s\n", s)		// printf char array, -> "str: s"
-#define P_PTR(p)	 printf("ptr: %p\n", p)		// printf pointer address, -> "ptr: p"
+#define P_CHAR(c)	 printf("%s: %c\n",  #c, c)						// printf char, -> "char: c"
+#define P_STR(s)	 printf("%s\n",  s)								// printf char array, -> "s"
+#define P_PTR(p)	 printf("%s: %p\n",  #p, p)						// printf pointer address, -> "ptr: p"
+
+#define P_CLR()		 printf("\n")									// printf blank line
+#define P_LNE()		 printf("---------------------------------\n")	// printf dotted line "-----"	
+
+#define P_BOOL(b)	 printf("%s: %s\n", #b, (b) ? "true" : "false")
+
+#define P_VEC2(v)	 printf("%s: x: %.2f, y: %.2f\n", #v, v[0], v[1]);
+#define P_VEC3(v)	 printf("%s: x: %.2f, y: %.2f, z: %.2f\n", #v, v[0], v[1], v[2]);
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -156,9 +164,6 @@ typedef void (*empty_callback)();
 // cglm helpers --------------------------------------------------------------------------------------
 
 // values
-#define VEC3_X    (vec3){ 1.0f, 0.0f, 0.0f } // use: func(VEC3_X);
-#define VEC3_Y    (vec3){ 0.0f, 1.0f, 0.0f } // use: func(VEC3_Y);
-#define VEC3_Z    (vec3){ 0.0f, 0.0f, 1.0f } // use: func(VEC3_Z);
 #define VEC3_ONE  (vec3){ 1.0f, 1.0f, 1.0f } // use: func(VEC3_ONE);
 #define VEC3_ZERO (vec3){ 0.0f, 0.0f, 0.0f } // use: func(VEC3_ZERO);
 
@@ -168,6 +173,31 @@ typedef void (*empty_callback)();
 #define VEC3_Z_INIT    { 0.0f, 0.0f, 1.0f }	// use: vec3 v = VEC3_Z_INIT;
 #define VEC3_ONE_INIT  { 1.0f, 1.0f, 1.0f }	// use: vec3 v = VEC3_ONE_INIT;
 #define VEC3_ZERO_INIT { 0.0f, 0.0f, 0.0f }	// use: vec3 v = VEC3_ZERO_INIT;
+
+// value / init with args
+#define VEC3(v)			(vec3){ v, v, v }	  // use: func(VEC3(1.0f));
+#define VEC3_INIT(v)	{ v, v, v }			  // use: vec3 v = VEC3_INIT(1.0f);
+
+#define VEC3_X(x)    (vec3){ x, 0.0f, 0.0f } // use: func(VEC3_X(1));
+#define VEC3_Y(y)    (vec3){ 0.0f, y, 0.0f } // use: func(VEC3_Y(1));
+#define VEC3_Z(z)    (vec3){ 0.0f, 0.0f, z } // use: func(VEC3_Z(1));
+
+#define VEC3_XYZ(x, y, z) (vec3){ x, y, z }	 // use: func(VEC3_XYZ(1));
+
+
+// function short hands
+#define vec3_fill(vec, f)				glm_vec3_fill(vec, f)
+#define vec3_copy(vec, dest)			glm_vec3_copy(vec, dest)
+#define vec3_add(vec1, vec2, dest)		glm_vec3_add(vec1, vec2, dest)
+#define vec3_sub(vec1, vec2, dest)		glm_vec3_sub(vec1, vec2, dest)
+#define vec3_mul(vec1, vec2, dest)		glm_vec3_mul(vec1, vec2, dest)
+#define vec3_div(vec1, vec2, dest)		glm_vec3_div(vec1, vec2, dest)
+#define vec3_cross(vec1, vec2, dest)	glm_vec3_cross(vec1, vec2, dest)
+#define vec3_dot(vec1, vec2)			glm_vec3_dot(vec1, vec2)
+#define vec3_eq(vec, f)					glm_vec3_eq(vec, f)
+#define vec3_eqv(vec1, vec2)			glm_vec3_eqv(vec1, vec2)
+#define vec3_normalize(vec)				glm_vec3_normalize(vec)
+
 
 // ---------------------------------------------------------------------------------------------------
 

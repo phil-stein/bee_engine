@@ -22,6 +22,8 @@
 #include "files/asset_manager.h"
 #include "script/gravity_script.h"
 
+#include "util/debug_util.h"
+
 
 #pragma region __VARS__
 
@@ -199,6 +201,7 @@ void app_init()
 	// load_scene("ui_test.scene");
 	// load_scene("tmp02.scene");
 
+
 	add_shader("basic.vert", "blinn_phong.frag", "SHADER_default", BEE_TRUE);
 	add_shader("basic.vert", "unlit.frag", "SHADER_unlit", BEE_TRUE);
 	add_shader("basic.vert", "cel_shading.frag", "SHADER_cel", BEE_TRUE);
@@ -207,17 +210,20 @@ void app_init()
 	vec3 tint = { 1.0f, 1.0f, 1.0f };
 
 	texture blank_tex = get_texture("blank.png");
-	add_material(get_shader_idx("SHADER_default"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
-	add_material(get_shader_idx("SHADER_unlit"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
-	add_material(get_shader_idx("SHADER_cel"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
+	add_material(get_shader("SHADER_default"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank", BEE_TRUE);
+	add_material(get_shader("SHADER_unlit"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_blank_unlit", BEE_TRUE);
+	add_material(get_shader("SHADER_cel"), blank_tex, blank_tex, BEE_FALSE, 1.0f, tile, tint, BEE_FALSE, "MAT_cel", BEE_TRUE);
 	
-	mesh m = make_grid_mesh_indexed(10, 10, BEE_TRUE);
+	TIMER_START("grid mesh");
+	mesh m = make_grid_mesh_indexed(100, 100, BEE_TRUE, BEE_TRUE);
+	TIMER_STOP_PRINT();
+
 	add_mesh(m);
 
 	// tmp
 	get_material("MAT_blank_unlit")->dif_tex = get_texture("grass01_dif.png");
 
-	vec3 scale; glm_vec3_fill(scale, 0.25f);
+	vec3 scale; vec3_fill(scale, 1);
 	add_entity(VEC3_ZERO, VEC3_ZERO, scale, get_mesh("grid"), get_material("MAT_blank_unlit"), NULL, NULL, NULL, NULL, "grid");
 
 
@@ -232,7 +238,7 @@ void app_update()
 {
 	// ---- fps ----
 	
-	char title[50];
+	char title[100];
 	int rtn = sprintf_s(title, sizeof(title), "bee engine | fps: %d | scene: \"%s\"", (int)get_fps(), get_active_scene_name());
 	assert(rtn != 0);
 

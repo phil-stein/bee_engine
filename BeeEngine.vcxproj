@@ -187,12 +187,14 @@
     <ClCompile Include="src\script\gravity_interface_ui.c" />
     <ClCompile Include="src\script\gravity_script.c" />
     <ClCompile Include="src\editor_ui.c" />
+    <ClCompile Include="src\text_renderer.c" />
     <ClCompile Include="src\types\camera.c" />
     <ClCompile Include="src\types\entities.c" />
     <ClCompile Include="src\types\framebuffer.c" />
     <ClCompile Include="src\types\object_data.c" />
     <ClCompile Include="src\types\shader.c" />
     <ClCompile Include="src\util\debug_util.c" />
+    <ClCompile Include="src\util\ds_util.c" />
     <ClCompile Include="src\util\str_util.c" />
     <ClCompile Include="src\window.c" />
   </ItemGroup>
@@ -217,12 +219,14 @@
     <ClInclude Include="src\script\gravity_interface_ui.h" />
     <ClInclude Include="src\script\gravity_script.h" />
     <ClInclude Include="src\editor_ui.h" />
+    <ClInclude Include="src\text_renderer.h" />
     <ClInclude Include="src\types\camera.h" />
     <ClInclude Include="src\types\entities.h" />
     <ClInclude Include="src\types\framebuffer.h" />
     <ClInclude Include="src\types\object_data.h" />
     <ClInclude Include="src\types\shader.h" />
     <ClInclude Include="src\util\debug_util.h" />
+    <ClInclude Include="src\util\ds_util.h" />
     <ClInclude Include="src\util\str_util.h" />
     <ClInclude Include="src\util\ui_util.h" />
     <ClInclude Include="src\window.h" />

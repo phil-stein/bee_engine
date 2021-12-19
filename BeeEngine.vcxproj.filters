@@ -96,6 +96,12 @@
     <ClCompile Include="src\util\debug_util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\util\ds_util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\text_renderer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\app.h">
@@ -183,6 +189,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rc\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\util\ds_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\text_renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

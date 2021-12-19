@@ -27,7 +27,7 @@
 // ---- entry func ----
 int main(void)
 {
-	START_TIMER("---- init ----");
+	TIMER_START("---- init ----");
 
 	assetm_init();
 	printf(" -> assetm_init() finished\n");
@@ -63,7 +63,7 @@ int main(void)
 	physics_init();
 	printf(" -> physics_init() finished\n\n");
 
-	STOP_TIMER_PRINT(); // init
+	TIMER_STOP_PRINT(); // init
 
 	// gui console 
 	submit_txt_console("bee_engine :)");
@@ -73,7 +73,7 @@ int main(void)
 	// main loop
 	while (!get_window_should_close())
 	{
-		START_TIMER("---- frame ----"); // whole frame
+		TIMER_START("---- frame ----"); // whole frame
 
 		// get and process events
 		window_poll_events();
@@ -83,27 +83,27 @@ int main(void)
 
 
 		// call the update function in the apllication
-		START_TIMER("app_update()");
+		TIMER_START("app_update()");
 		app_update();
-		STOP_TIMER();
+		TIMER_STOP();
 
-		START_TIMER("renderer_update()");
+		TIMER_START("renderer_update()");
 		renderer_update(); // render all objects
-		STOP_TIMER();
+		TIMER_STOP();
 
 
 		#ifdef EDITOR_ACT
-		START_TIMER("ui_update()");
+		TIMER_START("ui_update()");
 		ui_update();
-		STOP_TIMER();
+		TIMER_STOP();
 		#endif
 
-		START_TIMER("entities_update()");
+		TIMER_START("entities_update()");
 		entities_update(); // has to be after ui
-		STOP_TIMER();
+		TIMER_STOP();
 
 		// only need to / can check gamestate when editor is active
-		START_TIMER("physics_update()");
+		TIMER_START("physics_update()");
 		#ifdef EDITOR_ACT
 		if (get_gamestate()) // only wile playing
 		{
@@ -112,17 +112,17 @@ int main(void)
 		#else 
 			physics_update(get_delta_time()); // after renderer & entities
 		#endif
-		STOP_TIMER(); // physics update
+		TIMER_STOP(); // physics update
 
-		START_TIMER("input_update()");
+		TIMER_START("input_update()");
 		input_update(); // reset last frames button state
-		STOP_TIMER();
+		TIMER_STOP();
 
 		// ---- glfw stuff ----
 		// swap back and front bufffer
 		window_swap_buffers();
 
-		STOP_TIMER(); // frame
+		TIMER_STOP(); // frame
 
 		clear_state_timers();
 	}

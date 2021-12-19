@@ -14,11 +14,11 @@
 
 // ---- material ----
 
-material make_material(int shader_idx, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
+material make_material(shader* shader, texture dif_tex, texture spec_tex, texture norm_tex, bee_bool is_transparent, f32 shininess, vec2 tile, vec3 tint, bee_bool draw_backfaces, int uniforms_len, uniform* uniforms, const char* name)
 {
 	material mat;
 	mat.name		   = name;
-	mat.shader_idx	   = shader_idx;
+	mat.shader		   = shader;
 	mat.dif_tex		   = dif_tex;
 	mat.spec_tex	   = spec_tex;
 	mat.norm_tex	   = norm_tex;
@@ -317,7 +317,7 @@ mesh make_grid_mesh(int x_quads, int z_quads)
 	return m;
 }
 
-mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered)
+mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered, bee_bool uniform_uv)
 {
 	//make sure both x_verts and z_verts are at least 1
 	x_quads = x_quads < 1 ? 1 : x_quads;
@@ -333,39 +333,45 @@ mesh make_grid_mesh_indexed(int x_quads, int z_quads, bee_bool centered)
 	ASSERT(indices != NULL);
 	int offs = 0; // tri offset
 
+	// verts
 	for (int z = 0; z < z_quads +1; ++z)
 	{
 		for (int x = 0; x < x_quads +1; ++x)
 		{
 			// if centered move back by half the total size
-			int _x = centered ? x - (x_quads / 2) : x;
-			int _z = centered ? z - (z_quads / 2) : z;
+			f32 _x = centered ? (f32)x - ((f32)x_quads * 0.5f) : (f32)x;
+			f32 _z = centered ? (f32)z - ((f32)z_quads * 0.5f) : (f32)z;
 			// x, y, z coords
 			verts[offset + 0] = _x; verts[offset + 1] = 0; verts[offset + 2] = _z;		
 			// normals
 			verts[offset + 3] = 0.0f; verts[offset + 4] = 1.0f; verts[offset + 5] = 0.0f;  
 			// uv's 
-			verts[offset + 6] = (f32)x / (f32)x_quads; verts[offset + 7] = (f32)z / (f32)z_quads;
+			// use the bigger of the quad amounts to map to, so the uv arent stretched
+			f32 uv_x = (f32)(uniform_uv ? ( x_quads >= z_quads ? x_quads : z_quads ) : x_quads);
+			f32 uv_z = (f32)(uniform_uv ? ( x_quads >= z_quads ? x_quads : z_quads ) : z_quads);
+			verts[offset + 6] = (f32)x / uv_x; verts[offset + 7] = (f32)z / uv_z;
 			// tangents 
 			verts[offset + 8] = 0.0f; verts[offset + 9] = 1.0f; verts[offset + 10] = 0.0f;
 			offset += F32_PER_VERT;
 		}
 	}
-	for (int i = 0; i < x_quads * z_quads; ++i)
+	// indices
+	for (int z = 0; z < z_quads; ++z)
 	{
-		int z = i / z_quads; // extract the current z row from i
-		int x = i % x_quads; // extract the current x row from i
-		int off_top = x + ((x_quads +1) * (z + 1));	// draw a grid to understand this
-		int off_bot = x + ((x_quads +1) * z);		// draw a grid to understand this
-		// printf("bot: %d, x: %d, x_verts: %d, z: %d, x_verts * z: %d  \n", off_bot, x, x_quads +1, z, (x_quads + 1) * z);
-		// printf("top: %d, x: %d, x_verts: %d, z: %d, x_verts * z: %d\n\n", off_top, x, x_quads +1, z +1, (x_quads + 1) * (z + 1));
-		indices[offs + 0] = off_top;			// left top
-		indices[offs + 1] = off_top + 1;		// right top
-		indices[offs + 2] = off_bot + 1;		// right bottom
-		indices[offs + 3] = off_bot + 1;		// right bottom
-		indices[offs + 4] = off_bot;			// left bottom
-		indices[offs + 5] = off_top;			// left top
-		offs += 6;
+		for (int x = 0; x < x_quads; ++x)
+		{
+			int off_top = x + ((x_quads +1) * (z + 1));	// draw a grid to understand this
+			int off_bot = x + ((x_quads +1) * z);		// draw a grid to understand this
+			// printf("bot: %d, x: %d, x_verts: %d, z: %d, x_verts * z: %d  \n", off_bot, x, x_quads +1, z, (x_quads + 1) * z);
+			// printf("top: %d, x: %d, x_verts: %d, z: %d, x_verts * z: %d\n\n", off_top, x, x_quads +1, z +1, (x_quads + 1) * (z + 1));
+			indices[offs + 0] = off_top;			// left top
+			indices[offs + 1] = off_top + 1;		// right top
+			indices[offs + 2] = off_bot + 1;		// right bottom
+			indices[offs + 3] = off_bot + 1;		// right bottom
+			indices[offs + 4] = off_bot;			// left bottom
+			indices[offs + 5] = off_top;			// left top
+			offs += 6;
+		}
 	}
 
 
@@ -628,6 +634,32 @@ void update_entity(entity* ent)
 	}
 }
 
+// ---- structure ----
+
+structure make_structure(entity* top_entity)
+{
+	structure s = NULL;
+	arrput(s, top_entity); // first elem is top entity
+
+	// recursion to get a tree structure
+	// with each entity being followed by their children
+
+	for (int i = 0; i < top_entity->children_len; ++i)
+	{
+		add_entity_to_structure(s, get_entity(top_entity->children[i]));
+	}
+
+	return s;
+
+}
+void add_entity_to_structure(structure s, entity* e)
+{
+	arrput(s, e);
+	for (int i = 0; i < e->children_len; ++i)
+	{
+		add_entity_to_structure(s, get_entity(e->children[i]));
+	}
+}
 
 // ---- free ----
 

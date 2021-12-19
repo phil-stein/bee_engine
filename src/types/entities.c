@@ -151,9 +151,9 @@ void get_entity_global_rot_mat(int id, mat4 rot)
 	f32 x_p = parent_rot[0];  glm_make_rad(&x_p);
 	f32 y_p = parent_rot[1];  glm_make_rad(&y_p);
 	f32 z_p = parent_rot[2];  glm_make_rad(&z_p);
-	glm_rotate_at(rot, parent_pos, x_p, VEC3_X);
-	glm_rotate_at(rot, parent_pos, y_p, VEC3_Y);
-	glm_rotate_at(rot, parent_pos, z_p, VEC3_Z);
+	glm_rotate_at(rot, parent_pos, x_p, VEC3_X(1));
+	glm_rotate_at(rot, parent_pos, y_p, VEC3_Y(1));
+	glm_rotate_at(rot, parent_pos, z_p, VEC3_Z(1));
 }
 
 
@@ -170,6 +170,23 @@ u64 generate_guid()
 	return (u64)(ratio * MAXULONG64);
 }
 
+int check_entity_id_free(int id)
+{
+	bee_bool id_taken = BEE_TRUE;
+	int debug = 0;
+	while (id_taken)
+	{
+		entity* ent = get_entity(id);
+		id_taken = ent->id == -1 ? BEE_FALSE : BEE_TRUE; // default ent returned when id not found
+		if (id_taken) { id++; } // printf("id taken now: %d, ent->id: %d\n", idx, ent->id);
+
+		debug++;
+		if (debug > 100) { assert(0); }
+	}
+
+	return id;
+}
+
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, rigidbody* rb, collider* col, char* name)
 {
 	return add_entity_direct(make_entity(pos, rot, scale, _mesh, _material, _cam, _light, rb, col, name));
@@ -178,17 +195,8 @@ int add_entity_direct(entity e)
 {
 	// check id available
 	int idx = entities_len;
-	bee_bool id_taken = BEE_TRUE;
-	int debug = 0;
-	while (id_taken)
-	{
-		entity* ent = get_entity(idx);
-		id_taken = ent->id == -1 ? BEE_FALSE : BEE_TRUE; // default ent returned when id not found
-		if (id_taken) { idx++; } // printf("id taken now: %d, ent->id: %d\n", idx, ent->id);
+	idx = check_entity_id_free(idx);
 
-		debug++;
-		if (debug > 100) { assert(0); }
-	}
 	add_entity_direct_id(e, idx);
 }
 int add_entity_direct_id(entity e, int id)

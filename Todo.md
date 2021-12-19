@@ -1,23 +1,11 @@
 # Todo
 
 - general
-  - [ ] setup release build
+  - [x] setup release build
 
   - [ ] setup x86 build
 
-  - [ ] parent child rotation (vqs or v, mat, s) 
-
-    - [x] basics
-
-    - [x] child rotation on axis rotated by parent
-
-      -> decompose rotation in "get_entity_global_transform()"
-
-      -> maybe look at glm (not cglm) repo for example
-
-    - [x] recursive, multiple childs affecting each other
-
-      -> above needs to be finished
+    - [ ] get x64 libraries in x86
 
   - [ ] turn dir vec into rotation and reverse
 
@@ -25,13 +13,13 @@
     - [ ] dir -> rot (kinda works)
     
   - [ ] make entity id's guid's 
-  
+
   - [x] write debugging / performance testing tools
-  
+
     - [x] timer
     
     
-  
+
 - buggs
 
   - [ ] search for memory leaks & corruption using tool 
@@ -58,6 +46,12 @@
 
   - [x] make_grid_mesh()
 
+  - [ ] amount of assets per type is limited and not dynamic
+
+    -> need some sort of growing array that has consistent pointers
+
+    ​	and preferably isn't scattered throughout memory   
+
   - [ ] mixing of the different light sources looks weird in ambient areas & shadows
 
     -> prob. wait till after implementing pbr
@@ -71,11 +65,11 @@
   - [ ] revamp the uniform system to be less cumbersome
 
     -> directly use uniform from shader, without having to add them in the material as well
-
+  
     -> maybe make files for shaders specifing vert / frag file and uniforms
-
+  
   - [ ] move gizmo take camera orientation into account
-
+  
   - [ ] make first entity be right-click-able & drag-able
   
   - [ ] themes
@@ -152,7 +146,7 @@
   - [x] ui for drag & drop imported assets
 
   - [ ] editor cam v. game cam (camera component)
-  
+
     - [x] assure always one and only one camera in scene
     - [ ] integrate in gravity interface
 
@@ -163,31 +157,28 @@
   - [ ] axis view gizmo like top-right in blender, unity, max, etc
 
   - [ ] transform gizmos
-  
+
     - [x] move
     - [ ] scale
     - [ ] rotate
     - [ ] snap to grid
-  
+
   - [ ] show grid in scene
-  
+
   - [ ] structures (prefabs)
-  
+
     - [ ] serialize entity tree
     - [ ] save & load
     - [ ] asset manager
     - [ ] ui
-  
-  - [x] ui for adding / removing components
-  
-    - [x] mesh & material
-    - [x] rigidbody
-    - [x] collider
-  
-  - [x] make entity hierarchy / properties & scene properties groups, so play button doesn't get scrolled up when scrolling entity properties, etc.
-  
+
+  - [ ] drag and drop assets in scene
+
+    - [ ] materials onto object
+    - [ ] meshes to instance
+
     
-  
+
 - [ ] input 
 
   - [ ] controller input

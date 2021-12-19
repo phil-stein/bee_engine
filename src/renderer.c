@@ -38,9 +38,11 @@ f32 near_plane  = 0.1f;
 f32 far_plane   = 100.0f;
 int camera_ent_idx = -1; // -1 = no camera
 
+#ifdef EDITOR_ACT
 f32 editor_perspective = 45.0f;
 f32 editor_near_plane = 0.1f;
 f32 editor_far_plane = 100.0f;
+#endif
 
 // hdr
 f32 exposure = 1.0f;
@@ -68,26 +70,16 @@ int spot_lights_len  = 0;
 bee_bool wireframe_mode_enabled = BEE_FALSE;
 bee_bool normal_mode_enabled	 = BEE_FALSE;
 bee_bool uv_mode_enabled		 = BEE_FALSE;
-vec3	 wireframe_color = { 0.0f, 0.0f, 0.0f };
-
-#ifdef EDITOR_ACT
-int modes_shader;
-#endif
-
-#ifdef EDITOR_ACT
-// debug draw
-debug_draw* debug_calls = NULL;
-int debug_calls_len = 0;
-#endif
+vec3	 wireframe_color = { 11.0f / 255.0f, 1.0, 249.0f / 255.0f };
 
 
 // post processing
-int screen_shader;
+shader* screen_shader;
 u32 quad_vao, quad_vbo;
 
 // skybox
 u32 cube_map;
-int skybox_shader;
+shader* skybox_shader;
 u32 skybox_vao, skybox_vbo;
 bee_bool draw_skybox = BEE_TRUE;
 
@@ -97,19 +89,24 @@ framebuffer fb_color;
 bee_bool use_msaa = BEE_TRUE;
 
 // shadow mapping
-int shadow_shader;
+shader* shadow_shader;
 const f32 shadow_near_plane = 1.0f, shadow_far_plane = 7.5f;
 
 #ifdef EDITOR_ACT
+// wireframe, normal, uv mode shader
+shader* modes_shader;
+
+// debug draw
+shader* line_shader;
+debug_draw* debug_calls = NULL;
+int debug_calls_len = 0;
+
 // mouse picking
 framebuffer fb_mouse_pick;
-int mouse_pick_shader;
+shader* mouse_pick_shader;
 
 // outline 
 framebuffer fb_outline;
-
-// debug draw
-int line_shader;
 #endif
 
 
@@ -277,27 +274,27 @@ void renderer_update()
 #endif
 
 #ifdef EDITOR_ACT
-	START_TIMER("render_scene_mouse_pick()");
+	TIMER_START("render_scene_mouse_pick()");
 	render_scene_mouse_pick();
-	STOP_TIMER();
+	TIMER_STOP();
 #endif
-	START_TIMER("render_scene_shadows()");
+	TIMER_START("render_scene_shadows()");
 	render_scene_shadows();
-	STOP_TIMER();
+	TIMER_STOP();
 
-	START_TIMER("render_scene_normal()");
+	TIMER_START("render_scene_normal()");
 	render_scene_normal();
-	STOP_TIMER();
+	TIMER_STOP();
 
 #ifdef EDITOR_ACT
 	
-	START_TIMER("render_scene_outline()");
+	TIMER_START("render_scene_outline()");
 	render_scene_outline();
-	STOP_TIMER();
+	TIMER_STOP();
 
-	START_TIMER("render_scene_debug()");
+	TIMER_START("render_scene_debug()");
 	render_scene_debug();
-	STOP_TIMER();
+	TIMER_STOP();
 
 	if (wireframe_mode_enabled == BEE_TRUE)
 	{
@@ -305,9 +302,9 @@ void renderer_update()
 	}
 
 #endif
-	START_TIMER("render_scene_screen()");
+	TIMER_START("render_scene_screen()");
 	render_scene_screen();
-	STOP_TIMER();
+	TIMER_STOP();
 
 #ifdef EDITOR_ACT
 	// do this so the nuklear gui is always drawn in solid-mode
@@ -364,8 +361,7 @@ void render_scene_mouse_pick()
 	// cycle all objects
 	int entity_ids_len = 0;
 	int* entity_ids = get_entity_ids(&entity_ids_len);
-	shader* s = get_shader_by_idx(mouse_pick_shader);
-	shader_use(s);
+	shader_use(mouse_pick_shader);
 	for (int i = 0; i < entity_ids_len; ++i)
 	{
 		entity* ent = get_entity(entity_ids[i]);
@@ -380,11 +376,11 @@ void render_scene_mouse_pick()
 			mat4 model;
 			make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
-			shader_set_mat4(s, "model", model);
-			shader_set_mat4(s, "view", view);
-			shader_set_mat4(s, "proj", proj);
+			shader_set_mat4(mouse_pick_shader, "model", model);
+			shader_set_mat4(mouse_pick_shader, "view", view);
+			shader_set_mat4(mouse_pick_shader, "proj", proj);
 
-			shader_set_float(s, "id", (f32)ent->id);
+			shader_set_float(mouse_pick_shader, "id", (f32)ent->id);
 
 			mesh* m = ent->_mesh;
 
@@ -442,13 +438,13 @@ void render_scene_mouse_pick()
 
 		// shader_use called before the loop drawing the entities
 		// shader_use(mouse_pick_shader);
-		shader_set_mat4(s, "model", model);
-		shader_set_mat4(s, "view", view);
-		shader_set_mat4(s, "proj", proj);
+		shader_set_mat4(mouse_pick_shader, "model", model);
+		shader_set_mat4(mouse_pick_shader, "view", view);
+		shader_set_mat4(mouse_pick_shader, "proj", proj);
 
 		for (int i = 0; i < 3; ++i)
 		{
-			shader_set_float(s, "id", (f32)-2 -i); // -2, -3, -4
+			shader_set_float(mouse_pick_shader, "id", (f32)-2 -i); // -2, -3, -4
 
 			mesh* m = NULL;
 			vec3 tint = GLM_VEC3_ONE_INIT;
@@ -639,13 +635,12 @@ void render_scene_debug()
 			glm_perspective(deg_pers, ((f32)w / (f32)h), near_p, far_p, proj);
 
 			// set shader uniforms ------------------------------
-			shader* s = get_shader_by_idx(line_shader);
-			shader_use(s);
-			shader_set_mat4(s, "model",    model);
-			shader_set_mat4(s, "view",     view);
-			shader_set_mat4(s, "proj",     proj);
-			shader_set_int(s, "just_tint", 1);
-			shader_set_vec3(s, "mat.tint", tint);
+			shader_use(line_shader);
+			shader_set_mat4(line_shader, "model",    model);
+			shader_set_mat4(line_shader, "view",     view);
+			shader_set_mat4(line_shader, "proj",     proj);
+			shader_set_int(line_shader, "just_tint", 1);
+			shader_set_vec3(line_shader, "mat.tint", tint);
 			glBindVertexArray(m.vao);
 			glDrawArrays(GL_TRIANGLES, 0, 18); // each vertices consist of 3 floats
 
@@ -682,8 +677,7 @@ void render_scene_shadows()
 	vec3 up = { 0.0f,  1.0f,  0.0f };
 	// glm_lookat(eye, center, up, view);
 
-	shader* s = get_shader_by_idx(shadow_shader);
-	shader_use(s);
+	shader_use(shadow_shader);
 	for (int n = 0; n < dir_lights_len; ++n)
 	{
 		entity* l = get_entity(dir_lights[n]);
@@ -720,8 +714,8 @@ void render_scene_shadows()
 				mat4 model;
 				make_model_matrix(ent->id, pos, rot, scale, ent->rotate_global, model);
 
-				shader_set_mat4(s, "model", model);
-				shader_set_mat4(s, "light_space", light_space);
+				shader_set_mat4(shadow_shader, "model", model);
+				shader_set_mat4(shadow_shader, "light_space", light_space);
 
 				glBindVertexArray(ent->_mesh->vao);
 				if (ent->_mesh->indexed == BEE_TRUE)
@@ -966,8 +960,6 @@ void render_scene_skybox()
 	// draw skybox as last
 	glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
 	
-	shader* s = get_shader_by_idx(skybox_shader);
-	shader_use(s);
 
 	mat4 view;
 #ifdef EDITOR_ACT
@@ -993,13 +985,14 @@ void render_scene_skybox()
 	int w, h; get_window_size(&w, &h);
 	glm_perspective(deg_pers, ((float)w / (float)h), near_plane, far_plane, proj);
 
-	shader_set_mat4(s, "view", &view[0]);
-	shader_set_mat4(s, "proj", &proj[0]);
+	shader_use(skybox_shader);
+	shader_set_mat4(skybox_shader, "view", &view[0]);
+	shader_set_mat4(skybox_shader, "proj", &proj[0]);
 
 	// skybox cube
 	glBindVertexArray(skybox_vao);
 	glActiveTexture(GL_TEXTURE0);
-	shader_set_int(s, "cube_map", 0);
+	shader_set_int(skybox_shader, "cube_map", 0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cube_map);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
@@ -1023,16 +1016,15 @@ void render_scene_screen()
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glDisable(GL_DEPTH_TEST);
-	shader* s = get_shader_by_idx(screen_shader);
-	shader_use(s);
-	shader_set_float(s, "exposure", exposure);
+	shader_use(screen_shader);
+	shader_set_float(screen_shader, "exposure", exposure);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fb_color.buffer); // wireframe_mode_enabled ? mouse_pick_buffer : 
-	shader_set_int(s, "tex", 0);
+	shader_set_int(screen_shader, "tex", 0);
 #ifdef EDITOR_ACT
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, fb_outline.buffer);
-	shader_set_int(s, "outline", 1);
+	shader_set_int(screen_shader, "outline", 1);
 #endif
 	glBindVertexArray(quad_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1083,9 +1075,8 @@ void set_bg_till_loaded()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(f32), (void*)(2 * sizeof(f32)));
 
 
-	int s_idx = add_shader_specific("screen.vert", "screen.frag", "splash-logo", BEE_FALSE, 0, NULL, BEE_TRUE);
+	shader* s = add_shader_specific("screen.vert", "screen.frag", "splash-logo", BEE_FALSE, 0, NULL, BEE_TRUE);
 	texture t = get_texture("bee_engine_logo_dif.png");
-	shader* s = get_shader_by_idx(s_idx);
 	shader_use(s);
 	shader_set_float(s, "exposure", 0.8f);
 	glActiveTexture(GL_TEXTURE0);
@@ -1143,13 +1134,12 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 	if (wireframe_mode_enabled == BEE_TRUE || normal_mode_enabled == BEE_TRUE || uv_mode_enabled == BEE_TRUE) 
 	{
 		// act the shader
-		shader* s = get_shader_by_idx(modes_shader);
-		shader_use(s);
+		shader_use(modes_shader);
 
 		// set shader matrices ------------------------------
-		shader_set_mat4(s, "model", &model[0]);
-		shader_set_mat4(s, "view", &view[0]);
-		shader_set_mat4(s, "proj", &proj[0]);
+		shader_set_mat4(modes_shader, "model", model);
+		shader_set_mat4(modes_shader, "view", view);
+		shader_set_mat4(modes_shader, "proj", proj);
 
 		vec3 cam_pos; 
 		if (gamestate)
@@ -1160,21 +1150,21 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 		{
 			get_editor_camera_pos(cam_pos);
 		}
-		shader_set_vec3(s, "view_pos", cam_pos);
+		shader_set_vec3(modes_shader, "view_pos", cam_pos);
 
 
 		if (wireframe_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(s, "mode", 0);
-			shader_set_vec3(s, "wiref_col", wireframe_color);
+			shader_set_int(modes_shader, "mode", 0);
+			shader_set_vec3(modes_shader, "wiref_col", wireframe_color);
 		}
 		else if (normal_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(s, "mode", 1);
+			shader_set_int(modes_shader, "mode", 1);
 		}
 		else if (uv_mode_enabled == BEE_TRUE)
 		{
-			shader_set_int(s, "mode", 2);
+			shader_set_int(modes_shader, "mode", 2);
 
 		}
 	}
@@ -1182,20 +1172,19 @@ void draw_mesh(int entity_id, mesh* _mesh, material* mat, vec3 pos, vec3 rot, ve
 	{
 
 #endif
-		shader* s = get_shader_by_idx(mat->shader_idx);
-		shader_use(s);
+		shader_use(mat->shader);
 
 		// set shader matrices ------------------------------
-		shader_set_mat4(s, "model", model);
-		shader_set_mat4(s, "view", view);
-		shader_set_mat4(s, "proj", proj);
+		shader_set_mat4(mat->shader, "model", model);
+		shader_set_mat4(mat->shader, "view", view);
+		shader_set_mat4(mat->shader, "proj", proj);
 
-		set_shader_uniforms(mat, s);
+		set_shader_uniforms(mat, mat->shader);
 
 #ifdef EDITOR_ACT
 		if (is_gizmo)
 		{
-			shader_set_vec3(s, "mat.tint", gizmo_col); // material because using cel_shader
+			shader_set_vec3(mat->shader, "mat.tint", gizmo_col); // material because using cel_shader
 		}
 	}
 #endif
@@ -1254,15 +1243,15 @@ void make_model_matrix(int entity_id, vec3 pos, vec3 rot, vec3 scale, bee_bool r
 			rotated_around_parent = BEE_TRUE;
 
 			// normal rotation
-			glm_rotate_at(model, pos, x, VEC3_X);
-			glm_rotate_at(model, pos, y, VEC3_Y); 
-			glm_rotate_at(model, pos, z, VEC3_Z);
+			glm_rotate_at(model, pos, x, VEC3_X(1));
+			glm_rotate_at(model, pos, y, VEC3_Y(1)); 
+			glm_rotate_at(model, pos, z, VEC3_Z(1));
 		}
 		else
 		{
-			glm_rotate_at(model, pos, x, VEC3_X);
-			glm_rotate_at(model, pos, y, VEC3_Y);
-			glm_rotate_at(model, pos, z, VEC3_Z);
+			glm_rotate_at(model, pos, x, VEC3_X(1));
+			glm_rotate_at(model, pos, y, VEC3_Y(1));
+			glm_rotate_at(model, pos, z, VEC3_Z(1));
 		}
 
 	}

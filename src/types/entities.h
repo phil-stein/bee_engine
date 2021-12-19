@@ -17,6 +17,11 @@ void entities_clear_scene();
 
 // generates a random u64 (unsigned long long) number
 u64 generate_guid();
+
+// checks whether the given id is taken and returns a free one if it isnt 
+// if the given id is free it gets returned
+// therefore "id = check_entity_id_free(id);"
+int check_entity_id_free(int id);
 // makes entity from given properties and adds it to the engine
 // if your goal is to simply add an entity to the game use this function
 int add_entity(vec3 pos, vec3 rot, vec3 scale, mesh* _mesh, material* _material, camera* _cam, light* _light, rigidbody* rb, collider* col, char* name);

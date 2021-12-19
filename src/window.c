@@ -20,7 +20,7 @@ framebuffer** resize_buffers = NULL;
 int			  resize_buffers_len = 0;
 
 // intis glfw & glad, also creates the window
-// returns: <stddef.h> return_code
+// returns: <global.h> return_code, BEE_OK / BEE_ERROR
 rtn_code create_window(const int width, const int height, const char* title, bee_bool maximized)
 {
 
@@ -30,7 +30,7 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 	// Initialise GLFW
 	if (glfwInit() == GLFW_FALSE)
 	{
-		fprintf(stderr, "Failed to initialize GLFW !!!\n");
+		ERR("Failed to initialize GLFW !!!\n");
 		return BEE_ERROR;
 	}
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -49,7 +49,7 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 	window = glfwCreateWindow(width, height, title, NULL, NULL);
 	if (window == NULL)
 	{
-		fprintf(stderr, "Failed to open GLFW window.\n");
+		ERR("Failed to open GLFW window.\n");
 		glfwTerminate();
 		return BEE_ERROR;
 	}
@@ -61,7 +61,7 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 	// initialize glad, load the opengl bindings
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		fprintf(stderr, "Failed to initialize GLAD");
+		ERR("Failed to initialize GLAD");
 		return BEE_ERROR;
 	}
 
@@ -86,13 +86,13 @@ rtn_code create_window(const int width, const int height, const char* title, bee
 
 	#define LINUX
 	current_platform = PLATFORM_LINUX;
-	printf("[!!!] linux not yet properly supported.");
+	P_ERR("linux not yet properly supported.");
 
 #elif (defined __APPLE__ || defined _APPLE)
 	
 	#define APPLE
 	current_platform = PLATFORM_APPLE;
-	printf("[!!!] apple mac_os not yet properly supported.");
+	P_ERR("apple mac_os not yet properly supported.");
 
 #endif
 

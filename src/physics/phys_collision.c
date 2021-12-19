@@ -79,7 +79,8 @@ collision_info collision_check_aabb_v_aabb(entity* b1, entity* b2)
 	glm_vec3_add(b_min, b2->collider.offset, b_min);
 	glm_vec3_add(b_max, b2->collider.offset, b_max);
 
-	bee_bool collision = (a_min[0] <= b_max[0] && a_max[0] >= b_min[0]) &&
+	bee_bool collision = 
+		(a_min[0] <= b_max[0] && a_max[0] >= b_min[0]) &&
 		(a_min[1] <= b_max[1] && a_max[1] >= b_min[1]) &&
 		(a_min[2] <= b_max[2] && a_max[2] >= b_min[2]);
 

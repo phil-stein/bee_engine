@@ -1018,6 +1018,7 @@ void setup_input_class(gravity_vm* vm)
     // get_key()
     gravity_class_bind(c, "set_cursor_visible", NEW_CLOSURE_VALUE(input_set_cursor));
     gravity_class_bind(c, "rot_cam_by_mouse", NEW_CLOSURE_VALUE(input_rotate_cam_by_mouse));
+    gravity_class_bind(c, "stop_rot_cam_by_mouse", NEW_CLOSURE_VALUE(input_stop_rotate_cam_by_mouse));
     gravity_class_bind(c, "get_key_SPACE", NEW_CLOSURE_VALUE(get_key_SPACE));
     gravity_class_bind(c, "get_key_APOSTROPHE", NEW_CLOSURE_VALUE(get_key_APOSTROPHE));
     gravity_class_bind(c, "get_key_COMMA", NEW_CLOSURE_VALUE(get_key_COMMA));
@@ -1234,6 +1235,13 @@ static bee_bool input_rotate_cam_by_mouse(gravity_vm* vm, gravity_value_t* args,
     rotate_cam_by_mouse_act = BEE_TRUE;
     rotate_cam_by_mouse_idx = register_mouse_pos_callback(mouse_movement_callback);
     rotate_cam_by_mouse_speed = VALUE_ISA_FLOAT(v1) ? VALUE_AS_FLOAT(v1) : VALUE_AS_INT(v1);
+}
+
+static bee_bool input_stop_rotate_cam_by_mouse(gravity_vm* vm, gravity_value_t* args, uint16_t nargs, uint32_t rindex)
+{
+    if (nargs != 1) { throw_error("[Input.stop_rot_cam_by_mouse()] Wrong amount of arguments, 0 arguments are needed."); return; }
+
+    rotate_cam_by_mouse_act = BEE_FALSE;
 }
 
 
