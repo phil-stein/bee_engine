@@ -170,8 +170,6 @@ int internal_assets_names_len = 19;
 
 void assetm_init()
 {
-	// char* dir_path = get_asset_dir();
-
 	// ---- get asset dir ----
 	// load all assets in "proj\assets\"
 	char* cwd = _getcwd(NULL, 0);
@@ -1155,9 +1153,11 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 
 	shput(shaders, name_cpy, shaders_data_len);
 	arrput(shaders_data, s);
-	shaders_data_len++;
+	PF("%.2d | ", shaders_data_len); P_LNE();
+	P_SHADER(shaders_data[shaders_data_len]);
 
-	return &shaders_data[shget(shaders, name)];
+	// shaders_data_len++;
+	return &shaders_data[shaders_data_len++];
 }
 
 shader* add_shader(const char* vert_name, const char* frag_name, const char* name, bee_bool overwrite)

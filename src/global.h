@@ -94,24 +94,29 @@ typedef void (*empty_callback)();
 
 // printf helpers ------------------------------------------------------------------------------------
 
-#define P_INT(i)	 printf("%s: %i\n",  #i, i)						// printf integer value, -> "int: i"
-#define P_INT64(i)   printf("%s: %li\n", #i, i)						// printf long long value, -> "int64: i"
-#define P_UINT(u)	 printf("%s: %u\n",  #u, u)						// printf unsigned int value, -> "uint: u"
-#define P_UINT64(u)	 printf("%s: %lu\n", #u, u)						// printf unsigned long long value, -> "uint64: u"
-#define P_F32(f)	 printf("%s: %f\n",  #f, f)						// printf float value, -> "f32: f"
-#define P_F64(f)	 printf("%s: %Lf\n", #f, f)						// printf double value, -> "f64: f"
+#define STR_BOOL(b)	 (b) ? "true" : "false"
 
-#define P_CHAR(c)	 printf("%s: %c\n",  #c, c)						// printf char, -> "char: c"
-#define P_STR(s)	 printf("%s\n",  s)								// printf char array, -> "s"
-#define P_PTR(p)	 printf("%s: %p\n",  #p, p)						// printf pointer address, -> "ptr: p"
+#define PF(...)	     printf(__VA_ARGS__)						// printf shorthand
+#define P(msg)		 PF("%s\n", msg)							// printf string with new-line
 
-#define P_CLR()		 printf("\n")									// printf blank line
-#define P_LNE()		 printf("---------------------------------\n")	// printf dotted line "-----"	
+#define P_INT(i)	 PF("%s: %i\n",  #i, i)						// printf integer value, -> "int: i"
+#define P_INT64(i)   PF("%s: %li\n", #i, i)						// printf long long value, -> "int64: i"
+#define P_UINT(u)	 PF("%s: %u\n",  #u, u)						// printf unsigned int value, -> "uint: u"
+#define P_UINT64(u)	 PF("%s: %lu\n", #u, u)						// printf unsigned long long value, -> "uint64: u"
+#define P_F32(f)	 PF("%s: %f\n",  #f, f)						// printf float value, -> "f32: f"
+#define P_F64(f)	 PF("%s: %Lf\n", #f, f)						// printf double value, -> "f64: f"
 
-#define P_BOOL(b)	 printf("%s: %s\n", #b, (b) ? "true" : "false")
+#define P_CHAR(c)	 PF("%s: %c\n",  #c, c)						// printf char, -> "char: c"
+#define P_STR(s)	 PF("%s\n",  s)								// printf char array, -> "s"
+#define P_PTR(p)	 PF("%s: %p\n",  #p, p)						// printf pointer address, -> "ptr: p"
 
-#define P_VEC2(v)	 printf("%s: x: %.2f, y: %.2f\n", #v, v[0], v[1]);
-#define P_VEC3(v)	 printf("%s: x: %.2f, y: %.2f, z: %.2f\n", #v, v[0], v[1], v[2]);
+#define P_CLR()		 PF("\n")									// printf blank line
+#define P_LNE()		 PF("---------------------------------\n")	// printf dotted line "-----"	
+
+#define P_BOOL(b)	 PF("%s: %s\n", #b, STR_BOOL(b))
+
+#define P_VEC2(v)	 PF("%s: x: %.2f, y: %.2f\n", #v, v[0], v[1]);
+#define P_VEC3(v)	 PF("%s: x: %.2f, y: %.2f, z: %.2f\n", #v, v[0], v[1], v[2]);
 
 // ---------------------------------------------------------------------------------------------------
 
@@ -126,36 +131,46 @@ typedef void (*empty_callback)();
 // halts the program, printing a message where exactly it was halted
 // similar to calling assert(0) or abort(), just with a nicer message
 #define ABORT()		{ char* f = 0; CUR_FILE_NAME(f);										\
-					printf("|| ABORT || [FILE] %s [FUNCTION] %s [LINE] %d\n",				\
+					printf("[[ABORT]] [FILE] %s [FUNCTION] %s [LINE] %d\n",				\
 										  f, __FUNCTION__, __LINE__); abort(); }
 
 // alternative to assert() in assert.h, this version prints a nicer message when triggered
 #define ASSERT(c)	/* first part extracts the file name out of the path __FILE__ */		\
 					if(!(c)){		 														\
 					char* f = 0; CUR_FILE_NAME(f);											\
-					printf("[CONDITION] %s [FILE] %s [FUNCTION] %s [LINE] %d\n",			\
+					printf("[[ASSERT]] %s [FILE] %s [FUNCTION] %s [LINE] %d\n",			\
 										  #c, f, __FUNCTION__, __LINE__); abort(); }	
 
-// printf error message -> "[ERROR] e [FILE] file name [FUNCTION] function name [LINE] line"
-#define P_ERR(e)	/* first part extracts the file name out of the path __FILE__ */		\
-					{ char* f = 0; CUR_FILE_NAME(f);										\
-					printf("[ERROR] %s [FILE] %s [FUNCTION] %s [LINE] %d\n",				\
-									   e,  f, __FUNCTION__, __LINE__); }
+// printf error message -> "[ERROR] ... [FILE] file name [FUNCTION] function name [LINE] line"
+#define P_ERR(...) { char* f = 0; CUR_FILE_NAME(f);										\
+					printf("[[ERROR]] "); printf(__VA_ARGS__);								\
+					printf(" [FILE] %s [FUNCTION] %s [LINE] %d\n",							\
+									   f, __FUNCTION__, __LINE__); }
 
-// printf error message "e" and assert
-#define ERR(e)		/* f & name taken from the expanded P_ERR code */						\
-					P_ERR(e); abort();
+// printf error message (...) and exit
+#define ERR(...)	P_ERR(__VA_ARGS__); abort()
 
 // check consition "c" and printf error message "e" assert if evaluated false
-#define ERR_CHECK(c, e)	 if(!(c)){ printf("[CONDITION] %s ", #c); ERR(e); }
+#define ERR_CHECK(c, ...)	 if(!(c)){ printf("[CONDITION] %s ", #c); ERR(__VA_ARGS__); }
+
+#define NOTE(...)	{ static bool written = false;											\
+					  if (!written)															\
+					  {																		\
+					  	char* f = 0; CUR_FILE_NAME(f);										\
+					  		printf("[[NOTE]] "); printf(__VA_ARGS__);						\
+					  		printf(" [FILE] %s [FUNCTION] %s [LINE] %d\n",  				\
+					  			f, __FUNCTION__, __LINE__);	written = true;					\
+					  }																		\
+					}
 
 
 #else
 #define ABORT()				// not active because DEBUG_UTIL_ACT isnt defined
-#define ASSERT(c)			// not active because DEBUG_UTIL_ACT isnt defined
-#define P_ERR(e)			// not active because DEBUG_UTIL_ACT isnt defined
-#define ERR(e)				// not active because DEBUG_UTIL_ACT isnt defined
-#define ERR_CHECK(c, e)		// not active because DEBUG_UTIL_ACT isnt defined
+#define ASSERT()			// not active because DEBUG_UTIL_ACT isnt defined
+#define P_ERR()				// not active because DEBUG_UTIL_ACT isnt defined
+#define ERR()				// not active because DEBUG_UTIL_ACT isnt defined
+#define ERR_CHECK()			// not active because DEBUG_UTIL_ACT isnt defined
+#define NOTE()				// not active because DEBUG_UTIL_ACT isnt defined
 #endif
 
 // ---------------------------------------------------------------------------------------------------

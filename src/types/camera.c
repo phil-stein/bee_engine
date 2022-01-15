@@ -142,7 +142,7 @@ void get_camera_up_axis(entity* cam, vec3* axis)
 
 void get_camera_view_mat(entity* cam, mat4* view)
 {
-	if (cam->has_cam == BEE_FALSE) { assert(0);  return; }
+	ASSERT(cam->has_cam)
 	vec3 center;
 	glm_vec3_add(cam->pos, cam->_camera.front, center);
 	glm_lookat(cam->pos, center, cam->_camera.up, view);

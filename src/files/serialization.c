@@ -584,6 +584,7 @@ material* deserialize_material(char* buffer, int* offset)
 	texture dif  = deserialize_texture(buffer, offset);
 	texture spec = deserialize_texture(buffer, offset);
 	texture norm = get_texture("blank.png");
+	NOTE("puts blank in all normal textures");
 	if (current_version >= 0.9f)
 	{
 		norm = deserialize_texture(buffer, offset);;

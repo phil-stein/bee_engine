@@ -57,7 +57,7 @@ timer stop_timer_func()
 f64  stop_timer_print_func()
 {
 	timer t = stop_timer_func();
-	printf("[TIMER]: | %s | %.2Lfms\n", t.name, t.time);
+	printf("[TIMER] | %s | %.2Lfms\n", t.name, t.time);
 	return t.time;
 }
 

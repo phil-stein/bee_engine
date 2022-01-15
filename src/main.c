@@ -48,8 +48,6 @@ int main(void)
 
 	entities_init();
 	printf(" -> entities_init() finished\n");
-	app_init(); // @TODO: this should be last
-	printf(" -> app_init() finished\n");
 	gravity_ui_init();
 	printf(" -> gravity_ui_init() finished\n");
 	#ifdef EDITOR_ACT
@@ -62,6 +60,8 @@ int main(void)
 	printf(" -> input_init() finished\n");
 	physics_init();
 	printf(" -> physics_init() finished\n\n");
+	app_init(); // @TODO: this should be last
+	printf(" -> app_init() finished\n");
 
 	TIMER_STOP_PRINT(); // init
 

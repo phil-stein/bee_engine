@@ -1488,9 +1488,12 @@ void renderer_clear_scene()
 	spot_lights_len = 0;
 	
 	camera_ent_idx = -1;
+
+	#ifdef EDITOR_ACT
 	editor_perspective = 45.0f;
 	editor_near_plane = 0.1f;
 	editor_far_plane = 100.0f;
+	#endif
 }
 
 #ifdef EDITOR_ACT

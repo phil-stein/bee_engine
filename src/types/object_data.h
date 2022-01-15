@@ -28,9 +28,19 @@ typedef struct texture
 #endif
 
 }texture;
+#define P_TEXTURE(v)	PF("texture '%s':\n-> handle: %d\n-> size_x: %d\n-> size_y: %d\n-> name: '%s'\n-> path: '%s'\n",	\
+						#v, v.handle, v.size_x, v.size_y, v.name, v.path)
 
 // all available types of unifoms to be sent to a shader
 typedef enum uniform_type { UNIFORM_INT, UNIFORM_F32, UNIFORM_VEC2, UNIFORM_VEC3, UNIFORM_TEX }uniform_type;
+#define P_UNIFORM_TYPE(v)	PF("uniform_type: '%s': \n",		\
+							#v, v == UNIFORM_INT  ? "INT"  :	\
+								v == UNIFORM_F32  ? "F32"  :	\
+								v == UNIFORM_VEC2 ? "VEC2" :	\
+								v == UNIFORM_VEC3 ? "VEC3" :	\
+								v == UNIFORM_TEX  ? "TEX"  :	\
+								"UNKNOWN")
+
 // all information needed about a uniform
 // doesnt hold the values as this is for the shader to tell the material what uniforms it can give values to
 typedef struct uniform_definition
@@ -38,6 +48,9 @@ typedef struct uniform_definition
 	char* name;
 	uniform_type type;
 }uniform_def;
+#define P_UNIFORM_DEF(v)	PF("uniform_def '%s':\n-> name: %s\n->",	\
+							#v, v.name); P_UNIFORM_TYPE(v.type)
+
 // holds value for a uniform described by "def"
 typedef struct uniform
 {
@@ -53,6 +66,9 @@ typedef struct uniform
 		texture tex_val;	// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
 	};
 }uniform;
+#define P_UNIFORM(v)	PF("uniform '%s':\n->", #v);	\
+						P_UNIFORM_DEF(v.def);			
+
 
 typedef struct shader
 {
@@ -68,6 +84,8 @@ typedef struct shader
 	bee_bool has_error;
 
 }shader;
+#define P_SHADER(v)		PF("shader '%s':\n-> handle: %d\n-> vert_name: '%s'\n-> frag_name: '%s'\n-> name: '%s'\n-> use_lighting: %s\n-> has_error: %s\n",		\
+						#v, v.handle, v.vert_name, v.frag_name, v.name, STR_BOOL(v.use_lighting), STR_BOOL(v.has_error));									
 
 
 // ---- components ----
@@ -274,6 +292,7 @@ typedef struct scene
 	int entities_len;
 
 }scene;
+
 
 
 

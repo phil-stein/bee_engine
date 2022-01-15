@@ -80,10 +80,7 @@ void load_scene(const char* name)
 		set_error_popup(GENERAL_ERROR, buf); 
 	}
 #else
-	if (get_camera_ent_id() == -1)
-	{
-		assert(0); // scene without camera loaded
-	}
+	ERR_CHECK(get_camera_ent_id() > -1, "no camera in scene file")
 #endif
 
 	strcpy_s(active_scene, NAME_SIZE, name);

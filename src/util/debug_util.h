@@ -51,7 +51,7 @@ void start_timer_func(char* name, char* file, char* func);
 
 // functions / macros in "debug_utils.h" are deactivated
 // to activate them define "DEBUG_UTIL_ACT" globally, f.e. in "global.h" or your ide
-#define START_TIMER(n)
+#define TIMER_START(n)
 
 // functions / macros in "debug_utils.h" are deactivated
 // to activate them define "DEBUG_UTIL_ACT" globally, f.e. in "global.h" or your ide
@@ -63,7 +63,7 @@ timer  stop_timer_func();
 
 // functions / macros in "debug_utils.h" are deactivated
 // to activate them define "DEBUG_UTIL_ACT" globally, f.e. in "global.h" or your ide
-#define STOP_TIMER()
+#define TIMER_STOP()
 
 // functions / macros in "debug_utils.h" are deactivated
 // to activate them define "DEBUG_UTIL_ACT" globally, f.e. in "global.h" or your ide
@@ -71,7 +71,7 @@ f64 stop_timer_print_func();
 
 // functions / macros in "debug_utils.h" are deactivated
 // to activate them define "DEBUG_UTIL_ACT" globally, f.e. in "global.h" or your ide
-#define STOP_TIMER_PRINT()
+#define TIMER_STOP_PRINT()
 
 // functions / macros in "debug_utils.h" are deactivated
 // to activate them define "DEBUG_UTIL_ACT" globally, f.e. in "global.h" or your ide
