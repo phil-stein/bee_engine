@@ -56,7 +56,7 @@ typedef struct uniform
 {
 	// char* name;
 	// uniform_type type;
-	uniform_def* def;
+	uniform_def* def;		// pointer to the definition in the shader
 	union
 	{
 		int int_val;		// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
@@ -65,10 +65,13 @@ typedef struct uniform
 		vec3 vec3_val;		// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
 		texture tex_val;	// value of uniform, "..._val" variable with type defined in "def" is valid all others aren't
 	};
+	bool assigned;			// holds value & is used or not
+
 }uniform;
 #define P_UNIFORM(v)	PF("uniform '%s':\n->", #v);	\
 						P_UNIFORM_DEF(v.def);			
 
+#define UNIFORMS_MAX 32
 
 typedef struct shader
 {
@@ -78,7 +81,7 @@ typedef struct shader
 	char* name;
 
 	bee_bool use_lighting;		// use standard lighting model, prob. gonna remove this
-	uniform_def* uniform_defs;
+	uniform_def uniform_defs[UNIFORMS_MAX];
 	int uniform_defs_len;
 
 	bee_bool has_error;
@@ -95,7 +98,7 @@ typedef struct material
 	shader* shader;
 	// int shader_idx;
 
-	uniform* uniforms;
+	uniform uniforms[UNIFORMS_MAX];
 	int uniforms_len;
 
 	texture dif_tex;

@@ -220,7 +220,6 @@ shader create_shader_from_file(const char* vert_path, const char* frag_path, con
 	s.handle = handle;
 	s.name = name;
 	s.use_lighting = BEE_TRUE;
-	s.uniform_defs = NULL;
 	s.uniform_defs_len = 0;
 	s.has_error = has_error;
 

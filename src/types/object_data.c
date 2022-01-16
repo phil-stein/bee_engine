@@ -27,7 +27,15 @@ material make_material(shader* shader, texture dif_tex, texture spec_tex, textur
 	mat.draw_backfaces = draw_backfaces;
 	glm_vec2_copy(tile, mat.tile);
 	glm_vec3_copy(tint, mat.tint);
-	mat.uniforms	 = uniforms;
+	for (int i = 0; i < uniforms_len; ++i)
+	{ mat.uniforms[i] = uniforms[i]; }
+	uniform u;
+	u.assigned = false;
+	u.def = NULL;
+	u.int_val = 0;
+	for (int i = uniforms_len; i < UNIFORMS_MAX; ++i)
+	{ mat.uniforms[i] = u; }
+	// mat.uniforms	 = uniforms;
 	mat.uniforms_len = uniforms_len;
 
 	return mat;
@@ -698,9 +706,6 @@ void free_texture(texture* tex)
 void free_shader(shader* s)
 {
 	free(s->name);
-
-	if (s->uniform_defs != NULL)
-	{ arrfree(s->uniform_defs); }
 
 	if (s->has_error) { return; }
 

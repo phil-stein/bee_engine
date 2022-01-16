@@ -7,7 +7,7 @@
         sampler2D normal;
         float shininess;
         vec2 tile;
-	    vec3 tint;
+	vec3 tint;
     };
 
     struct directional_light 

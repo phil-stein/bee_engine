@@ -8,7 +8,7 @@ resources:  [learnopengl.com](https://learnopengl.com/), "3D Math Primer for Gra
 
 ## current capabilities
 
-<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot12.png" alt="logo" width="1000">
+<img src="https://github.com/phil-stein/bee_engine/blob/main/assets/github_resources/screenshot13.png" alt="logo" width="1000">
 
 
 

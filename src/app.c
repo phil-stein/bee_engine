@@ -202,6 +202,9 @@ void app_init()
 	// load_scene("ui_test.scene");
 	// load_scene("tmp02.scene");
 
+	shader* s = shader_load_from_path("assets/shaders/default.shader", "test");
+	P_SHADER((*s));
+
 
 	// add_shader("basic.vert", "blinn_phong.frag", "SHADER_default", BEE_TRUE);
 	// add_shader("basic.vert", "unlit.frag", "SHADER_unlit", BEE_TRUE);

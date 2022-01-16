@@ -4849,9 +4849,7 @@ void edit_asset_window()
                     strcpy(name_cpy, name);
                     uniform_def d = { name_cpy, type};
 
-                    arrput(s->uniform_defs, d);
-                    s->uniform_defs_len++;
-                    
+                    s->uniform_defs[s->uniform_defs_len++] = d;
                 }
             }
             if (add_uniform)
@@ -5065,6 +5063,7 @@ void edit_asset_window()
                 nk_tree_pop(ctx);
             }
 
+            /*
             if (nk_tree_push(ctx, NK_TREE_NODE, "Edit Uniforms", NK_MINIMIZED))
             {
                 
@@ -5088,7 +5087,7 @@ void edit_asset_window()
                         char buf[24];
                         sprintf_s(buf, 24, "uniform defs: %d", m->shader->uniform_defs_len);
                         nk_label(ctx, buf, NK_TEXT_LEFT);
-                        printf("uniform defs: %d", m->shader->uniform_defs_len);
+                        // printf("uniform defs: %d", m->shader->uniform_defs_len);
                     }
                     else
                     {
@@ -5247,6 +5246,102 @@ void edit_asset_window()
                     nk_tree_pop(ctx);
                 }
                 
+                nk_tree_pop(ctx);
+            }
+            */
+
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Edit Uniforms", NK_MINIMIZED))
+            {
+                for (int i = 0; i < m->shader->uniform_defs_len && i < UNIFORMS_MAX; ++i)
+                {
+                    uniform* u = &m->uniforms[i];
+                    u->def = &m->shader->uniform_defs[i];
+                    char buf[35] = "";
+                    struct nk_rect img_bounds_uniform;
+
+                    if (u == NULL)
+                    {
+                        nk_labelf(ctx, NK_TEXT_LEFT, "%s: null", m->shader->uniform_defs[i].name);
+                        continue;
+                    }
+
+                    // nk_layout_row_dynamic(ctx, 25, 1);
+                    nk_layout_row_begin(ctx, NK_LAYOUT_STATIC, 25, 2);
+                    nk_layout_row_push(ctx, 50);
+                    // nk_checkbox_label(ctx, "", &u->assigned);
+                    u->assigned = nk_check_label(ctx, "", u->assigned);
+
+                    nk_layout_row_push(ctx, 200);
+                    if (!u->assigned)
+                    {
+                        nk_labelf(ctx, NK_TEXT_LEFT, "%s: not assigned", m->shader->uniform_defs[i].name);
+                    }
+                    else if (u->def->type == UNIFORM_INT)
+                    {
+                        nk_property_int(ctx, u->def->name, 0, &u->int_val, 100, 1, 1);
+                    }
+                    else if (u->def->type == UNIFORM_F32)
+                    {
+                        nk_property_float(ctx, u->def->name, 0.0f, &u->f32_val, 100.0f, 0.1f, 0.1f);
+                    }
+                    else if (u->def->type == UNIFORM_VEC2)
+                    {
+                        sprintf(buf, "%s X", u->def->name);
+                        nk_layout_row_dynamic(ctx, 25, 2);
+                        nk_property_float(ctx, buf, 0.0f, &u->vec2_val[0], 100.0f, 0.1f, 0.1f);
+                        sprintf(buf, "%s X", u->def->name);
+                        nk_property_float(ctx, buf, 0.0f, &u->vec2_val[1], 100.0f, 0.1f, 0.1f);
+                    }
+                    else if (u->def->type == UNIFORM_VEC3)
+                    {
+                        nk_label(ctx, u->def->name, NK_TEXT_LEFT);
+                        struct nk_colorf tint = { u->vec3_val[0], u->vec3_val[1], u->vec3_val[2] };
+                        if (nk_combo_begin_color(ctx, nk_rgb_cf(tint), nk_vec2(200, 400)))
+                        {
+                            enum color_mode { COL_RGB, COL_HSV };
+                            static int col_mode = COL_RGB;
+
+                            nk_layout_row_dynamic(ctx, 120, 1);
+                            tint = nk_color_picker(ctx, tint, NK_RGB);
+
+                            nk_layout_row_dynamic(ctx, 25, 2);
+                            col_mode = nk_option_label(ctx, "RGB", col_mode == COL_RGB) ? COL_RGB : col_mode;
+                            col_mode = nk_option_label(ctx, "HSV", col_mode == COL_HSV) ? COL_HSV : col_mode;
+
+                            nk_layout_row_dynamic(ctx, 25, 1);
+                            if (col_mode == COL_RGB) {
+                                tint.r = nk_propertyf(ctx, "#R:", 0, tint.r, 1.0f, 0.01f, 0.005f);
+                                tint.g = nk_propertyf(ctx, "#G:", 0, tint.g, 1.0f, 0.01f, 0.005f);
+                                tint.b = nk_propertyf(ctx, "#B:", 0, tint.b, 1.0f, 0.01f, 0.005f);
+                            }
+                            else {
+                                float hsva[4];
+                                nk_colorf_hsva_fv(hsva, tint);
+                                hsva[0] = nk_propertyf(ctx, "#H:", 0, hsva[0], 1.0f, 0.01f, 0.05f);
+                                hsva[1] = nk_propertyf(ctx, "#S:", 0, hsva[1], 1.0f, 0.01f, 0.05f);
+                                hsva[2] = nk_propertyf(ctx, "#V:", 0, hsva[2], 1.0f, 0.01f, 0.05f);
+                                tint = nk_hsva_colorfv(hsva);
+                            }
+                            nk_combo_end(ctx);
+
+                            // assign the altered color 
+                            u->vec3_val[0] = tint.r;
+                            u->vec3_val[1] = tint.g;
+                            u->vec3_val[2] = tint.b;
+                        }
+                    }
+                    else if (u->def->type == UNIFORM_TEX)
+                    {
+                        nk_label(ctx, u->def->name, NK_TEXT_LEFT);
+                        float ratio_x = (float)u->tex_val.size_y / (float)u->tex_val.size_x;
+                        struct nk_image img = nk_image_id(u->tex_val.icon_handle);
+                        nk_layout_row_static(ctx, 150 * ratio_x, 150, 1);
+                        img_bounds_uniform = nk_widget_bounds(ctx);
+                        nk_image(ctx, img);
+                    }
+                    nk_layout_row_end(ctx);
+                }
+
                 nk_tree_pop(ctx);
             }
 

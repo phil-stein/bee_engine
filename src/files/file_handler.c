@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <direct.h>
 #include <string.h>
+#include <ctype.h>
 
 #define STB_IMAGE_IMPLEMENTATION // only define in one ".c" file
 #include "stb\stb_image.h"
@@ -146,6 +147,172 @@ rtn_code copy_file(char* filepath_src, char* filepath_cpy)
 }
 
 
+// shaders --------------------------------------------------------------------------
+
+typedef enum shader_file_token_type
+{
+    SHTK_STRING,
+    SHTK_VERT,
+    SHTK_FRAG,
+    SHTK_INT,
+    SHTK_FLOAT,
+    SHTK_VEC2,
+    SHTK_VEC3,
+    SHTK_TEX,
+}shader_tok_type;
+#define SHADER_TOK_VAL_MAX 128
+typedef struct shader_file_token
+{
+    shader_tok_type type;
+    char val[SHADER_TOK_VAL_MAX];
+}shader_tok;
+
+shader* shader_load_from_path(const char* file_path, const char* name)
+{
+    if (!file_exists_check(file_path)) { ERR("shader file doesnt exist."); }
+    
+    int txt_len = 0;
+    char* txt = read_text_file_len(file_path, &txt_len);
+
+    shader_tok t[64];
+    int t_len = 0;
+    shader_tok tok;
+
+    for (int i = 0; i < txt_len; ++i)
+    {
+        if (isspace(txt[i])) { continue; }
+
+        if (txt[i +0] == '[' &&
+            txt[i +1] == 'v' &&
+            txt[i +2] == 'e'&&
+            txt[i +3] == 'r'&&
+            txt[i +4] == 't'&&
+            txt[i +5] == ']'&&
+            isspace(txt[i +6]))
+        {
+            tok.type = SHTK_VERT;
+            t[t_len++] = tok;
+            i += 5;
+            P("[VERT]");
+            continue;
+        }
+        if (txt[i + 0] == '[' &&
+            txt[i + 1] == 'f' &&
+            txt[i + 2] == 'r' &&
+            txt[i + 3] == 'a' &&
+            txt[i + 4] == 'g' &&
+            txt[i + 5] == ']' &&
+            isspace(txt[i + 6]))
+        {
+            tok.type = SHTK_FRAG;
+            t[t_len++] = tok;
+            i += 5;
+            P("[FRAG]");
+            continue;
+        }
+        if (txt[i + 0] == '[' &&
+            txt[i + 1] == 'i' &&
+            txt[i + 2] == 'n' &&
+            txt[i + 3] == 't' &&
+            txt[i + 4] == ']' &&
+            isspace(txt[i + 5]))
+        {
+            tok.type = SHTK_INT;
+            t[t_len++] = tok;
+            i += 4;
+            P("[INT]");
+            continue;
+        }
+        if (txt[i + 0] == '[' &&
+            txt[i + 1] == 'f' &&
+            txt[i + 2] == 'l' &&
+            txt[i + 3] == 'o' &&
+            txt[i + 4] == 'a' &&
+            txt[i + 5] == 't' &&
+            txt[i + 6] == ']' &&
+            isspace(txt[i + 7]))
+        {
+            tok.type = SHTK_FLOAT;
+            t[t_len++] = tok;
+            i += 6;
+            P("[FLOAT]");
+            continue;
+        }
+        if (txt[i + 0] == '[' &&
+            txt[i + 1] == 'v' &&
+            txt[i + 2] == 'e' &&
+            txt[i + 3] == 'c' &&
+            txt[i + 4] == '2' &&
+            txt[i + 5] == ']' &&
+            isspace(txt[i + 6]))
+        {
+            tok.type = SHTK_VEC2;
+            t[t_len++] = tok;
+            i += 5;
+            P("[VEC2]");
+            continue;
+        }
+        if (txt[i + 0] == '[' &&
+            txt[i + 1] == 'v' &&
+            txt[i + 2] == 'e' &&
+            txt[i + 3] == 'c' &&
+            txt[i + 4] == '3' &&
+            txt[i + 5] == ']' &&
+            isspace(txt[i + 6]))
+        {
+            tok.type = SHTK_VEC3;
+            t[t_len++] = tok;
+            i += 5;
+            P("[VEC3]");
+            continue;
+        }
+        if (txt[i + 0] == '[' &&
+            txt[i + 1] == 't' &&
+            txt[i + 2] == 'e' &&
+            txt[i + 3] == 'x' &&
+            txt[i + 4] == ']' &&
+            isspace(txt[i + 5]))
+        {
+            tok.type = SHTK_TEX;
+            t[t_len++] = tok;
+            i += 4;
+            P("[TEX]");
+            continue;
+        }
+
+        // read strings
+        int j = 0;
+        while (i +j < txt_len && 
+            (isalnum(txt[i + j]) || txt[i + j] == '.' || txt[i + j] == '_'))
+        { j++; }
+        if (j > 1)
+        {
+            char end = txt[i +j];
+            txt[i +j] = '\0';
+            strcpy(tok.val, txt + i);
+            P_STR(tok.val);
+            txt[i +j] = end;
+            tok.type = SHTK_STRING;
+            t[t_len++] = tok;
+            i += j;
+            continue;
+        }
+    }
+
+    int vert = -1;
+    int frag = -1;
+
+    for (int i = 0; i < t_len; ++i)
+    {
+        if (t[i].type == SHTK_VERT && t[i + 1].type == SHTK_STRING)
+        { vert = i + 1; }
+        if (t[i].type == SHTK_FRAG && t[i + 1].type == SHTK_STRING)
+        { frag = i + 1; }
+    }
+    if (vert <= -1 || frag <= -1) { ERR("vert or frag shader missing"); }
+
+    return add_shader(t[vert].val, t[frag].val, name, true);
+}
 
 // textures -------------------------------------------------------------------------
 

@@ -29,6 +29,11 @@ void write_text_file(const char* file_path, const char* txt, int len);
 // create copy of file at 'filepath_src' and copy it to 'filepath_cpy'
 rtn_code copy_file(char* filepath_src, char* filepath_cpy);
 
+
+// read and parse a .shader file
+shader* shader_load_from_path(const char* file_path, const char* name);
+
+
 // loads an image from file and loads it onto the gpu, 
 // render by calling: glBindTexture(GL_TEXTURE_2D, u32);
 // returns: u32 handle for the opengl texture

@@ -1123,7 +1123,18 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 			s.frag_name = frag_name;
 			s.use_lighting = use_lighting;
 			s.uniform_defs_len = uniform_defs_len;
-			s.uniform_defs = uniform_defs;
+			for (int i = 0; i < uniform_defs_len; ++i)
+			{
+				uniform_def u;
+				u.name = "unassigned";
+				u.type = uniform_defs[i];
+				s.uniform_defs[i] = u;
+			}
+			uniform_def u;
+			u.name = "unassigned";
+			u.type = UNIFORM_INT;
+			for (int i = uniform_defs_len; i < UNIFORMS_MAX; ++i)
+			{ s.uniform_defs[i] = u; }
 
 			shaders_data[shget(shaders, name)] = s;
 		}
@@ -1149,12 +1160,23 @@ shader* add_shader_specific(const char* vert_name, const char* frag_name, const 
 	s.frag_name = frag_name;
 	s.use_lighting		= use_lighting;
 	s.uniform_defs_len  = uniform_defs_len;
-	s.uniform_defs		= uniform_defs;
+	for (int i = 0; i < uniform_defs_len; ++i)
+	{
+		uniform_def u;
+		u.name = "unassigned";
+		u.type = uniform_defs[i];
+		s.uniform_defs[i] = u;
+	}
+	uniform_def u;
+	u.name = "unassigned";
+	u.type = UNIFORM_INT;
+	for (int i = uniform_defs_len; i < UNIFORMS_MAX; ++i)
+	{ s.uniform_defs[i] = u; }
 
 	shput(shaders, name_cpy, shaders_data_len);
 	arrput(shaders_data, s);
-	PF("%.2d | ", shaders_data_len); P_LNE();
-	P_SHADER(shaders_data[shaders_data_len]);
+	// PF("%.2d | ", shaders_data_len); P_LNE();
+	// P_SHADER(shaders_data[shaders_data_len]);
 
 	// shaders_data_len++;
 	return &shaders_data[shaders_data_len++];
@@ -1338,11 +1360,9 @@ void recomile_shader(const char* name)
 	s_new.frag_name = s->frag_name;
 	s_new.use_lighting = s->use_lighting;
 	s_new.uniform_defs_len = s->uniform_defs_len;
-	s_new.uniform_defs = NULL;
 	for (int i = 0; i < s_new.uniform_defs_len; ++i)
-	{
-		arrput(s_new.uniform_defs, s->uniform_defs[i]);
-	}
+	{ s_new.uniform_defs[i] = s->uniform_defs[i]; }
+	
 	// free_shader(s);
 	shader_delete(s); // this instead of free_shader() as that also frees the name
 
